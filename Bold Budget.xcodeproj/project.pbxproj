@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		565082842CA8179A009D9417 /* SwinjectAutoregistration in Frameworks */ = {isa = PBXBuildFile; productRef = 565082832CA8179A009D9417 /* SwinjectAutoregistration */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		5673DA202CA7FA5A007833E0 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -34,6 +38,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Extensions/CGFloatExtensions.swift,
+				Workers/StringProvider.swift,
 			);
 			target = 5673DA1E2CA7FA5A007833E0 /* Bold BudgetTests */;
 		};
@@ -41,6 +46,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Extensions/CGFloatExtensions.swift,
+				Workers/StringProvider.swift,
 			);
 			target = 5673DA282CA7FA5A007833E0 /* Bold BudgetUITests */;
 		};
@@ -73,6 +79,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				565082842CA8179A009D9417 /* SwinjectAutoregistration in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -133,6 +140,7 @@
 			);
 			name = "Bold Budget";
 			packageProductDependencies = (
+				565082832CA8179A009D9417 /* SwinjectAutoregistration */,
 			);
 			productName = "Bold Budget";
 			productReference = 5673DA0F2CA7FA58007833E0 /* Bold Budget.app */;
@@ -216,6 +224,9 @@
 			);
 			mainGroup = 5673DA062CA7FA58007833E0;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				565082822CA8179A009D9417 /* XCRemoteSwiftPackageReference "SwinjectAutoregistration" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 5673DA102CA7FA58007833E0 /* Products */;
 			projectDirPath = "";
@@ -587,6 +598,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		565082822CA8179A009D9417 /* XCRemoteSwiftPackageReference "SwinjectAutoregistration" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Swinject/SwinjectAutoregistration.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.9.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		565082832CA8179A009D9417 /* SwinjectAutoregistration */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 565082822CA8179A009D9417 /* XCRemoteSwiftPackageReference "SwinjectAutoregistration" */;
+			productName = SwinjectAutoregistration;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 5673DA072CA7FA58007833E0 /* Project object */;
 }
