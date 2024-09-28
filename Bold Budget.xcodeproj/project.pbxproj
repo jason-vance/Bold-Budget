@@ -30,12 +30,19 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		5673DA882CA80534007833E0 /* Exceptions for "Bold Budget" folder in "Bold Budget" target */ = {
+		5673DAAE2CA8069B007833E0 /* Exceptions for "Bold Budget" folder in "Bold BudgetTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				"Bold-Budget-Info.plist",
+				Extensions/CGFloatExtensions.swift,
 			);
-			target = 5673DA0E2CA7FA58007833E0 /* Bold Budget */;
+			target = 5673DA1E2CA7FA5A007833E0 /* Bold BudgetTests */;
+		};
+		5673DAAF2CA8069B007833E0 /* Exceptions for "Bold Budget" folder in "Bold BudgetUITests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Extensions/CGFloatExtensions.swift,
+			);
+			target = 5673DA282CA7FA5A007833E0 /* Bold BudgetUITests */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -43,7 +50,8 @@
 		5673DA112CA7FA58007833E0 /* Bold Budget */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				5673DA882CA80534007833E0 /* Exceptions for "Bold Budget" folder in "Bold Budget" target */,
+				5673DAAE2CA8069B007833E0 /* Exceptions for "Bold Budget" folder in "Bold BudgetTests" target */,
+				5673DAAF2CA8069B007833E0 /* Exceptions for "Bold Budget" folder in "Bold BudgetUITests" target */,
 			);
 			path = "Bold Budget";
 			sourceTree = "<group>";
