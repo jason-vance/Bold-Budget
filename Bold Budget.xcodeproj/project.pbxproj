@@ -55,6 +55,7 @@
 				Domain/TransactionCategory.swift,
 				Extensions/CGFloatExtensions.swift,
 				Extensions/DateExtensions.swift,
+				Views/PieChart.swift,
 				Workers/StringProvider.swift,
 				Workers/TransactionProvider/TransactionProvider.swift,
 			);
