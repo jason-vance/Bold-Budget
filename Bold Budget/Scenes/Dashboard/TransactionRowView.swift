@@ -24,6 +24,7 @@ struct TransactionRowView: View {
     }
     
     @ViewBuilder func CategoryIcon() -> some View {
+        //TODO: Get real category image
         Image(systemName: "bag.fill")
             .padding(.padding)
             .frame(width: 44, height: 44)
@@ -60,7 +61,7 @@ struct TransactionRowView: View {
                 .font(.body.bold())
                 .lineLimit(1)
             Spacer(minLength: 0)
-            Text(transaction.amount.formatted(.currency(code: "USD")))
+            Text(transaction.amount.formatted())
                 .font(.body)
         }
     }

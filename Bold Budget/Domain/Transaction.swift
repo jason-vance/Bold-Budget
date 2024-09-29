@@ -11,8 +11,7 @@ struct Transaction {
     let id: UUID
     //TODO: Use TransactionDescription struct
     let title: String
-    //TODO: Use Money struct
-    let amount: Double
+    let amount: Money
     let date: Date
     
     var description: String {
@@ -31,7 +30,7 @@ extension Transaction {
         .init(
             id: UUID(),
             title: "Walmart Groceries",
-            amount: 123.5,
+            amount: Money(123.5),
             date: .now
         )
     }

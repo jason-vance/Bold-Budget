@@ -37,6 +37,7 @@
 		5673DAAE2CA8069B007833E0 /* Exceptions for "Bold Budget" folder in "Bold BudgetTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Domain/Money.swift,
 				Domain/Transaction.swift,
 				Extensions/CGFloatExtensions.swift,
 				Extensions/DateExtensions.swift,
@@ -47,6 +48,7 @@
 		5673DAAF2CA8069B007833E0 /* Exceptions for "Bold Budget" folder in "Bold BudgetUITests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Domain/Money.swift,
 				Domain/Transaction.swift,
 				Extensions/CGFloatExtensions.swift,
 				Extensions/DateExtensions.swift,
