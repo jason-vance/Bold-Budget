@@ -9,11 +9,18 @@ import SwiftUI
 
 struct PieChart: View {
     
-    private let colors: [Color] = [.red, .yellow, .blue, .purple, .orange, .green]
-    
     public struct Slice {
         let name: String
         let value: Double
+        
+        static let samples: [Slice] = [
+            .init(name: "Groceries", value: 600),
+            .init(name: "Housing", value: 2500),
+            .init(name: "Travel", value: 1500),
+            .init(name: "Entertainment", value: 250),
+            .init(name: "Candy Bar", value: 5),
+            .init(name: "Medical", value: 125)
+        ]
     }
     
     private struct _Slice: Identifiable {
@@ -30,11 +37,23 @@ struct PieChart: View {
     
     @State var slices: [Slice]
     
-    private func makeSlices(pieSize: CGSize) -> [_Slice] {
-        let pieCircumference = min(pieSize.width, pieSize.height) * Double.pi
+    private var _color: Color = Color.black
+    
+    init(slices: [Slice]) {
+        self.slices = slices
+        self._color = Color.black
+    }
+    
+    func color(_ color: Color) -> PieChart {
+        var view = self
+        view._color = color
+        return view
+    }
+    
+    private func mapSlicesTo_Slice(pieCircumference: CGFloat) -> [_Slice] {
         let padding = CGFloat.padding / pieCircumference
         let lineCap = (lineWidth / 2) / pieCircumference
-        
+         
         var index = -1
         var previousCumulativeValue: CGFloat = 0
         return slices
@@ -56,6 +75,43 @@ struct PieChart: View {
             }
     }
     
+    private func mergeSmallSlicesIfNecessary(_ slices: [_Slice], pieCircumference: CGFloat) -> [_Slice] {
+        let wontBeVisible: (_Slice) -> Bool = { slice in
+            let length = (slice.to - slice.from) * pieCircumference
+            print("pieCircumference: \(pieCircumference), length: \(length)")
+            return length < (lineWidth / 2)
+        }
+        
+        let merge: (_Slice, _Slice) -> _Slice = { lhs, rhs in
+                .init(
+                    index: min(lhs.index, rhs.index),
+                    name: "\(lhs.name), \(rhs.name)",
+                    value: lhs.value + rhs.value,
+                    from: min(lhs.from, rhs.from),
+                    to: max(lhs.to, rhs.to)
+                )
+        }
+        
+        var rv: [_Slice] = slices
+        while let lastSlice = rv.last, wontBeVisible(lastSlice) {
+            guard rv.count >= 2 else { break }
+            
+            let secondToLastSlice = rv[rv.count - 2]
+            let mergedSlice = merge(lastSlice, secondToLastSlice)
+            
+            rv = rv.dropLast(2)
+            rv.append(mergedSlice)
+        }
+        
+        return rv
+    }
+    
+    private func makeSlices(pieSize: CGSize) -> [_Slice] {
+        let pieCircumference = min(pieSize.width, pieSize.height) * Double.pi
+        let slices = mapSlicesTo_Slice(pieCircumference: pieCircumference)
+        return mergeSmallSlicesIfNecessary(slices, pieCircumference: pieCircumference)
+    }
+    
     private var total: Double { slices.reduce(0, { $0 + $1.value }) }
     
     var body: some View {
@@ -74,19 +130,12 @@ struct PieChart: View {
         Circle()
             .trim(from: slice.from, to: slice.to)
             .rotation(.degrees(-90))
-            .stroke(colors[slice.index], style: .init(lineWidth: lineWidth, lineCap: .round))
+            .stroke(style: .init(lineWidth: lineWidth, lineCap: .round))
+            .foregroundStyle(_color)
     }
 }
 
 #Preview {
-    let slices: [PieChart.Slice] = [
-        .init(name: "Groceries", value: 600),
-        .init(name: "Housing", value: 2500),
-        .init(name: "Travel", value: 1500),
-        .init(name: "Entertainment", value: 250),
-        .init(name: "Candy Bar", value: 5),
-        .init(name: "Medical", value: 125)
-    ]
-    
-    PieChart(slices: slices)
+    PieChart(slices: PieChart.Slice.samples)
+        .color(Color.blue)
 }

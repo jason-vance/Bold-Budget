@@ -24,7 +24,7 @@ struct DashboardView: View {
     
     var body: some View {
         VStack {
-            PieChart()
+            Chart()
             List {
                 TransactionList()
             }
@@ -37,12 +37,10 @@ struct DashboardView: View {
         .onReceive(transactionsPublisher) { transactions = $0 }
     }
     
-    @ViewBuilder func PieChart() -> some View {
-        ZStack {
-            Text("Pie Chart")
-                .font(.title.bold())
-        }
-        .frame(width: 300, height: 300)
+    @ViewBuilder func Chart() -> some View {
+        PieChart(slices: PieChart.Slice.samples)
+            .color(Color.text)
+            .containerRelativeFrame(.horizontal) { length, axis in length * 0.75 }
     }
     
     @ViewBuilder func TransactionList() -> some View {
