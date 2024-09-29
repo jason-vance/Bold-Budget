@@ -11,7 +11,8 @@ struct Money: Equatable {
     
     private let amount: Double
     
-    init(_ amount: Double) {
+    init?(_ amount: Double) {
+        guard amount >= 0 else { return nil }
         self.amount = amount
     }
     
@@ -21,6 +22,6 @@ struct Money: Equatable {
     }
     
     static func + (_ lhs: Money, rhs: Money) -> Money {
-        Money(lhs.amount + rhs.amount)
+        Money(lhs.amount + rhs.amount)!
     }
 }

@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Transaction {
+struct Transaction: Identifiable {
     let id: UUID
     //TODO: Use TransactionDescription struct
     let title: String
@@ -26,11 +26,11 @@ struct Transaction {
 }
 
 extension Transaction {
-    static var sampleBasic: Transaction {
+    static var sampleRandomBasic: Transaction {
         .init(
             id: UUID(),
             title: "Walmart Groceries",
-            amount: Money(123.5),
+            amount: Money(.random(in: 1...250))!,
             date: .now
         )
     }

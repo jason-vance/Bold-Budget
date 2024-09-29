@@ -6,8 +6,21 @@
 //
 
 import SwiftUI
+import SwinjectAutoregistration
+import Combine
 
 struct DashboardView: View {
+    
+    let transactionProvider = iocContainer~>TransactionProvider.self
+    
+    private var transactionsPublisher: AnyPublisher<[Transaction],Never> {
+        transactionProvider
+            .transactionPublisher
+            .receive(on: RunLoop.main)
+            .eraseToAnyPublisher()
+    }
+    
+    @State private var transactions: [Transaction] = []
     
     var body: some View {
         VStack {
@@ -21,6 +34,7 @@ struct DashboardView: View {
         }
         .foregroundStyle(Color.text)
         .background(Color.background)
+        .onReceive(transactionsPublisher) { transactions = $0 }
     }
     
     @ViewBuilder func PieChart() -> some View {
@@ -32,12 +46,12 @@ struct DashboardView: View {
     }
     
     @ViewBuilder func TransactionList() -> some View {
-        //TODO: Get real transactions
-        ForEach(1...10, id: \.self) { index in
-            TransactionRowView(.sampleBasic)
+        ForEach(transactions) { transaction in
+            TransactionRowView(transaction)
                 .listRowBackground(Color.background)
                 .listRowSeparatorTint(Color.text)
         }
+        //TODO: Show something if there are no transactions
     }
 }
 

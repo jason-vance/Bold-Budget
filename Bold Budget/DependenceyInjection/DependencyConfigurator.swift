@@ -13,4 +13,7 @@ let iocContainer: Container = Container()
 
 func setup(iocContainer: Container) {
     iocContainer.autoregister(StringProvider.self, initializer: StringProvider.getInstance)
+    
+    // Dashboard
+    iocContainer.autoregister(TransactionProvider.self, initializer: TransactionProvider.getInstance)
 }

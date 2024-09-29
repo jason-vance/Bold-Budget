@@ -68,7 +68,7 @@ struct TransactionRowView: View {
 }
 
 #Preview {
-    TransactionRowView(.sampleBasic)
+    TransactionRowView(.sampleRandomBasic)
         .padding(.padding)
         .background(Color.background)
 }

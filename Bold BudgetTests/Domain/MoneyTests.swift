@@ -12,7 +12,7 @@ struct MoneyTests {
 
     @Test func formatsValueToCurrencyString() async throws {
         // Write your test here and use APIs like `#expect(...)` to check expected conditions.
-        let money = Money(100)
+        let money = Money(100)!
         
         #expect(money.formatted() == "$100.00")
         
@@ -24,15 +24,15 @@ struct MoneyTests {
     }
     
     @Test func addition() {
-        let one = Money(1)
-        let two = Money(2)
+        let one = Money(1)!
+        let two = Money(2)!
         let added = one + two
         #expect(added.formatted() == "$3.00")
     }
     
     @Test func equality() {
-        let a = Money(2)
-        let b = Money(2)
+        let a = Money(2)!
+        let b = Money(2)!
         #expect(a == b)
     }
 }
