@@ -42,6 +42,8 @@
 				Domain/TransactionCategory.swift,
 				Extensions/CGFloatExtensions.swift,
 				Extensions/DateExtensions.swift,
+				Utils/GeometryUtils.swift,
+				Views/Gestures/TouchWithLocation.swift,
 				Workers/StringProvider.swift,
 				Workers/TransactionProvider/TransactionProvider.swift,
 			);
@@ -55,6 +57,8 @@
 				Domain/TransactionCategory.swift,
 				Extensions/CGFloatExtensions.swift,
 				Extensions/DateExtensions.swift,
+				Utils/GeometryUtils.swift,
+				Views/Gestures/TouchWithLocation.swift,
 				Views/PieChart.swift,
 				Workers/StringProvider.swift,
 				Workers/TransactionProvider/TransactionProvider.swift,

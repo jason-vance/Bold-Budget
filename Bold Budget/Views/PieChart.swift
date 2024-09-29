@@ -33,9 +33,12 @@ struct PieChart: View {
     }
 
     private let lineWidth: CGFloat = 16
+    private let tapMaxDuration: TimeInterval = 0.3
     private var minSliceViewSize: CGFloat  { 2 * lineWidth }
     
     @State var slices: [Slice]
+    @State private var selectedSlice: _Slice? = nil
+    @State private var touchStart: Date? = nil
     
     private var _color: Color = Color.black
     private var formatValue: (Double) -> String
@@ -65,7 +68,7 @@ struct PieChart: View {
         var index = -1
         var previousCumulativeValue: CGFloat = 0
         return slices
-            .sorted { $0.value > $1.value }
+            .sorted { $0.value < $1.value }
             .map { slice in
                 let from = (previousCumulativeValue / total) + lineCap + (padding / 2)
                 let to = from + (slice.value / total) - (2 * lineCap) - (padding / 2)
@@ -93,7 +96,7 @@ struct PieChart: View {
         let merge: (_Slice, _Slice) -> _Slice = { lhs, rhs in
                 .init(
                     index: min(lhs.index, rhs.index),
-                    name: "\(lhs.name), \(rhs.name)",
+                    name: "\(rhs.name), \(lhs.name)",
                     value: lhs.value + rhs.value,
                     from: min(lhs.from, rhs.from),
                     to: max(lhs.to, rhs.to)
@@ -124,32 +127,72 @@ struct PieChart: View {
     
     var body: some View {
         GeometryReader { geo in
+            let slices = makeSlices(pieSize: geo.size)
+            
             ZStack {
-                let slices = makeSlices(pieSize: geo.size)
-                ForEach(slices) { slice in
-                    SliceView(slice)
+                ZStack {
+                    ForEach(slices) { slice in
+                        SliceView(slice)
+                    }
+                }
+                .onTouchGesture { point in
+                    let center = CGPoint(x: geo.frame(in: .local).midX, y: geo.frame(in: .local).midY)
+                    let angle = angleBetween(center: center, point: point)
+                    let fraction = angle / 360
+                    let selectedSlice = slices.first { $0.from <= fraction && $0.to >= fraction }
+                    
+                    if touchStart == nil || self.selectedSlice?.id != selectedSlice?.id {
+                        touchStart = .now
+                    }
+                    
+                    withAnimation(.snappy) {
+                        self.selectedSlice = selectedSlice
+                    }
+                } onTouchEnded: {
+                    if let touchStart = touchStart {
+                        let interval = Date.now.timeIntervalSince(touchStart)
+                        print("interval: \(interval)")
+                        if interval < tapMaxDuration {
+                            return
+                        }
+                    }
+                    
+                    withAnimation(.snappy) {
+                        touchStart = nil
+                        selectedSlice = nil
+                    }
                 }
                 VStack {
                     Text("Total")
                         .font(.title2.weight(.semibold))
                         .opacity(0)
-                    Text("\(formatValue(total))")
+                    Text("\(formatValue(selectedSlice == nil ? total : selectedSlice!.value))")
                         .font(.largeTitle.weight(.bold))
-                    Text("Total")
+                        .contentTransition(.numericText())
+                    Text(selectedSlice == nil ? "Total" : "\(selectedSlice!.name)")
                         .font(.title2.weight(.semibold))
+                        .multilineTextAlignment(.center)
                 }
             }
             .foregroundStyle(_color)
         }
         .padding(lineWidth / 2)
+        .aspectRatio(1, contentMode: .fit)
     }
     
     @ViewBuilder private func SliceView(_ slice: _Slice) -> some View {
+        let isHighlighted = selectedSlice == nil || selectedSlice?.id == slice.id
+        let isEnlarged = selectedSlice != nil && selectedSlice?.id == slice.id
+        let isEnsmalled = selectedSlice != nil && selectedSlice?.id != slice.id
+
         Circle()
             .trim(from: slice.from, to: slice.to)
-            .rotation(.degrees(-90))
-            .stroke(style: .init(lineWidth: lineWidth, lineCap: .round))
+            .stroke(style: .init(
+                lineWidth: isEnlarged ? lineWidth + (.padding / 2) : isEnsmalled ? lineWidth - (.padding / 2) : lineWidth,
+                lineCap: .round
+            ))
             .foregroundStyle(_color)
+            .opacity(isHighlighted ? 1 : 0.5)
     }
 }
 
