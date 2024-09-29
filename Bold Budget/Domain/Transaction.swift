@@ -1,0 +1,38 @@
+//
+//  Transaction.swift
+//  Bold Budget
+//
+//  Created by Jason Vance on 9/28/24.
+//
+
+import Foundation
+
+struct Transaction {
+    let id: UUID
+    //TODO: Use TransactionDescription struct
+    let title: String
+    //TODO: Use Money struct
+    let amount: Double
+    let date: Date
+    
+    var description: String {
+        //TODO: Add category, etc
+        return title
+    }
+    
+    var location: String? {
+        //TODO: Add location, address, etc
+        return nil
+    }
+}
+
+extension Transaction {
+    static var sampleBasic: Transaction {
+        .init(
+            id: UUID(),
+            title: "Walmart Groceries",
+            amount: 123.5,
+            date: .now
+        )
+    }
+}
