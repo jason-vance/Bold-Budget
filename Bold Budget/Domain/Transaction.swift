@@ -13,6 +13,7 @@ struct Transaction: Identifiable {
     let title: String
     let amount: Money
     let date: Date
+    let category: Category
     
     var description: String {
         //TODO: Add category, etc
@@ -31,7 +32,8 @@ extension Transaction {
             id: UUID(),
             title: "Walmart Groceries",
             amount: Money(.random(in: 1...250))!,
-            date: .now
+            date: .now,
+            category: Category.samples[.random(in: 0..<Category.samples.count)]
         )
     }
 }

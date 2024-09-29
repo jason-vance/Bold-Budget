@@ -20,6 +20,6 @@ class TransactionProvider {
     
     init() {
         //TODO: Get real transactions
-        transactions.send((0...1000).map { _ in Transaction.sampleRandomBasic })
+        transactions.send((0...100).map { _ in Transaction.sampleRandomBasic })
     }
 }

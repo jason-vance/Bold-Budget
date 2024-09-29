@@ -39,6 +39,7 @@
 			membershipExceptions = (
 				Domain/Money.swift,
 				Domain/Transaction.swift,
+				Domain/TransactionCategory.swift,
 				Extensions/CGFloatExtensions.swift,
 				Extensions/DateExtensions.swift,
 				Workers/StringProvider.swift,
@@ -51,6 +52,7 @@
 			membershipExceptions = (
 				Domain/Money.swift,
 				Domain/Transaction.swift,
+				Domain/TransactionCategory.swift,
 				Extensions/CGFloatExtensions.swift,
 				Extensions/DateExtensions.swift,
 				Workers/StringProvider.swift,
