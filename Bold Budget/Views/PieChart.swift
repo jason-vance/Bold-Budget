@@ -38,15 +38,23 @@ struct PieChart: View {
     @State var slices: [Slice]
     
     private var _color: Color = Color.black
+    private var formatValue: (Double) -> String
     
     init(slices: [Slice]) {
         self.slices = slices
         self._color = Color.black
+        formatValue = { value in value.formatted() }
     }
     
     func color(_ color: Color) -> PieChart {
         var view = self
         view._color = color
+        return view
+    }
+    
+    func valueFormatter(_ formatValue: @escaping (Double) -> String) -> PieChart {
+        var view = self
+        view.formatValue = formatValue
         return view
     }
     
@@ -121,7 +129,17 @@ struct PieChart: View {
                 ForEach(slices) { slice in
                     SliceView(slice)
                 }
+                VStack {
+                    Text("Total")
+                        .font(.title2.weight(.semibold))
+                        .opacity(0)
+                    Text("\(formatValue(total))")
+                        .font(.largeTitle.weight(.bold))
+                    Text("Total")
+                        .font(.title2.weight(.semibold))
+                }
             }
+            .foregroundStyle(_color)
         }
         .padding(lineWidth / 2)
     }

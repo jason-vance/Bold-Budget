@@ -40,6 +40,7 @@ struct DashboardView: View {
     @ViewBuilder func Chart() -> some View {
         PieChart(slices: PieChart.Slice.samples)
             .color(Color.text)
+            .valueFormatter { value in Money(value)?.formatted() ?? value.formatted() }
             .containerRelativeFrame(.horizontal) { length, axis in length * 0.75 }
     }
     
