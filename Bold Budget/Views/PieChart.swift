@@ -137,6 +137,9 @@ struct PieChart: View {
             let slices = makeSlices(pieSize: geo.size)
             
             ZStack {
+                if slices.isEmpty {
+                    NoSlicesCircle()
+                }
                 ZStack {
                     ForEach(slices) { slice in
                         SliceView(slice)
@@ -186,6 +189,16 @@ struct PieChart: View {
         .aspectRatio(1, contentMode: .fit)
     }
     
+    @ViewBuilder private func NoSlicesCircle() -> some View {
+        Circle()
+            .stroke(style: .init(
+                lineWidth: lineWidth,
+                lineCap: .round
+            ))
+            .foregroundStyle(_color)
+            .opacity(0.5)
+    }
+    
     @ViewBuilder private func SliceView(_ slice: _Slice) -> some View {
         let isHighlighted = selectedSlice == nil || selectedSlice?.id == slice.id
         let isEnlarged = selectedSlice != nil && selectedSlice?.id == slice.id
@@ -204,5 +217,10 @@ struct PieChart: View {
 
 #Preview {
     PieChart(slices: PieChart.Slice.samples)
+        .color(Color.blue)
+}
+
+#Preview("Empty") {
+    PieChart(slices: [])
         .color(Color.blue)
 }
