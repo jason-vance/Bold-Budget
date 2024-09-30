@@ -28,6 +28,8 @@ struct PieChart: View {
         let index: Int
         let name: String
         let value: Double
+        let touchFrom: CGFloat
+        let touchTo: CGFloat
         let from: CGFloat
         let to: CGFloat
     }
@@ -70,8 +72,10 @@ struct PieChart: View {
         return slices
             .sorted { $0.value < $1.value }
             .map { slice in
-                let from = (previousCumulativeValue / total) + lineCap + (padding / 2)
-                let to = from + (slice.value / total) - (2 * lineCap) - (padding / 2)
+                let touchFrom = (previousCumulativeValue / total)
+                let touchTo = touchFrom + (slice.value / total)
+                let from = touchFrom + lineCap + (padding / 2)
+                let to = touchTo - lineCap - (padding / 2)
                 
                 previousCumulativeValue += slice.value
                 index += 1
@@ -80,6 +84,8 @@ struct PieChart: View {
                     index: index,
                     name: slice.name,
                     value: slice.value,
+                    touchFrom: touchFrom,
+                    touchTo: touchTo,
                     from: from,
                     to: to
                 )
@@ -88,9 +94,8 @@ struct PieChart: View {
     
     private func mergeSmallSlicesIfNecessary(_ slices: [_Slice], pieCircumference: CGFloat) -> [_Slice] {
         let wontBeVisible: (_Slice) -> Bool = { slice in
-            let length = (slice.to - slice.from) * pieCircumference
-            print("pieCircumference: \(pieCircumference), length: \(length)")
-            return length < (lineWidth / 2)
+            let length = (slice.touchTo - slice.touchFrom) * pieCircumference
+            return length < (lineWidth + CGFloat.padding)
         }
         
         let merge: (_Slice, _Slice) -> _Slice = { lhs, rhs in
@@ -98,20 +103,22 @@ struct PieChart: View {
                     index: min(lhs.index, rhs.index),
                     name: "\(rhs.name), \(lhs.name)",
                     value: lhs.value + rhs.value,
+                    touchFrom: min(lhs.touchFrom, rhs.touchFrom),
+                    touchTo: max(lhs.touchTo, rhs.touchTo),
                     from: min(lhs.from, rhs.from),
                     to: max(lhs.to, rhs.to)
                 )
         }
         
         var rv: [_Slice] = slices
-        while let lastSlice = rv.last, wontBeVisible(lastSlice) {
+        while let firstSlice = rv.first, wontBeVisible(firstSlice) {
             guard rv.count >= 2 else { break }
             
-            let secondToLastSlice = rv[rv.count - 2]
-            let mergedSlice = merge(lastSlice, secondToLastSlice)
+            let secondSlice = rv[1]
+            let mergedSlice = merge(firstSlice, secondSlice)
             
-            rv = rv.dropLast(2)
-            rv.append(mergedSlice)
+            rv = Array(rv.dropFirst(2))
+            rv.insert(mergedSlice, at: 0)
         }
         
         return rv
@@ -139,7 +146,7 @@ struct PieChart: View {
                     let center = CGPoint(x: geo.frame(in: .local).midX, y: geo.frame(in: .local).midY)
                     let angle = angleBetween(center: center, point: point)
                     let fraction = angle / 360
-                    let selectedSlice = slices.first { $0.from <= fraction && $0.to >= fraction }
+                    let selectedSlice = slices.first { $0.touchFrom <= fraction && $0.touchTo >= fraction }
                     
                     if touchStart == nil || self.selectedSlice?.id != selectedSlice?.id {
                         touchStart = .now
@@ -151,7 +158,6 @@ struct PieChart: View {
                 } onTouchEnded: {
                     if let touchStart = touchStart {
                         let interval = Date.now.timeIntervalSince(touchStart)
-                        print("interval: \(interval)")
                         if interval < tapMaxDuration {
                             return
                         }
