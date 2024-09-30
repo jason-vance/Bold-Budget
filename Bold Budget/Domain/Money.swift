@@ -9,7 +9,9 @@ import Foundation
 
 struct Money: Equatable {
     
-    private let amount: Double
+    static let zero: Money = .init(0)!
+    
+    let amount: Double
     
     init?(_ amount: Double) {
         guard amount >= 0 else { return nil }

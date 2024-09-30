@@ -22,6 +22,18 @@ struct DashboardView: View {
     
     @State private var transactions: [Transaction] = []
     
+    private var pieSlices: [PieChart.Slice] {
+        var sliceDict = [Transaction.Category:Money]()
+        
+        for transaction in transactions {
+            sliceDict[transaction.category] = sliceDict[transaction.category, default: .zero] + transaction.amount
+        }
+        
+        return sliceDict.map { key, value in
+            PieChart.Slice(name: key.name, value: value.amount)
+        }
+    }
+    
     var body: some View {
         VStack {
             Chart()
@@ -38,7 +50,7 @@ struct DashboardView: View {
     }
     
     @ViewBuilder func Chart() -> some View {
-        PieChart(slices: PieChart.Slice.samples)
+        PieChart(slices: pieSlices)
             .color(Color.text)
             .valueFormatter { value in Money(value)?.formatted() ?? value.formatted() }
             .containerRelativeFrame(.horizontal) { length, axis in length * 0.75 }

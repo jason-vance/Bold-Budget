@@ -8,7 +8,7 @@
 import Foundation
 
 extension Transaction {
-    struct Category: Equatable {
+    struct Category: Equatable, Hashable {
         let id: UUID
         let name: String
         let sfSymbol: String

@@ -9,7 +9,7 @@ import SwiftUI
 
 struct PieChart: View {
     
-    public struct Slice {
+    public struct Slice: Equatable {
         let name: String
         let value: Double
         
@@ -38,7 +38,9 @@ struct PieChart: View {
     private let tapMaxDuration: TimeInterval = 0.3
     private var minSliceViewSize: CGFloat  { 2 * lineWidth }
     
-    @State var slices: [Slice]
+    private let slices: [Slice]
+    
+    @State private var slicesState: [Slice] = []
     @State private var selectedSlice: _Slice? = nil
     @State private var touchStart: Date? = nil
     
@@ -69,7 +71,7 @@ struct PieChart: View {
          
         var index = -1
         var previousCumulativeValue: CGFloat = 0
-        return slices
+        return slicesState
             .sorted { $0.value < $1.value }
             .map { slice in
                 let touchFrom = (previousCumulativeValue / total)
@@ -130,7 +132,7 @@ struct PieChart: View {
         return mergeSmallSlicesIfNecessary(slices, pieCircumference: pieCircumference)
     }
     
-    private var total: Double { slices.reduce(0, { $0 + $1.value }) }
+    private var total: Double { slicesState.reduce(0, { $0 + $1.value }) }
     
     var body: some View {
         GeometryReader { geo in
@@ -187,6 +189,7 @@ struct PieChart: View {
         }
         .padding(lineWidth / 2)
         .aspectRatio(1, contentMode: .fit)
+        .onChange(of: slices, initial: true) { _, slices in slicesState = slices }
     }
     
     @ViewBuilder private func NoSlicesCircle() -> some View {
