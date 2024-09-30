@@ -10,14 +10,13 @@ import Foundation
 struct Transaction: Identifiable {
     let id: UUID
     //TODO: Use TransactionDescription struct
-    let title: String
+    let title: String?
     let amount: Money
     let date: Date
     let category: Category
     
     var description: String {
-        //TODO: Add category, etc
-        return title
+        return title ?? category.name
     }
     
     var location: String? {
