@@ -58,6 +58,12 @@ struct DashboardView: View {
                 .containerRelativeFrame(.horizontal) { length, axis in length * 0.75 }
             Spacer(minLength: 0)
         }
+        .padding(.bottom, 32)
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .frame(width: .infinity, height: 0.5)
+                .foregroundStyle(Color.text)
+        }
         .listRowBackground(Color.background)
         .listRowSeparator(.hidden)
     }
@@ -68,7 +74,15 @@ struct DashboardView: View {
                 .listRowBackground(Color.background)
                 .listRowSeparatorTint(Color.text)
         }
-        //TODO: Show something if there are no transactions
+        if transactions.isEmpty {
+            ContentUnavailableView(
+                "No Transactions",
+                systemImage: "dollarsign",
+                description: Text("Any transactions you add will show up here")
+            )
+            .listRowBackground(Color.background)
+            .listRowSeparator(.hidden)
+        }
     }
 }
 
