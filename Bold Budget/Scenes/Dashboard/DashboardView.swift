@@ -36,8 +36,8 @@ struct DashboardView: View {
     
     var body: some View {
         VStack {
-            Chart()
             List {
+                Chart()
                 TransactionList()
             }
             .listStyle(.plain)
@@ -50,10 +50,16 @@ struct DashboardView: View {
     }
     
     @ViewBuilder func Chart() -> some View {
-        PieChart(slices: pieSlices)
-            .color(Color.text)
-            .valueFormatter { value in Money(value)?.formatted() ?? value.formatted() }
-            .containerRelativeFrame(.horizontal) { length, axis in length * 0.75 }
+        HStack {
+            Spacer(minLength: 0)
+            PieChart(slices: pieSlices)
+                .color(Color.text)
+                .valueFormatter { value in Money(value)?.formatted() ?? value.formatted() }
+                .containerRelativeFrame(.horizontal) { length, axis in length * 0.75 }
+            Spacer(minLength: 0)
+        }
+        .listRowBackground(Color.background)
+        .listRowSeparator(.hidden)
     }
     
     @ViewBuilder func TransactionList() -> some View {
