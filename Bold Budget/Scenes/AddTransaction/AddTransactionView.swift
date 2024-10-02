@@ -39,6 +39,8 @@ struct AddTransactionView: View {
         )
     }
     
+    private var isFormComplete: Bool { transaction != nil }
+    
     private func setTitleInstructions(_ titleString: String) {
         withAnimation(.snappy) {
             if titleString.isEmpty { titleInstructions = ""; return }
@@ -93,12 +95,13 @@ struct AddTransactionView: View {
     }
     
     @ViewBuilder func SaveButton() -> some View {
-        //TODO: Disable if form is not complete
         Button {
             //TODO: Save the transaction
         } label: {
             TitleBarButtonLabel(sfSymbol: "checkmark")
         }
+        .opacity(isFormComplete ? 1 : .opacityButtonBackground)
+        .disabled(!isFormComplete)
     }
     
     @ViewBuilder func CategoryField() -> some View {
