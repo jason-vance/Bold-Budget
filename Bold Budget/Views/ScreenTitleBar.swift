@@ -84,7 +84,7 @@ struct ScreenTitleBar<PrimaryContent:View,LeadingContent:View,TrailingContent:Vi
         } label: {
             Image(systemName: "chevron.backward")
                 .font(.subheadline.bold())
-                .foregroundStyle(Color.accent)
+                .foregroundStyle(Color.text)
         }
     })
 }
@@ -96,7 +96,7 @@ struct ScreenTitleBar<PrimaryContent:View,LeadingContent:View,TrailingContent:Vi
         } label: {
             Image(systemName: "magnifyingglass")
                 .font(.subheadline.bold())
-                .foregroundStyle(Color.accent)
+                .foregroundStyle(Color.text)
         }
     })
 }
