@@ -9,14 +9,13 @@ import Foundation
 
 struct Transaction: Identifiable {
     let id: UUID
-    //TODO: Use TransactionDescription struct
-    let title: String?
+    let title: Transaction.Title?
     let amount: Money
     let date: Date
-    let category: Category
+    let category: Transaction.Category
     
     var description: String {
-        return title ?? category.name
+        return title?.text ?? category.name
     }
     
     var location: String? {
@@ -29,7 +28,7 @@ extension Transaction {
     static var sampleRandomBasic: Transaction {
         .init(
             id: UUID(),
-            title: "Walmart Groceries",
+            title: .init("Walmart Groceries")!,
             amount: Money(.random(in: 1...250))!,
             date: .now,
             category: Category.samples[.random(in: 0..<Category.samples.count)]

@@ -46,7 +46,7 @@ fileprivate extension TransactionsCache {
         static func from(_ transaction: Transaction) -> TransactionsCacheEntry {
             .init(
                 id: transaction.id,
-                title: transaction.title,
+                title: transaction.title?.text,
                 amount: transaction.amount.amount,
                 date: transaction.date,
                 categoryId: transaction.category.id
@@ -63,7 +63,7 @@ fileprivate extension TransactionsCache {
             
             return .init(
                 id: id,
-                title: title,
+                title: .init(title ?? ""),
                 amount: amount,
                 date: date,
                 category: category

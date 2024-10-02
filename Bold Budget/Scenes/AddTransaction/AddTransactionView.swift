@@ -14,7 +14,8 @@ struct AddTransactionView: View {
     @State private var category: Transaction.Category? = nil
     @State private var amountDouble: Double = 0
     @State private var transactionDate: Date = .now
-    @State private var title: String = ""
+    @State private var titleString: String = ""
+    @State private var titleInstructions: String = ""
     
     @State private var showCategoryPicker: Bool = false
     @State private var showTransactionDatePicker: Bool = false
@@ -23,6 +24,12 @@ struct AddTransactionView: View {
         guard let category = category else { return nil }
         guard let amount = Money(amountDouble) else { return nil }
         
+        var title: Transaction.Title? = nil
+        if !titleString.isEmpty {
+            guard let tmpTitle = Transaction.Title(titleString) else { return nil }
+            title = tmpTitle
+        }
+        
         return .init(
             id: UUID(),
             title: title,
@@ -30,6 +37,15 @@ struct AddTransactionView: View {
             date: transactionDate,
             category: category
         )
+    }
+    
+    private func setTitleInstructions(_ titleString: String) {
+        withAnimation(.snappy) {
+            if titleString.isEmpty { titleInstructions = ""; return }
+            if titleString.count < Transaction.Title.minTextLength { titleInstructions = "Too short"; return }
+            if titleString.count > Transaction.Title.maxTextLength { titleInstructions = "Too long"; return }
+            titleInstructions = "\(titleString.count)/\(Transaction.Title.maxTextLength)"
+        }
     }
 
     var body: some View {
@@ -57,6 +73,7 @@ struct AddTransactionView: View {
             .scrollContentBackground(.hidden)
         }
         .background(Color.background)
+        .onChange(of: titleString) { _, titleString in setTitleInstructions(titleString) }
     }
     
     @ViewBuilder func TopBar() -> some View {
@@ -154,9 +171,13 @@ struct AddTransactionView: View {
                 Text("Title")
                     .foregroundStyle(Color.text)
                 Spacer(minLength: 0)
+                Text(titleInstructions)
+                    .font(.caption2)
+                    .foregroundStyle(Color.text.opacity( 0.75))
+                    .padding(.horizontal, .paddingHorizontalButtonXSmall)
             }
             TextField("Title",
-                      text: $title,
+                      text: $titleString,
                       prompt: Text("Milk Tea, Movie Tickets, etc...").foregroundStyle(Color.text.opacity(0.7))
             )
             .textFieldSmall()
