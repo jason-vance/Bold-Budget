@@ -16,8 +16,6 @@ extension CGFloat {
     static let cornerRadiusSmall: CGFloat = 8
     static let cornerRadiusMedium: CGFloat = 12
     
-    static let opacityButtonBackground: CGFloat = 0.1
-    
     static let padding: CGFloat = 8
     
     static let paddingHorizontalButtonXSmall: CGFloat = 8

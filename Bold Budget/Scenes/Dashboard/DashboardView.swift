@@ -22,6 +22,8 @@ struct DashboardView: View {
     
     @State private var transactions: [Transaction] = []
     
+    @State private var showAddTransaction: Bool = false
+    
     private var pieSlices: [PieChart.Slice] {
         var sliceDict = [Transaction.Category:Money]()
         
@@ -44,9 +46,31 @@ struct DashboardView: View {
             .scrollIndicators(.hidden)
             .listRowSpacing(0)
         }
+        .overlay(alignment: .bottomTrailing) {
+            AddTransactionButton()
+        }
         .foregroundStyle(Color.text)
         .background(Color.background)
         .onReceive(transactionsPublisher) { transactions = $0 }
+        .fullScreenCover(isPresented: $showAddTransaction) {
+            AddTransactionView()
+        }
+    }
+    
+    @ViewBuilder func AddTransactionButton() -> some View {
+        Button {
+            showAddTransaction = true
+        } label: {
+            Image(systemName: "plus")
+                .foregroundStyle(Color.background)
+                .font(.title)
+                .padding()
+                .background {
+                    Circle()
+                        .foregroundStyle(Color.text)
+                }
+        }
+        .padding()
     }
     
     @ViewBuilder func Chart() -> some View {
@@ -61,7 +85,7 @@ struct DashboardView: View {
         .padding(.bottom, 32)
         .overlay(alignment: .bottom) {
             Rectangle()
-                .frame(width: .infinity, height: 0.5)
+                .frame(height: 0.5)
                 .foregroundStyle(Color.text)
         }
         .listRowBackground(Color.background)
