@@ -42,10 +42,15 @@
 				Domain/TransactionCategory.swift,
 				Extensions/CGFloatExtensions.swift,
 				Extensions/DateExtensions.swift,
+				Scenes/Dashboard/Workers/TransactionProvider.swift,
+				Utils/Cache.swift,
 				Utils/GeometryUtils.swift,
 				Views/Gestures/TouchWithLocation.swift,
 				Workers/StringProvider.swift,
-				Workers/TransactionProvider/TransactionProvider.swift,
+				Workers/TransactionCategoryProvider/TransactionCategoriesCache.swift,
+				Workers/TransactionCategoryProvider/TransactionCategoryProvider.swift,
+				Workers/TransactionLedger/TransactionLedger.swift,
+				Workers/TransactionLedger/TransactionsCache.swift,
 			);
 			target = 5673DA1E2CA7FA5A007833E0 /* Bold BudgetTests */;
 		};
@@ -57,11 +62,16 @@
 				Domain/TransactionCategory.swift,
 				Extensions/CGFloatExtensions.swift,
 				Extensions/DateExtensions.swift,
+				Scenes/Dashboard/Workers/TransactionProvider.swift,
+				Utils/Cache.swift,
 				Utils/GeometryUtils.swift,
 				Views/Gestures/TouchWithLocation.swift,
 				Views/PieChart.swift,
 				Workers/StringProvider.swift,
-				Workers/TransactionProvider/TransactionProvider.swift,
+				Workers/TransactionCategoryProvider/TransactionCategoriesCache.swift,
+				Workers/TransactionCategoryProvider/TransactionCategoryProvider.swift,
+				Workers/TransactionLedger/TransactionLedger.swift,
+				Workers/TransactionLedger/TransactionsCache.swift,
 			);
 			target = 5673DA282CA7FA5A007833E0 /* Bold BudgetUITests */;
 		};
