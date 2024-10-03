@@ -8,7 +8,14 @@
 import Foundation
 
 struct Transaction: Identifiable {
+    
+    enum Kind: Codable {
+        case expense
+        case income
+    }
+    
     let id: UUID
+    let kind: Kind
     let title: Transaction.Title?
     let amount: Money
     let date: SimpleDate
@@ -28,6 +35,7 @@ extension Transaction {
     static var sampleRandomBasic: Transaction {
         .init(
             id: UUID(),
+            kind: .expense,
             title: .sample,
             amount: .sampleRandom,
             date: .now,

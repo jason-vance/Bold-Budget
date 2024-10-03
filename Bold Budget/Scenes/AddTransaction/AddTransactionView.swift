@@ -11,6 +11,7 @@ struct AddTransactionView: View {
     
     @Environment(\.dismiss) private var dismiss
     
+    @State private var kind: Transaction.Kind = .expense
     @State private var category: Transaction.Category? = nil
     @State private var amountDouble: Double = 0
     @State private var transactionDate: Date = .now
@@ -42,6 +43,7 @@ struct AddTransactionView: View {
         
         return .init(
             id: UUID(),
+            kind: kind,
             title: title,
             amount: amount,
             date: date,
