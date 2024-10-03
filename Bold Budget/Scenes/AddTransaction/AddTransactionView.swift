@@ -86,6 +86,7 @@ struct AddTransactionView: View {
         )
     }
     
+    //TODO: Add a dicard dialog
     @ViewBuilder func CloseButton() -> some View {
         Button {
             dismiss()
@@ -117,6 +118,9 @@ struct AddTransactionView: View {
             }
         }
         .formRow()
+        .fullScreenCover(isPresented: $showCategoryPicker) {
+            TransactionCategoryPickerView(mode: .pickerAndEditor)
+        }
     }
     
     @ViewBuilder func AmountField() -> some View {

@@ -1,6 +1,15 @@
 {
-  "originHash" : "850bb841dcd96dd0d14a101ef1be82605d264faa3bf1edb3a55506a729fcc74d",
+  "originHash" : "02103bf2400a2277c4f50b0b1469a7fca0f2a231a2b71bc650f0fcbfc78aff8c",
   "pins" : [
+    {
+      "identity" : "swiftui-flow-layout",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/globulus/swiftui-flow-layout.git",
+      "state" : {
+        "revision" : "de7da3440c3b87ba94adfa98c698828d7746a76d",
+        "version" : "1.0.5"
+      }
+    },
     {
       "identity" : "swinject",
       "kind" : "remoteSourceControl",

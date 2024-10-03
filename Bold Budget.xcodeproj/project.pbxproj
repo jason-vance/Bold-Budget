@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		565082842CA8179A009D9417 /* SwinjectAutoregistration in Frameworks */ = {isa = PBXBuildFile; productRef = 565082832CA8179A009D9417 /* SwinjectAutoregistration */; };
+		5690C4982CAE0F8700A389F4 /* SwiftUIFlowLayout in Frameworks */ = {isa = PBXBuildFile; productRef = 5690C4972CAE0F8700A389F4 /* SwiftUIFlowLayout */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -107,6 +108,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5690C4982CAE0F8700A389F4 /* SwiftUIFlowLayout in Frameworks */,
 				565082842CA8179A009D9417 /* SwinjectAutoregistration in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -169,6 +171,7 @@
 			name = "Bold Budget";
 			packageProductDependencies = (
 				565082832CA8179A009D9417 /* SwinjectAutoregistration */,
+				5690C4972CAE0F8700A389F4 /* SwiftUIFlowLayout */,
 			);
 			productName = "Bold Budget";
 			productReference = 5673DA0F2CA7FA58007833E0 /* Bold Budget.app */;
@@ -254,6 +257,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				565082822CA8179A009D9417 /* XCRemoteSwiftPackageReference "SwinjectAutoregistration" */,
+				5690C4962CAE0F8700A389F4 /* XCRemoteSwiftPackageReference "swiftui-flow-layout" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 5673DA102CA7FA58007833E0 /* Products */;
@@ -636,6 +640,14 @@
 				minimumVersion = 2.9.1;
 			};
 		};
+		5690C4962CAE0F8700A389F4 /* XCRemoteSwiftPackageReference "swiftui-flow-layout" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/globulus/swiftui-flow-layout.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.5;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -643,6 +655,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 565082822CA8179A009D9417 /* XCRemoteSwiftPackageReference "SwinjectAutoregistration" */;
 			productName = SwinjectAutoregistration;
+		};
+		5690C4972CAE0F8700A389F4 /* SwiftUIFlowLayout */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5690C4962CAE0F8700A389F4 /* XCRemoteSwiftPackageReference "swiftui-flow-layout" */;
+			productName = SwiftUIFlowLayout;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
