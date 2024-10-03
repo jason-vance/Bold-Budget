@@ -11,6 +11,7 @@ struct AddTransactionCategoryView: View {
     
     @Environment(\.dismiss) private var dismiss
     
+    @State private var kind: Transaction.Category.Kind = .expense
     @State private var symbolString: String? = nil
     @State private var nameString: String = ""
     @State private var nameInstructions: String = ""
@@ -23,6 +24,7 @@ struct AddTransactionCategoryView: View {
         guard let sfSymbol = Transaction.Category.SfSymbol(symbolString) else { return nil }
 
         return .init(
+            kind: kind,
             name: name,
             sfSymbol: sfSymbol
         )
@@ -51,6 +53,7 @@ struct AddTransactionCategoryView: View {
             Form {
                 Section {
                     NameField()
+                    KindField()
                     SymbolField()
                 } header: {
                     Text("")
@@ -91,10 +94,43 @@ struct AddTransactionCategoryView: View {
         .disabled(!isFormComplete)
     }
     
+    @ViewBuilder func KindField() -> some View {
+        HStack {
+            Text("Income or Expense")
+                .foregroundStyle(Color.text)
+            Spacer(minLength: 0)
+            Menu {
+                Button {
+                    kind = .expense
+                } label: {
+                    HStack {
+                        Text(Transaction.Category.Kind.expense.name)
+                        if kind == .expense { Image(systemName: "checkmark") }
+                    }
+                }
+                Button {
+                    kind = .income
+                } label: {
+                    HStack {
+                        Text(Transaction.Category.Kind.income.name)
+                        if kind == .income { Image(systemName: "checkmark") }
+                    }
+                }
+            } label: {
+                Text(kind.name)
+                    .buttonLabelSmall()
+            }
+        }
+        .formRow()
+    }
+    
     @ViewBuilder func NameField() -> some View {
         VStack {
-            Text("Name")
-                .foregroundStyle(Color.text)
+            HStack {
+                Text("Name")
+                    .foregroundStyle(Color.text)
+                Spacer(minLength: 0)
+            }
             TextField("Name",
                       text: $nameString,
                       prompt: Text("Groceries, Rent, etc...").foregroundStyle(Color.text.opacity(0.7))

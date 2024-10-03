@@ -40,7 +40,6 @@ class TransactionsCache {
 fileprivate extension TransactionsCache {
     struct TransactionsCacheEntry: Codable {
         let id: UUID?
-        let kind: Transaction.Kind?
         let title: String?
         let amount: Double?
         let date: SimpleDate.RawValue?
@@ -50,7 +49,6 @@ fileprivate extension TransactionsCache {
         static func from(_ transaction: Transaction) -> TransactionsCacheEntry {
             .init(
                 id: transaction.id,
-                kind: transaction.kind,
                 title: transaction.title?.text,
                 amount: transaction.amount.amount,
                 date: transaction.date.rawValue,
@@ -61,7 +59,6 @@ fileprivate extension TransactionsCache {
         
         func toTransaction(categories: [String:Transaction.Category]) -> Transaction? {
             guard let id = id else { return nil }
-            guard let kind = kind else { return nil }
             guard let amount = amount else { return nil }
             guard let amount = Money(amount) else { return nil }
             guard let date = date else { return nil }
@@ -71,7 +68,6 @@ fileprivate extension TransactionsCache {
             
             return .init(
                 id: id,
-                kind: kind,
                 title: .init(title ?? ""),
                 amount: amount,
                 date: date,

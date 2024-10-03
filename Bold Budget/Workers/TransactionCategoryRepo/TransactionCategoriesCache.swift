@@ -37,23 +37,27 @@ class TransactionCategoriesCache {
 
 fileprivate extension TransactionCategoriesCache {
     struct TransactionCategoriesCacheEntry: Codable {
+        let kind: Transaction.Category.Kind?
         let name: String?
         let sfSymbol: String?
 
         static func from(_ category: Transaction.Category) -> TransactionCategoriesCacheEntry {
             .init(
+                kind: category.kind,
                 name: category.name.value,
                 sfSymbol: category.sfSymbol.value
             )
         }
         
         func toCategory() -> Transaction.Category? {
+            guard let kind = kind else { return nil }
             guard let name = name else { return nil }
             guard let name = Transaction.Category.Name(name) else { return nil }
             guard let sfSymbol = sfSymbol else { return nil }
             guard let sfSymbol = Transaction.Category.SfSymbol(sfSymbol) else { return nil }
             
             return .init(
+                kind: kind,
                 name: name,
                 sfSymbol: sfSymbol
             )
