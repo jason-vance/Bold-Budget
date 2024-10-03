@@ -23,13 +23,14 @@ struct TransactionCategoryPickerView: View {
     @State private var categories: [Transaction.Category] = []
     @State private var searchText: String = ""
     @State private var searchPresented: Bool = false
+    @State private var showAddTransactionCategoryView: Bool = false
     
     public var onSelected: (Transaction.Category) -> ()
     
     private let categoryProvider = iocContainer~>TransactionCategoryProvider.self
     
     private var filteredCategories: [Transaction.Category] {
-        categories.filter { $0.name.contains(searchText) }
+        categories.filter { $0.name.value.contains(searchText) }
         //TODO: Sort categories too
     }
     
@@ -55,13 +56,13 @@ struct TransactionCategoryPickerView: View {
                 VStack {
                     FlowLayout(
                         mode: .scrollable,
-                        items: filteredCategories.sorted { $0.name < $1.name },
+                        items: filteredCategories.sorted { $0.name.value < $1.name.value },
                         itemSpacing: 0
                     ) { category in
                         Button {
                             select(category: category)
                         } label: {
-                            Text(category.name)
+                            Text(category.name.value)
                                 .buttonLabelSmall()
                                 .id(category.id)
                         }
@@ -98,11 +99,14 @@ struct TransactionCategoryPickerView: View {
     
     @ViewBuilder func AddButton() -> some View {
         Button {
-            //TODO: showAddTransactionCategoryView
+            showAddTransactionCategoryView = true
         } label: {
             TitleBarButtonLabel(sfSymbol: "plus")
         }
         .opacity(mode == .pickerAndEditor ? 1 : 0)
+        .fullScreenCover(isPresented: $showAddTransactionCategoryView) {
+            AddTransactionCategoryView()
+        }
     }
     
     @ViewBuilder func SearchArea() -> some View {

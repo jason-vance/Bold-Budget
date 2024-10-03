@@ -32,7 +32,7 @@ struct DashboardView: View {
         }
         
         return sliceDict.map { key, value in
-            PieChart.Slice(name: key.name, value: value.amount)
+            PieChart.Slice(name: key.name.value, value: value.amount)
         }
     }
     

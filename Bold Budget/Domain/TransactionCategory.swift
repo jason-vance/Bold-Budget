@@ -8,10 +8,14 @@
 import Foundation
 
 extension Transaction {
-    struct Category: Equatable, Hashable, Codable {
+    struct Category: Equatable, Hashable {
         let id: UUID
-        let name: String
-        let sfSymbol: String
+        let name: Name
+        let sfSymbol: SfSymbol
+        
+        func hash(into hasher: inout Hasher) {
+            hasher.combine(id)
+        }
     }
 }
 
@@ -19,28 +23,28 @@ extension Transaction.Category {
     static let samples: [Transaction.Category] = [
         .init(
             id: UUID(),
-            name: "Groceries",
-            sfSymbol: "bag.fill"
+            name: .init("Groceries")!,
+            sfSymbol: .init("bag.fill")!
         ),
         .init(
             id: UUID(),
-            name: "Housing",
-            sfSymbol: "house.fill"
+            name: .init("Housing")!,
+            sfSymbol: .init("house.fill")!
         ),
         .init(
             id: UUID(),
-            name: "Vehicle",
-            sfSymbol: "cross.fill"
+            name: .init("Vehicle")!,
+            sfSymbol: .init("cross.fill")!
         ),
         .init(
             id: UUID(),
-            name: "Entertainment",
-            sfSymbol: "ticket.fill"
+            name: .init("Entertainment")!,
+            sfSymbol: .init("ticket.fill")!
         ),
         .init(
             id: UUID(),
-            name: "Travel",
-            sfSymbol: "airplane"
+            name: .init("Travel")!,
+            sfSymbol: .init("airplane")!
         )
     ]
 }

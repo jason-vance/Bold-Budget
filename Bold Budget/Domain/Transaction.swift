@@ -15,7 +15,7 @@ struct Transaction: Identifiable {
     let category: Transaction.Category
     
     var description: String {
-        return title?.text ?? category.name
+        return title?.text ?? category.name.value
     }
     
     var location: String? {

@@ -113,7 +113,7 @@ struct AddTransactionView: View {
             Button {
                 showCategoryPicker = true
             } label: {
-                Text(category?.name ?? "N/A")
+                Text(category?.name.value ?? "N/A")
                     .buttonLabelSmall()
             }
         }

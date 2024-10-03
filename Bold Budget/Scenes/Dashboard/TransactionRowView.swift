@@ -24,7 +24,7 @@ struct TransactionRowView: View {
     }
     
     @ViewBuilder func CategoryIcon() -> some View {
-        Image(systemName: transaction.category.sfSymbol)
+        Image(systemName: transaction.category.sfSymbol.value)
             .padding(.padding)
             .frame(width: 44, height: 44)
             .background {
