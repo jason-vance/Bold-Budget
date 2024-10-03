@@ -11,7 +11,7 @@ struct Transaction: Identifiable {
     let id: UUID
     let title: Transaction.Title?
     let amount: Money
-    let date: Date
+    let date: SimpleDate
     let category: Transaction.Category
     let cityAndState: Transaction.CityAndState?
     

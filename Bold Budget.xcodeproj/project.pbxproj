@@ -39,6 +39,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Domain/Money.swift,
+				Domain/SimpleDate.swift,
 				Domain/Transaction/Category/TransactionCategory.swift,
 				Domain/Transaction/Category/TransactionCategoryName.swift,
 				Domain/Transaction/Category/TransactionCategorySfSymbol.swift,
@@ -64,6 +65,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Domain/Money.swift,
+				Domain/SimpleDate.swift,
 				Domain/Transaction/Category/TransactionCategory.swift,
 				Domain/Transaction/Category/TransactionCategoryName.swift,
 				Domain/Transaction/Category/TransactionCategorySfSymbol.swift,

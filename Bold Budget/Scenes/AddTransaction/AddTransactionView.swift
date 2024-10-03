@@ -26,6 +26,7 @@ struct AddTransactionView: View {
     private var transaction: Transaction? {
         guard let category = category else { return nil }
         guard let amount = Money(amountDouble) else { return nil }
+        guard let date = SimpleDate(date: transactionDate) else { return nil }
         
         var title: Transaction.Title? = nil
         if !titleString.isEmpty {
@@ -43,7 +44,7 @@ struct AddTransactionView: View {
             id: UUID(),
             title: title,
             amount: amount,
-            date: transactionDate,
+            date: date,
             category: category,
             cityAndState: cityAndState
         )

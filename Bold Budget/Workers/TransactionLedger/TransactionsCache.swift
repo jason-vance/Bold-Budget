@@ -42,7 +42,7 @@ fileprivate extension TransactionsCache {
         let id: UUID?
         let title: String?
         let amount: Double?
-        let date: Date?
+        let date: SimpleDate.RawValue?
         let categoryId: String?
         let cityAndState: String?
         
@@ -51,7 +51,7 @@ fileprivate extension TransactionsCache {
                 id: transaction.id,
                 title: transaction.title?.text,
                 amount: transaction.amount.amount,
-                date: transaction.date,
+                date: transaction.date.rawValue,
                 categoryId: transaction.category.id,
                 cityAndState: transaction.cityAndState?.value
             )
@@ -62,6 +62,7 @@ fileprivate extension TransactionsCache {
             guard let amount = amount else { return nil }
             guard let amount = Money(amount) else { return nil }
             guard let date = date else { return nil }
+            guard let date = SimpleDate(rawValue: date) else { return nil }
             guard let categoryId = categoryId else { return nil }
             guard let category = categories[categoryId] else { return nil }
             

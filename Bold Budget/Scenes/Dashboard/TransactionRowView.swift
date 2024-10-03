@@ -45,10 +45,10 @@ struct TransactionRowView: View {
                 Spacer(minLength: 0)
             }
             HStack {
-                Text(transaction.date.toBasicUiString())
+                Text(transaction.date.toDate()?.toBasicUiString() ?? "Unkown Date")
                     .font(.footnote.weight(.light))
                     .lineLimit(1)
-                    .opacity(0.75)
+                    .opacity(transaction.date.toDate() == nil ? 0 : 0.75)
                 Spacer(minLength: 0)
             }
         }
