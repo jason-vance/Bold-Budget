@@ -38,10 +38,10 @@ struct TransactionRowView: View {
         VStack {
             Description()
             HStack {
-                //TODO: Remove default text
-                Text(transaction.location ?? "Mililani, HI")
+                Text(transaction.location ?? "Unknown Location")
                     .font(.callout.weight(.light))
                     .lineLimit(1)
+                    .opacity(transaction.location == nil ? 0 : 1)
                 Spacer(minLength: 0)
             }
             HStack {

@@ -27,3 +27,9 @@ struct Money: Equatable {
         Money(lhs.amount + rhs.amount)!
     }
 }
+
+extension Money {
+    static var sampleRandom: Money {
+        .init(.random(in: 1...250))!
+    }
+}

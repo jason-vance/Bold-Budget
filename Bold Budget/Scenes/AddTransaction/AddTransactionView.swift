@@ -16,7 +16,9 @@ struct AddTransactionView: View {
     @State private var transactionDate: Date = .now
     @State private var titleString: String = ""
     @State private var titleInstructions: String = ""
-    
+    @State private var cityAndStateString: String = ""
+    @State private var cityAndStateInstructions: String = ""
+
     @State private var showDiscardDialog: Bool = false
     @State private var showCategoryPicker: Bool = false
     @State private var showTransactionDatePicker: Bool = false
@@ -31,12 +33,19 @@ struct AddTransactionView: View {
             title = tmpTitle
         }
         
+        var cityAndState: Transaction.CityAndState? = nil
+        if !cityAndStateString.isEmpty {
+            guard let tmpCityState = Transaction.CityAndState(cityAndStateString) else { return nil }
+            cityAndState = tmpCityState
+        }
+        
         return .init(
             id: UUID(),
             title: title,
             amount: amount,
             date: transactionDate,
-            category: category
+            category: category,
+            cityAndState: cityAndState
         )
     }
     
@@ -54,6 +63,15 @@ struct AddTransactionView: View {
             if titleString.count < Transaction.Title.minTextLength { titleInstructions = "Too short"; return }
             if titleString.count > Transaction.Title.maxTextLength { titleInstructions = "Too long"; return }
             titleInstructions = "\(titleString.count)/\(Transaction.Title.maxTextLength)"
+        }
+    }
+    
+    private func setCityStateInstructions(_ cityAndStateString: String) {
+        withAnimation(.snappy) {
+            if cityAndStateString.isEmpty { cityAndStateInstructions = ""; return }
+            if cityAndStateString.count < Transaction.CityAndState.minTextLength { cityAndStateInstructions = "Too short"; return }
+            if cityAndStateString.count > Transaction.CityAndState.maxTextLength { cityAndStateInstructions = "Too long"; return }
+            cityAndStateInstructions = "\(cityAndStateString.count)/\(Transaction.CityAndState.maxTextLength)"
         }
     }
     
@@ -79,6 +97,7 @@ struct AddTransactionView: View {
                 }
                 Section {
                     TitleField()
+                    CityAndStateField()
                 } header: {
                     Text("Optional")
                         .foregroundStyle(Color.text)
@@ -90,6 +109,7 @@ struct AddTransactionView: View {
         }
         .background(Color.background)
         .onChange(of: titleString) { _, titleString in setTitleInstructions(titleString) }
+        .onChange(of: cityAndStateString) { _, cityAndStateString in setCityStateInstructions(cityAndStateString) }
     }
     
     @ViewBuilder func TopBar() -> some View {
@@ -230,6 +250,26 @@ struct AddTransactionView: View {
             TextField("Title",
                       text: $titleString,
                       prompt: Text("Milk Tea, Movie Tickets, etc...").foregroundStyle(Color.text.opacity(0.7))
+            )
+            .textFieldSmall()
+        }
+        .formRow()
+    }
+    
+    @ViewBuilder func CityAndStateField() -> some View {
+        VStack {
+            HStack {
+                Text("City and State")
+                    .foregroundStyle(Color.text)
+                Spacer(minLength: 0)
+                Text(cityAndStateInstructions)
+                    .font(.caption2)
+                    .foregroundStyle(Color.text.opacity( 0.75))
+                    .padding(.horizontal, .paddingHorizontalButtonXSmall)
+            }
+            TextField("City and State",
+                      text: $cityAndStateString,
+                      prompt: Text(Transaction.CityAndState.sample.value).foregroundStyle(Color.text.opacity(0.7))
             )
             .textFieldSmall()
         }

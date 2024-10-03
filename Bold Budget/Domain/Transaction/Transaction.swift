@@ -13,14 +13,14 @@ struct Transaction: Identifiable {
     let amount: Money
     let date: Date
     let category: Transaction.Category
+    let cityAndState: Transaction.CityAndState?
     
     var description: String {
         return title?.text ?? category.name.value
     }
     
     var location: String? {
-        //TODO: Add location, address, etc
-        return nil
+        return cityAndState?.value
     }
 }
 
@@ -28,10 +28,11 @@ extension Transaction {
     static var sampleRandomBasic: Transaction {
         .init(
             id: UUID(),
-            title: .init("Walmart Groceries")!,
-            amount: Money(.random(in: 1...250))!,
+            title: .sample,
+            amount: .sampleRandom,
             date: .now,
-            category: Category.samples[.random(in: 0..<Category.samples.count)]
+            category: Category.samples[.random(in: 0..<Category.samples.count)],
+            cityAndState: .sample
         )
     }
     
