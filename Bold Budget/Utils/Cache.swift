@@ -162,7 +162,7 @@ private extension Cache {
         using fileManager: FileManager = .default
     ) -> URL {
         let folderURLs = fileManager.urls(
-            for: .applicationSupportDirectory,
+            for: .documentDirectory,
             in: .userDomainMask
         )
 

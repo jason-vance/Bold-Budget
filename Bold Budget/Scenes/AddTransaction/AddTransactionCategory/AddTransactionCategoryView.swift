@@ -23,13 +23,19 @@ struct AddTransactionCategoryView: View {
         guard let sfSymbol = Transaction.Category.SfSymbol(symbolString) else { return nil }
 
         return .init(
-            id: UUID(),
             name: name,
             sfSymbol: sfSymbol
         )
     }
     
     private var isFormComplete: Bool { category != nil }
+    
+    private func saveCategory() {
+        guard let category = category else { return }
+        guard let saver = iocContainer.resolve(TransactionCategorySaver.self) else { return }
+        saver.save(category: category)
+        dismiss()
+    }
     
     private func setNameInstructions(_ nameString: String) {
         withAnimation(.snappy) {
@@ -78,7 +84,7 @@ struct AddTransactionCategoryView: View {
     
     @ViewBuilder func SaveButton() -> some View {
         Button {
-            //TODO: Save the category
+            saveCategory()
         } label: {
             TitleBarButtonLabel(sfSymbol: "checkmark")
         }

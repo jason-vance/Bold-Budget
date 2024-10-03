@@ -52,8 +52,8 @@
 				Utils/GeometryUtils.swift,
 				Views/Gestures/TouchWithLocation.swift,
 				Workers/StringProvider.swift,
-				Workers/TransactionCategoryProvider/TransactionCategoriesCache.swift,
-				Workers/TransactionCategoryProvider/TransactionCategoryProvider.swift,
+				Workers/TransactionCategoryRepo/TransactionCategoriesCache.swift,
+				Workers/TransactionCategoryRepo/TransactionCategoryRepo.swift,
 				Workers/TransactionLedger/TransactionLedger.swift,
 				Workers/TransactionLedger/TransactionsCache.swift,
 			);
@@ -76,8 +76,8 @@
 				Utils/GeometryUtils.swift,
 				Views/Gestures/TouchWithLocation.swift,
 				Workers/StringProvider.swift,
-				Workers/TransactionCategoryProvider/TransactionCategoriesCache.swift,
-				Workers/TransactionCategoryProvider/TransactionCategoryProvider.swift,
+				Workers/TransactionCategoryRepo/TransactionCategoriesCache.swift,
+				Workers/TransactionCategoryRepo/TransactionCategoryRepo.swift,
 				Workers/TransactionLedger/TransactionLedger.swift,
 				Workers/TransactionLedger/TransactionsCache.swift,
 			);

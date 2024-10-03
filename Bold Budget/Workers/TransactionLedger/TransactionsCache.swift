@@ -14,9 +14,9 @@ class TransactionsCache {
     
     private let cache = Cache.readFromDiskOrDefault(TransactionsCache.self, withName: cacheName)
     
-    private let categoryProvider: TransactionCategoryProvider
+    private let categoryProvider: TransactionCategoryRepo
     
-    init(categoryProvider: TransactionCategoryProvider) {
+    init(categoryProvider: TransactionCategoryRepo) {
         self.categoryProvider = categoryProvider
     }
 
@@ -25,7 +25,7 @@ class TransactionsCache {
         return cache.values.compactMap { $0.toTransaction(categories: categoryDict) }
     }
     
-    private func makeCategoryDict() -> [UUID:Transaction.Category] {
+    private func makeCategoryDict() -> [String:Transaction.Category] {
         Dictionary(uniqueKeysWithValues: categoryProvider.categories.map { ($0.id, $0) })
     }
     
@@ -41,7 +41,7 @@ fileprivate extension TransactionsCache {
         let title: String?
         let amount: Double?
         let date: Date?
-        let categoryId: UUID?
+        let categoryId: String?
         
         static func from(_ transaction: Transaction) -> TransactionsCacheEntry {
             .init(
@@ -53,7 +53,7 @@ fileprivate extension TransactionsCache {
             )
         }
         
-        func toTransaction(categories: [UUID:Transaction.Category]) -> Transaction? {
+        func toTransaction(categories: [String:Transaction.Category]) -> Transaction? {
             guard let id = id else { return nil }
             guard let amount = amount else { return nil }
             guard let amount = Money(amount) else { return nil }

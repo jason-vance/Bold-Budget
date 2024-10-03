@@ -20,18 +20,21 @@ struct TransactionCategoryPickerView: View {
     @Environment(\.dismiss) private var dismiss
     
     @State var mode: Mode = .picker
-    @State private var categories: [Transaction.Category] = []
+    @State private var categories: [Transaction.Category]? = nil
     @State private var searchText: String = ""
     @State private var searchPresented: Bool = false
     @State private var showAddTransactionCategoryView: Bool = false
     
     public var onSelected: (Transaction.Category) -> ()
     
-    private let categoryProvider = iocContainer~>TransactionCategoryProvider.self
+    private let categoryProvider = iocContainer~>TransactionCategoryRepo.self
     
     private var filteredCategories: [Transaction.Category] {
-        categories.filter { $0.name.value.contains(searchText) }
-        //TODO: Sort categories too
+        guard let categories = categories else { return [] }
+        guard !searchText.isEmpty else { return categories }
+        return categories
+            .filter { $0.name.value.contains(searchText) }
+            .sorted { $0.name.value < $1.name.value }
     }
     
     private var categoriesPublisher: AnyPublisher<[Transaction.Category],Never> {
@@ -54,27 +57,29 @@ struct TransactionCategoryPickerView: View {
             BarDivider()
             ScrollView {
                 VStack {
-                    FlowLayout(
-                        mode: .scrollable,
-                        items: filteredCategories.sorted { $0.name.value < $1.name.value },
-                        itemSpacing: 0
-                    ) { category in
-                        Button {
-                            select(category: category)
-                        } label: {
-                            Text(category.name.value)
-                                .buttonLabelSmall()
-                                .id(category.id)
+                    if let _ = categories {
+                        ForEach(filteredCategories) { category in
+                            HStack {
+                                Button {
+                                    select(category: category)
+                                } label: {
+                                    HStack {
+                                        Image(systemName: category.sfSymbol.value)
+                                        Text(category.name.value)
+                                    }
+                                    .buttonLabelSmall()
+                                }
+                                Spacer(minLength: 0)
+                            }
                         }
-                    }
-                    if categories.isEmpty {
+                    } else {
                         ProgressView()
                             .progressViewStyle(.circular)
                             .tint(Color.text)
                             .padding(.top, 100)
                     }
                 }
-                .padding()
+                .padding(.padding)
             }
         }
         .background(Color.background)

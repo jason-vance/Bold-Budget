@@ -113,8 +113,16 @@ struct AddTransactionView: View {
             Button {
                 showCategoryPicker = true
             } label: {
-                Text(category?.name.value ?? "N/A")
+                if let category = category {
+                    HStack {
+                        Image(systemName: category.sfSymbol.value)
+                        Text(category.name.value)
+                    }
                     .buttonLabelSmall()
+                } else {
+                    Text(category?.name.value ?? "N/A")
+                        .buttonLabelSmall()
+                }
             }
         }
         .formRow()
