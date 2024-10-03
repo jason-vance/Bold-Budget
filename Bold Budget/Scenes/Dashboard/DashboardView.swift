@@ -56,7 +56,8 @@ struct DashboardView: View {
     }
     
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
+            TopBar()
             List {
                 Chart()
                 TransactionList()
@@ -77,20 +78,28 @@ struct DashboardView: View {
         }
     }
     
+    @ViewBuilder func TopBar() -> some View {
+        ScreenTitleBar(
+            primaryContent: { Text("Dashboard") },
+            leadingContent: { TimeFrameButton() },
+            trailingContent: { AddTransactionButton() }
+        )
+    }
+    
+    @ViewBuilder func TimeFrameButton() -> some View {
+        Button {
+            //showTimeFramePicker = true
+        } label: {
+            TitleBarButtonLabel(sfSymbol: "calendar")
+        }
+    }
+    
     @ViewBuilder func AddTransactionButton() -> some View {
         Button {
             showAddTransaction = true
         } label: {
-            Image(systemName: "plus")
-                .foregroundStyle(Color.background)
-                .font(.title)
-                .padding()
-                .background {
-                    Circle()
-                        .foregroundStyle(Color.text)
-                }
+            TitleBarButtonLabel(sfSymbol: "plus")
         }
-        .padding()
     }
     
     @ViewBuilder func Chart() -> some View {
