@@ -73,7 +73,6 @@ struct AddTransactionCategoryView: View {
         )
     }
     
-    //TODO: Add a dicard dialog
     @ViewBuilder func CloseButton() -> some View {
         Button {
             dismiss()

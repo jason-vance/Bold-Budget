@@ -17,6 +17,7 @@ struct AddTransactionView: View {
     @State private var titleString: String = ""
     @State private var titleInstructions: String = ""
     
+    @State private var showDiscardDialog: Bool = false
     @State private var showCategoryPicker: Bool = false
     @State private var showTransactionDatePicker: Bool = false
     
@@ -40,6 +41,12 @@ struct AddTransactionView: View {
     }
     
     private var isFormComplete: Bool { transaction != nil }
+    
+    private var hasFormChanged: Bool {
+        category != nil ||
+        amountDouble != 0 ||
+        !titleString.isEmpty
+    }
     
     private func setTitleInstructions(_ titleString: String) {
         withAnimation(.snappy) {
@@ -86,12 +93,34 @@ struct AddTransactionView: View {
         )
     }
     
-    //TODO: Add a dicard dialog
     @ViewBuilder func CloseButton() -> some View {
         Button {
-            dismiss()
+            if hasFormChanged {
+                showDiscardDialog = true
+            } else {
+                dismiss()
+            }
         } label: {
             TitleBarButtonLabel(sfSymbol: "xmark")
+        }
+        .confirmationDialog("Discard this transaction?", isPresented: $showDiscardDialog, titleVisibility: .visible) {
+            DiscardButton()
+            CancelDiscardButton()
+        }
+    }
+    
+    @ViewBuilder func DiscardButton() -> some View {
+        Button(role: .destructive) {
+            dismiss()
+        } label: {
+            Text("Discard")
+        }
+    }
+    
+    @ViewBuilder func CancelDiscardButton() -> some View {
+        Button(role: .cancel) {
+        } label: {
+            Text("Cancel")
         }
     }
     
