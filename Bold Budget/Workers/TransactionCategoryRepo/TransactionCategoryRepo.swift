@@ -40,7 +40,7 @@ class TransactionCategoryRepo {
                 let cache = TransactionCategoriesCache()
                 instance = .init(
                     getCategories: { cache.categories },
-                    addCategory: { category in try cache.add(category: category) }
+                    addCategory: { try cache.add(category: $0) }
                 )
             }
         }

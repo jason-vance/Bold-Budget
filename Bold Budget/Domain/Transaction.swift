@@ -34,4 +34,8 @@ extension Transaction {
             category: Category.samples[.random(in: 0..<Category.samples.count)]
         )
     }
+    
+    static var samples: [Transaction] {
+        (0...100).map { _ in Transaction.sampleRandomBasic }
+    }
 }

@@ -22,4 +22,5 @@ func setup(iocContainer: Container) {
     
     // AddTransactions
     iocContainer.autoregister(TransactionCategorySaver.self, initializer: TransactionCategoryRepo.getInstance)
+    iocContainer.autoregister(TransactionSaver.self, initializer: TransactionLedger.getInstance)
 }

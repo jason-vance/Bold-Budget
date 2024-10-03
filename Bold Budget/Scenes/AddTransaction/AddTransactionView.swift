@@ -56,6 +56,13 @@ struct AddTransactionView: View {
             titleInstructions = "\(titleString.count)/\(Transaction.Title.maxTextLength)"
         }
     }
+    
+    private func saveTransaction() {
+        guard let transaction = transaction else { return }
+        guard let saver = iocContainer.resolve(TransactionSaver.self) else { return }
+        saver.save(transaction: transaction)
+        dismiss()
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -126,7 +133,7 @@ struct AddTransactionView: View {
     
     @ViewBuilder func SaveButton() -> some View {
         Button {
-            //TODO: Save the transaction
+            saveTransaction()
         } label: {
             TitleBarButtonLabel(sfSymbol: "checkmark")
         }

@@ -8,6 +8,10 @@
 import Combine
 import Foundation
 
+protocol TransactionSaver {
+    func save(transaction: Transaction)
+}
+
 class TransactionLedger {
     
     private static let envKey_useMocks: String = "TransactionLedger.envKey_useMocks"
@@ -27,13 +31,18 @@ class TransactionLedger {
     static func getInstance() -> TransactionLedger {
         if instance == nil {
             if Self.shouldUseMocks() {
+                var transactions = Transaction.samples
                 instance = .init(
-                    initialValue: (0...100).map { _ in Transaction.sampleRandomBasic }
+                    getTransactions: { transactions },
+                    addTransaction: { transactions = transactions + [$0] }
                 )
             } else {
-                //TODO: Get real transactions
+                let cache = TransactionsCache(
+                    categoryRepo: TransactionCategoryRepo.getInstance()
+                )
                 instance = .init(
-                    initialValue: []
+                    getTransactions: { cache.transactions },
+                    addTransaction: { try cache.add(transaction: $0) }
                 )
             }
         }
@@ -41,17 +50,35 @@ class TransactionLedger {
         return instance!
     }
     
-    private var transactions: CurrentValueSubject<[Transaction],Never> = .init([])
-    
+    private let getTransactions: () -> [Transaction]
+    private let addTransaction: (Transaction) throws -> ()
+    private let transactionsSubject: CurrentValueSubject<[Transaction],Never> = .init([])
+
+    init(
+        getTransactions: @escaping () -> [Transaction],
+        addTransaction: @escaping (Transaction) throws -> ()
+    ) {
+        self.getTransactions = getTransactions
+        self.addTransaction = addTransaction
+        transactionsSubject.send(getTransactions())
+    }
+
     public var transactionPublisher: AnyPublisher<[Transaction],Never> {
-        transactions.eraseToAnyPublisher()
+        transactionsSubject.eraseToAnyPublisher()
     }
     
-    init(
-        initialValue: [Transaction]
-    ) {
-        transactions.send(initialValue)
+    public var transactions: [Transaction] { transactionsSubject.value }
+    
+    func save(transaction: Transaction) {
+        do {
+            try addTransaction(transaction)
+            transactionsSubject.send(getTransactions())
+        } catch {
+            print("Failed to add transaction: \(error.localizedDescription)")
+        }
     }
 }
 
 extension TransactionLedger: TransactionProvider {}
+
+extension TransactionLedger: TransactionSaver {}

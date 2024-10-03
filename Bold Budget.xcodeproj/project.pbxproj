@@ -140,6 +140,7 @@
 				5673DA112CA7FA58007833E0 /* Bold Budget */,
 				5673DA222CA7FA5A007833E0 /* Bold BudgetTests */,
 				5673DA2C2CA7FA5A007833E0 /* Bold BudgetUITests */,
+				5690C4B22CAE846900A389F4 /* Frameworks */,
 				5673DA102CA7FA58007833E0 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -152,6 +153,13 @@
 				5673DA292CA7FA5A007833E0 /* Bold BudgetUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		5690C4B22CAE846900A389F4 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

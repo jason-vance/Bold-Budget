@@ -14,10 +14,12 @@ class TransactionsCache {
     
     private let cache = Cache.readFromDiskOrDefault(TransactionsCache.self, withName: cacheName)
     
-    private let categoryProvider: TransactionCategoryRepo
+    private let categoryRepo: TransactionCategoryRepo
     
-    init(categoryProvider: TransactionCategoryRepo) {
-        self.categoryProvider = categoryProvider
+    init(
+        categoryRepo: TransactionCategoryRepo
+    ) {
+        self.categoryRepo = categoryRepo
     }
 
     public var transactions: [Transaction] {
@@ -26,12 +28,12 @@ class TransactionsCache {
     }
     
     private func makeCategoryDict() -> [String:Transaction.Category] {
-        Dictionary(uniqueKeysWithValues: categoryProvider.categories.map { ($0.id, $0) })
+        Dictionary(uniqueKeysWithValues: categoryRepo.categories.map { ($0.id, $0) })
     }
     
-    public func add(transaction: Transaction) {
+    public func add(transaction: Transaction) throws {
         cache[transaction.id] = .from(transaction)
-        try? cache.saveToDisk(withName: Self.cacheName)
+        try cache.saveToDisk(withName: Self.cacheName)
     }
 }
 
