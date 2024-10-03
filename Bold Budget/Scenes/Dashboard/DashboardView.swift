@@ -57,7 +57,6 @@ struct DashboardView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            TopBar()
             List {
                 Chart()
                 TransactionList()
@@ -65,7 +64,9 @@ struct DashboardView: View {
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
             .scrollIndicators(.hidden)
-            .listRowSpacing(0)
+            .safeAreaInset(edge: .bottom, alignment: .trailing) {
+                AddTransactionButton()
+            }
         }
         .overlay(alignment: .bottomTrailing) {
             AddTransactionButton()
@@ -78,47 +79,40 @@ struct DashboardView: View {
         }
     }
     
-    @ViewBuilder func TopBar() -> some View {
-        ScreenTitleBar(
-            primaryContent: { Text("Dashboard") },
-            leadingContent: { TimeFrameButton() },
-            trailingContent: { AddTransactionButton() }
-        )
-    }
-    
-    @ViewBuilder func TimeFrameButton() -> some View {
-        Button {
-            //showTimeFramePicker = true
-        } label: {
-            TitleBarButtonLabel(sfSymbol: "calendar")
-        }
-    }
-    
     @ViewBuilder func AddTransactionButton() -> some View {
         Button {
             showAddTransaction = true
         } label: {
-            TitleBarButtonLabel(sfSymbol: "plus")
+            Image(systemName: "plus")
+                .foregroundStyle(Color.background)
+                .font(.title)
+                .padding()
+                .background {
+                    Circle()
+                        .foregroundStyle(Color.text)
+                        .shadow(color: Color.background, radius: .padding)
+                }
         }
+        .padding()
     }
     
     @ViewBuilder func Chart() -> some View {
-        HStack {
-            Spacer(minLength: 0)
-            PieChart(slices: pieSlices)
-                .color(Color.text)
-                .valueFormatter { value in Money(value)?.formatted() ?? value.formatted() }
-                .containerRelativeFrame(.horizontal) { length, axis in length * 0.75 }
-            Spacer(minLength: 0)
+        Section {
+            HStack {
+                Spacer(minLength: 0)
+                PieChart(slices: pieSlices)
+                    .color(Color.text)
+                    .valueFormatter { value in Money(value)?.formatted() ?? value.formatted() }
+                    .containerRelativeFrame(.horizontal) { length, axis in length * 0.85 }
+                Spacer(minLength: 0)
+            }
+            .listRowBackground(Color.background)
+            .listRowSeparator(.hidden)
+        } header: {
+            ZStack{}
         }
-        .padding(.bottom, 32)
-        .overlay(alignment: .bottom) {
-            Rectangle()
-                .frame(height: 0.5)
-                .foregroundStyle(Color.text)
-        }
-        .listRowBackground(Color.background)
-        .listRowSeparator(.hidden)
+        .listSectionSeparator(.hidden)
+        .listSectionSpacing(0)
     }
     
     @ViewBuilder func TransactionList() -> some View {
