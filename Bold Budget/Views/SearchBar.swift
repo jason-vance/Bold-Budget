@@ -9,13 +9,55 @@ import SwiftUI
 
 struct SearchBar: View {
     
+    enum Autocapitalization {
+        case never
+        case characters
+        case words
+        case sentences
+        
+        func toSwiftUi() -> TextInputAutocapitalization {
+            switch self {
+            case .never:
+                    .never
+            case .characters:
+                    .characters
+            case .words:
+                    .words
+            case .sentences:
+                    .sentences
+            }
+        }
+    }
+    
     @State var prompt: String
     @Binding var searchText: String
     @Binding var searchPresented: Bool
     var action: ()->()
     @FocusState private var focus
+    @State private var autocapitalization: TextInputAutocapitalization? = nil
     
     @State private var showCancel: Bool = false
+    
+    private var __autocapitalization: Autocapitalization?
+    
+    public func autocapitalization(_ autocapitalization: Autocapitalization) -> SearchBar {
+        var view = self
+        view.__autocapitalization = autocapitalization
+        return view
+    }
+    
+    init(
+        prompt: String,
+        searchText: Binding<String>,
+        searchPresented: Binding<Bool>,
+        action: (() -> Void)? = nil
+    ) {
+        self.prompt = prompt
+        self._searchText = searchText
+        self._searchPresented = searchPresented
+        self.action = action ?? { }
+        self.autocapitalization = nil
+    }
     
     var body: some View {
         HStack {
@@ -24,6 +66,7 @@ struct SearchBar: View {
                 text: $searchText,
                 prompt: Text(prompt).foregroundStyle(Color.text.opacity(.opacityButtonBackground))
             )
+            .textInputAutocapitalization(autocapitalization)
             .submitLabel(.search)
             .onSubmit(of: .text) {
                 action()
@@ -67,6 +110,7 @@ struct SearchBar: View {
                 showCancel = newFocus
             }
         }
+        .onChange(of: __autocapitalization, initial: true) { _, cap in autocapitalization = cap?.toSwiftUi() }
     }
 }
 
@@ -77,8 +121,7 @@ struct SearchBar: View {
                 SearchBar(
                     prompt: "Search prompt",
                     searchText: searchText,
-                    searchPresented: searchedPresented,
-                    action: { }
+                    searchPresented: searchedPresented
                 )
                 Text("searchedPresented: \(searchedPresented.wrappedValue)")
                 Spacer()

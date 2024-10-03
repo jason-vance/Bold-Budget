@@ -119,7 +119,7 @@ struct AddTransactionView: View {
         }
         .formRow()
         .fullScreenCover(isPresented: $showCategoryPicker) {
-            TransactionCategoryPickerView(mode: .pickerAndEditor)
+            TransactionCategoryPickerView(mode: .pickerAndEditor) { category = $0 }
         }
     }
     

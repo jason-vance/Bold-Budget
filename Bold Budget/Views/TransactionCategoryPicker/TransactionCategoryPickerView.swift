@@ -24,10 +24,13 @@ struct TransactionCategoryPickerView: View {
     @State private var searchText: String = ""
     @State private var searchPresented: Bool = false
     
+    public var onSelected: (Transaction.Category) -> ()
+    
     private let categoryProvider = iocContainer~>TransactionCategoryProvider.self
     
     private var filteredCategories: [Transaction.Category] {
         categories.filter { $0.name.contains(searchText) }
+        //TODO: Sort categories too
     }
     
     private var categoriesPublisher: AnyPublisher<[Transaction.Category],Never> {
@@ -38,16 +41,18 @@ struct TransactionCategoryPickerView: View {
     }
     
     private func select(category: Transaction.Category) {
-        //TODO: onSelected(category)
+        onSelected(category)
         dismiss()
     }
     
     var body: some View {
         VStack(spacing: 0) {
             TopBar()
+            SearchArea()
+                .padding(.padding)
+            BarDivider()
             ScrollView {
                 VStack {
-                    SearchArea()
                     FlowLayout(
                         mode: .scrollable,
                         items: filteredCategories.sorted { $0.name < $1.name },
@@ -111,5 +116,5 @@ struct TransactionCategoryPickerView: View {
 }
 
 #Preview {
-    TransactionCategoryPickerView(mode: .pickerAndEditor)
+    TransactionCategoryPickerView(mode: .pickerAndEditor) { _ in }
 }
