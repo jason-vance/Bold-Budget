@@ -59,18 +59,7 @@ struct TransactionCategoryPickerView: View {
                 VStack {
                     if let _ = categories {
                         ForEach(filteredCategories) { category in
-                            HStack {
-                                Button {
-                                    select(category: category)
-                                } label: {
-                                    HStack {
-                                        Image(systemName: category.sfSymbol.value)
-                                        Text(category.name.value)
-                                    }
-                                    .buttonLabelSmall()
-                                }
-                                Spacer(minLength: 0)
-                            }
+                            CategoryButton(category)
                         }
                     } else {
                         ProgressView()
@@ -84,6 +73,42 @@ struct TransactionCategoryPickerView: View {
         }
         .background(Color.background)
         .onReceive(categoriesPublisher) { categories = $0 }
+    }
+    
+    @ViewBuilder func CategoryButton(_ category: Transaction.Category) -> some View {
+        HStack {
+            Button {
+                select(category: category)
+            } label: {
+                HStack {
+                    KindIndicator(category.kind)
+                    HStack {
+                        Image(systemName: category.sfSymbol.value)
+                        Text(category.name.value)
+                    }
+                    .buttonLabelSmall()
+                }
+            }
+            Spacer(minLength: 0)
+        }
+    }
+    
+    @ViewBuilder func KindIndicator(_ kind: Transaction.Category.Kind) -> some View {
+        HStack(spacing: 0) {
+            Image(systemName: "dollarsign")
+                .offset(x: 2)
+        }
+        .overlay {
+            Image(systemName: kind == .expense ? "minus" : "plus")
+                .font(.caption2.bold())
+                .offset(x: -7)
+        }
+        .frame(width: 22, height: 22)
+        .foregroundStyle(Color.background)
+        .padding(.padding)
+        .background {
+            Circle().foregroundStyle(Color.text)
+        }
     }
     
     @ViewBuilder func TopBar() -> some View {

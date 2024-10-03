@@ -133,7 +133,7 @@ struct AddTransactionCategoryView: View {
             }
             TextField("Name",
                       text: $nameString,
-                      prompt: Text("Groceries, Rent, etc...").foregroundStyle(Color.text.opacity(0.7))
+                      prompt: Text("Groceries, Rent, Paycheck, etc...").foregroundStyle(Color.text.opacity(0.7))
             )
             .textFieldSmall()
             HStack {
