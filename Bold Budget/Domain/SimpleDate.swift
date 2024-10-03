@@ -7,9 +7,13 @@
 
 import Foundation
 
-struct SimpleDate {
+struct SimpleDate: Equatable, Comparable, Hashable {
     
     public typealias RawValue = UInt32
+    
+    static func < (lhs: SimpleDate, rhs: SimpleDate) -> Bool {
+        lhs.rawValue < rhs.rawValue
+    }
     
     let rawValue: RawValue
     

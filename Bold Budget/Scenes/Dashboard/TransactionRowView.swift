@@ -26,29 +26,33 @@ struct TransactionRowView: View {
     @ViewBuilder func CategoryIcon() -> some View {
         Image(systemName: transaction.category.sfSymbol.value)
             .padding(.padding)
-            .frame(width: 44, height: 44)
+            .frame(width: 48, height: 48)
             .background {
                 RoundedRectangle(cornerRadius: .cornerRadiusMedium, style: .continuous)
-                    .stroke(style: .init(lineWidth: .borderWidthMedium))
+                    .stroke(style: .init(lineWidth: .borderWidthThin))
                     .foregroundStyle(Color.text)
+            }
+            .background {
+                RoundedRectangle(cornerRadius: .cornerRadiusMedium, style: .continuous)
+                    .foregroundStyle(Color.text.opacity(.opacityButtonBackground))
             }
     }
     
     @ViewBuilder func TransactionText() -> some View {
-        VStack {
+        VStack(spacing: 0) {
             Description()
             HStack {
                 Text(transaction.location ?? "Unknown Location")
-                    .font(.callout.weight(.light))
+                    .font(.caption.weight(.light))
                     .lineLimit(1)
                     .opacity(transaction.location == nil ? 0 : 1)
                 Spacer(minLength: 0)
             }
             HStack {
                 Text(transaction.date.toDate()?.toBasicUiString() ?? "Unkown Date")
-                    .font(.footnote.weight(.light))
+                    .font(.caption2.weight(.semibold))
                     .lineLimit(1)
-                    .opacity(transaction.date.toDate() == nil ? 0 : 0.75)
+                    .opacity(transaction.date.toDate() == nil ? 0 : 0.5)
                 Spacer(minLength: 0)
             }
         }

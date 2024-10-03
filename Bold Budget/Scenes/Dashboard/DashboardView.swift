@@ -11,6 +11,12 @@ import Combine
 
 struct DashboardView: View {
     
+    struct TransactionGroup: Identifiable {
+        var id: SimpleDate { date }
+        let date: SimpleDate
+        var transactions: [Transaction]
+    }
+    
     let transactionProvider = iocContainer~>TransactionProvider.self
     
     private var transactionsPublisher: AnyPublisher<[Transaction],Never> {
@@ -21,6 +27,19 @@ struct DashboardView: View {
     }
     
     @State private var transactions: [Transaction] = []
+    private var transactionGroups: [TransactionGroup] {
+        let dict = transactions.reduce(Dictionary<SimpleDate,[Transaction]>()) { dict, transaction in
+            let date = transaction.date
+            var dict = dict
+            dict[date] = dict[date, default: []] + [transaction]
+            return dict
+        }
+        
+        return dict.map { key, value in
+            TransactionGroup(date: key, transactions: value)
+        }
+        .sorted { $0.date > $1.date }
+    }
     
     @State private var showAddTransaction: Bool = false
     
@@ -42,7 +61,8 @@ struct DashboardView: View {
                 Chart()
                 TransactionList()
             }
-            .listStyle(.plain)
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
             .scrollIndicators(.hidden)
             .listRowSpacing(0)
         }
@@ -93,10 +113,19 @@ struct DashboardView: View {
     }
     
     @ViewBuilder func TransactionList() -> some View {
-        ForEach(transactions) { transaction in
-            TransactionRowView(transaction)
-                .listRowBackground(Color.background)
-                .listRowSeparatorTint(Color.text)
+        ForEach(transactionGroups) { transactionGroup in
+            Section {
+                let transactions = transactionGroup.transactions.sorted { $0.description < $1.description }
+                ForEach(transactions) { transaction in
+                    TransactionRowView(transaction)
+                        .dashboardTransactionRow()
+                }
+            } header: {
+                Text(transactionGroup.date.toDate()?.toBasicUiString() ?? "Unknown Date")
+                    .foregroundStyle(Color.text)
+            }
+            .listSectionSeparator(.hidden)
+            .listSectionSpacing(0)
         }
         if transactions.isEmpty {
             ContentUnavailableView(
