@@ -85,3 +85,28 @@ struct SimpleDate: Equatable, Comparable, Hashable {
     
     static var now: SimpleDate { .init(date: .now)! }
 }
+
+extension SimpleDate {
+    
+    static func startOfMonth(containing date: SimpleDate) -> SimpleDate {
+        let rawValue = date.rawValue - (date.rawValue % 100) + 1
+        return SimpleDate(rawValue: rawValue)!
+    }
+    
+    static func endOfMonth(containing date: SimpleDate) -> SimpleDate {
+        let startOfMonth = startOfMonth(containing: date)
+        let startOfNext = Calendar.current.date(byAdding: .month, value: 1, to: startOfMonth.toDate()!)
+        return .init(date: Calendar.current.date(byAdding: .day, value: -1, to: startOfNext!)!)!
+    }
+    
+    static func startOfYear(containing date: SimpleDate) -> SimpleDate {
+        let rawValue = date.rawValue - (date.rawValue % 10000) + 101
+        return SimpleDate(rawValue: rawValue)!
+    }
+    
+    static func endOfYear(containing date: SimpleDate) -> SimpleDate {
+        let startOfMonth = startOfYear(containing: date)
+        let startOfNext = Calendar.current.date(byAdding: .year, value: 1, to: startOfMonth.toDate()!)
+        return .init(date: Calendar.current.date(byAdding: .day, value: -1, to: startOfNext!)!)!
+    }
+}
