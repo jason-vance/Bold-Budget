@@ -10,14 +10,15 @@ import SwiftUI
 
 extension View {
     
-    func buttonLabelSmall() -> some View {
+    func buttonLabelSmall(isProminent: Bool = false) -> some View {
         self
-            .foregroundStyle(Color.text)
+            .foregroundStyle(isProminent ? Color.background : Color.text)
             .padding(.horizontal, .paddingHorizontalButtonSmall)
             .padding(.vertical, .paddingVerticalButtonSmall)
             .background {
                 RoundedRectangle(cornerRadius: .cornerRadiusSmall, style: .continuous)
-                    .foregroundStyle(Color.text.opacity(Double.opacityButtonBackground))
+                    .foregroundStyle(Color.text)
+                    .opacity(isProminent ? 1 : Double.opacityButtonBackground)
             }
     }
     

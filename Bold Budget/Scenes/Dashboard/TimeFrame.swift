@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct TimeFrame {
+struct TimeFrame: Equatable {
     
     enum Period {
         case month
@@ -28,6 +28,15 @@ struct TimeFrame {
                 SimpleDate.endOfMonth(containing: date)
             case .year:
                 SimpleDate.endOfYear(containing: date)
+            }
+        }
+        
+        func toUiString() -> String {
+            switch self {
+            case .month:
+                return String(localized: "Month")
+            case .year:
+                return String(localized: "Year")
             }
         }
     }
