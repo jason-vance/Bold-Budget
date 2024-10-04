@@ -18,7 +18,6 @@ struct DashboardView: View {
     }
     
     let transactionProvider = iocContainer~>TransactionProvider.self
-    
     private var transactionsPublisher: AnyPublisher<[Transaction],Never> {
         transactionProvider
             .transactionPublisher
@@ -26,14 +25,23 @@ struct DashboardView: View {
             .eraseToAnyPublisher()
     }
     
+    @State private var timeFrame: TimeFrame = .init(period: .month, containing: .now)
     @State private var transactions: [Transaction] = []
+    @State private var showAddTransaction: Bool = false
+    
+    private var filteredTransactions: [Transaction] {
+        transactions
+            .filter { $0.date >= timeFrame.start && $0.date <= timeFrame.end }
+    }
+    
     private var transactionGroups: [TransactionGroup] {
-        let dict = transactions.reduce(Dictionary<SimpleDate,[Transaction]>()) { dict, transaction in
-            let date = transaction.date
-            var dict = dict
-            dict[date] = dict[date, default: []] + [transaction]
-            return dict
-        }
+        let dict = filteredTransactions
+            .reduce(Dictionary<SimpleDate,[Transaction]>()) { dict, transaction in
+                let date = transaction.date
+                var dict = dict
+                dict[date] = dict[date, default: []] + [transaction]
+                return dict
+            }
         
         return dict.map { key, value in
             TransactionGroup(date: key, transactions: value)
@@ -41,12 +49,10 @@ struct DashboardView: View {
         .sorted { $0.date > $1.date }
     }
     
-    @State private var showAddTransaction: Bool = false
-    
     private var pieSlices: [PieChart.Slice] {
         var sliceDict = [Transaction.Category:Money]()
         
-        for transaction in transactions {
+        for transaction in filteredTransactions {
             sliceDict[transaction.category] = sliceDict[transaction.category, default: .zero] + transaction.amount
         }
         
@@ -57,6 +63,7 @@ struct DashboardView: View {
     
     var body: some View {
         VStack(spacing: 0) {
+            TopBar()
             List {
                 Chart()
                 TransactionList()
@@ -77,6 +84,46 @@ struct DashboardView: View {
         .fullScreenCover(isPresented: $showAddTransaction) {
             AddTransactionView()
         }
+    }
+    
+    @ViewBuilder func TopBar() -> some View {
+        ScreenTitleBar(
+            primaryContent: { TimeFrameButton() },
+            leadingContent: { DecrementTimeFrameButton() },
+            trailingContent: { IncrementTimeFrameButton() }
+        )
+    }
+    
+    @ViewBuilder func TimeFrameButton() -> some View {
+        Button {
+            //TODO: showTimeFramePicker = true
+        } label: {
+            Text(timeFrame.toUiString())
+                .buttonLabelSmall()
+                .contentTransition(.numericText())
+        }
+    }
+    
+    @ViewBuilder func DecrementTimeFrameButton() -> some View {
+        Button {
+            withAnimation(.snappy) {
+                timeFrame = timeFrame.previous
+            }
+        } label: {
+            TitleBarButtonLabel(sfSymbol: "chevron.backward")
+        }
+        //TODO: disable if current time frame is at past limit
+    }
+    
+    @ViewBuilder func IncrementTimeFrameButton() -> some View {
+        Button {
+            withAnimation(.snappy) {
+                timeFrame = timeFrame.next
+            }
+        } label: {
+            TitleBarButtonLabel(sfSymbol: "chevron.forward")
+        }
+        //TODO: disable if current time frame is today's time frame
     }
     
     @ViewBuilder func AddTransactionButton() -> some View {

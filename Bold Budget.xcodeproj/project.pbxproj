@@ -49,6 +49,7 @@
 				Extensions/CGFloatExtensions.swift,
 				Extensions/DateExtensions.swift,
 				Extensions/DoubleExtensions.swift,
+				Scenes/Dashboard/TimeFrame.swift,
 				Scenes/Dashboard/Workers/TransactionProvider.swift,
 				Utils/Cache.swift,
 				Utils/GeometryUtils.swift,
