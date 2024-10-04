@@ -132,21 +132,33 @@ struct DashboardView: View {
     }
     
     @ViewBuilder func DecrementTimeFrameButton() -> some View {
+        let isDisabled: Bool = {
+            guard let _ = (transactions.first { $0.date < timeFrame.previous.end }) else { return true }
+            return false
+        }()
+        
         Button {
             withAnimation(.snappy) { timeFrame = timeFrame.previous }
         } label: {
             TitleBarButtonLabel(sfSymbol: "chevron.backward")
+                .opacity(isDisabled ? .opacityButtonBackground : 1)
         }
-        //TODO: disable if current time frame is at past limit
+        .disabled(isDisabled)
     }
     
     @ViewBuilder func IncrementTimeFrameButton() -> some View {
+        let isDisabled: Bool = {
+            guard let _ = (transactions.first { $0.date > timeFrame.next.start }) else { return true }
+            return false
+        }()
+        
         Button {
             withAnimation(.snappy) { timeFrame = timeFrame.next }
         } label: {
             TitleBarButtonLabel(sfSymbol: "chevron.forward")
+                .opacity(isDisabled ? .opacityButtonBackground : 1)
         }
-        //TODO: disable if current time frame is today's time frame
+        .disabled(isDisabled)
     }
     
     @ViewBuilder func AddTransactionButton() -> some View {
