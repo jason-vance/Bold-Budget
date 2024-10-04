@@ -10,8 +10,6 @@ import SwinjectAutoregistration
 
 struct ContentView: View {
     
-    let stringProvider = iocContainer~>StringProvider.self
-    
     var body: some View {
         DashboardView()
     }
