@@ -58,7 +58,17 @@ struct DashboardView: View {
         }
         
         return sliceDict.map { key, value in
-            PieChart.Slice(name: key.name.value, value: value.amount)
+            PieChart.Slice(value: value.amount, category: key)
+        }
+    }
+    
+    private func formatPieChart(value: Double) -> String {
+        if let money = Money(value) {
+            money.formatted()
+        } else if let negativeMoney = Money(-value) {
+            "-\(negativeMoney.formatted())"
+        } else {
+            value.formatted()
         }
     }
     
@@ -183,8 +193,7 @@ struct DashboardView: View {
             HStack {
                 Spacer(minLength: 0)
                 PieChart(slices: pieSlices)
-                    .color(Color.text)
-                    .valueFormatter { value in Money(value)?.formatted() ?? value.formatted() }
+                    .valueFormatter { formatPieChart(value: $0) }
                     .containerRelativeFrame(.horizontal) { length, axis in length * 0.85 }
                 Spacer(minLength: 0)
             }

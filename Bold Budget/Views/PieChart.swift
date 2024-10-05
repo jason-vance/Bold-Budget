@@ -10,23 +10,28 @@ import SwiftUI
 struct PieChart: View {
     
     public struct Slice: Equatable {
-        let name: String
         let value: Double
+        let category: Transaction.Category
         
         static let samples: [Slice] = [
-            .init(name: "Groceries", value: 600),
-            .init(name: "Housing", value: 2500),
-            .init(name: "Travel", value: 1500),
-            .init(name: "Entertainment", value: 250),
-            .init(name: "Candy Bar", value: 5),
-            .init(name: "Medical", value: 125)
+            .init(value: 600, category: Transaction.Category.samples[0]),
+            .init(value: 2500, category: Transaction.Category.samples[1]),
+            .init(value: 1500, category: Transaction.Category.samples[4]),
+            .init(value: 250, category: Transaction.Category.samples[3]),
+            .init(value: 125, category: Transaction.Category.samples[2]),
+            .init(value: 7, category: .init(kind: .expense, name: .init("Candy Bar")!, sfSymbol: .init("ellipsis.rectangle.fill")!)),
+            .init(value: 5, category: .init(kind: .income, name: .init("Candy Bar")!, sfSymbol: .init("ellipsis.rectangle.fill")!)),
+            .init(value: 1700, category: .init(kind: .income, name: .init("Stocks")!, sfSymbol: .init("chart.bar.xaxis.ascending")!)),
+            .init(value: 2700, category: .init(kind: .income, name: .init("Paycheck")!, sfSymbol: .init("banknote.fill")!))
         ]
     }
     
     private struct _Slice: Identifiable {
         var id: Int { index }
         let index: Int
+        let kind: Transaction.Category.Kind
         let name: String
+        let sfSymbol: Transaction.Category.SfSymbol
         let value: Double
         let touchFrom: CGFloat
         let touchTo: CGFloat
@@ -44,19 +49,11 @@ struct PieChart: View {
     @State private var selectedSlice: _Slice? = nil
     @State private var touchStart: Date? = nil
     
-    private var _color: Color = Color.black
     private var formatValue: (Double) -> String
     
     init(slices: [Slice]) {
         self.slices = slices
-        self._color = Color.black
         formatValue = { value in value.formatted() }
-    }
-    
-    func color(_ color: Color) -> PieChart {
-        var view = self
-        view._color = color
-        return view
     }
     
     func valueFormatter(_ formatValue: @escaping (Double) -> String) -> PieChart {
@@ -68,11 +65,21 @@ struct PieChart: View {
     private func mapSlicesTo_Slice(pieCircumference: CGFloat) -> [_Slice] {
         let padding = CGFloat.padding / pieCircumference
         let lineCap = (lineWidth / 2) / pieCircumference
+        
+        let total = self.grossTotal
          
         var index = -1
         var previousCumulativeValue: CGFloat = 0
         return slicesState
-            .sorted { $0.value < $1.value }
+            .sorted {
+                if $0.category.kind != $1.category.kind {
+                    $0.category.kind == .expense
+                } else if $0.category.kind == .expense {
+                    $0.value > $1.value
+                } else {
+                    $0.value < $1.value
+                }
+            }
             .map { slice in
                 let touchFrom = (previousCumulativeValue / total)
                 let touchTo = touchFrom + (slice.value / total)
@@ -84,7 +91,9 @@ struct PieChart: View {
                 
                 return .init(
                     index: index,
-                    name: slice.name,
+                    kind: slice.category.kind,
+                    name: slice.category.name.value,
+                    sfSymbol: slice.category.sfSymbol,
                     value: slice.value,
                     touchFrom: touchFrom,
                     touchTo: touchTo,
@@ -101,42 +110,110 @@ struct PieChart: View {
         }
         
         let merge: (_Slice, _Slice) -> _Slice = { lhs, rhs in
-                .init(
-                    index: min(lhs.index, rhs.index),
-                    name: "\(rhs.name), \(lhs.name)",
-                    value: lhs.value + rhs.value,
-                    touchFrom: min(lhs.touchFrom, rhs.touchFrom),
-                    touchTo: max(lhs.touchTo, rhs.touchTo),
-                    from: min(lhs.from, rhs.from),
-                    to: max(lhs.to, rhs.to)
-                )
+            assert(lhs.kind == rhs.kind, "Cannot merge slices of different kinds")
+            
+            return .init(
+                index: min(lhs.index, rhs.index),
+                kind: lhs.kind,
+                name: "\(rhs.name), \(lhs.name)",
+                sfSymbol: .init("ellipsis")!,
+                value: lhs.value + rhs.value,
+                touchFrom: min(lhs.touchFrom, rhs.touchFrom),
+                touchTo: max(lhs.touchTo, rhs.touchTo),
+                from: min(lhs.from, rhs.from),
+                to: max(lhs.to, rhs.to)
+            )
         }
         
         var rv: [_Slice] = slices
-        while let firstSlice = rv.first, wontBeVisible(firstSlice) {
-            guard rv.count >= 2 else { break }
-            
-            let secondSlice = rv[1]
-            let mergedSlice = merge(firstSlice, secondSlice)
-            
-            rv = Array(rv.dropFirst(2))
-            rv.insert(mergedSlice, at: 0)
+        if let kind = slices.first?.kind {
+            if kind == .income {
+                while let smallestSlice = rv.first, wontBeVisible(smallestSlice) {
+                    guard rv.count >= 2 else { break }
+                    
+                    let secondSmallestSlice = rv[1]
+                    let mergedSlice = merge(smallestSlice, secondSmallestSlice)
+                    
+                    rv = Array(rv.dropFirst(2))
+                    rv.insert(mergedSlice, at: 0)
+                }
+            } else {
+                while let smallestSlice = rv.last, wontBeVisible(smallestSlice) {
+                    guard rv.count >= 2 else { break }
+                    
+                    let secondSmallestSlice = rv[rv.count - 2]
+                    let mergedSlice = merge(smallestSlice, secondSmallestSlice)
+                    
+                    rv = Array(rv.dropLast(2))
+                    rv.append(mergedSlice)
+                }
+            }
         }
         
         return rv
     }
     
-    private func makeSlices(pieSize: CGSize) -> [_Slice] {
-        let pieCircumference = min(pieSize.width, pieSize.height) * Double.pi
+    private func makeSlices(pieCircumference: CGFloat) -> [_Slice] {
         let slices = mapSlicesTo_Slice(pieCircumference: pieCircumference)
-        return mergeSmallSlicesIfNecessary(slices, pieCircumference: pieCircumference)
+        
+        let incomes = mergeSmallSlicesIfNecessary(
+            slices.filter { $0.kind == .income },
+            pieCircumference: pieCircumference
+        )
+        let expenses = mergeSmallSlicesIfNecessary(
+            slices.filter { $0.kind == .expense },
+            pieCircumference: pieCircumference
+        )
+        
+        return incomes + expenses
     }
     
-    private var total: Double { slicesState.reduce(0, { $0 + $1.value }) }
+    private var grossTotal: Double { slicesState.reduce(0, { $0 + $1.value }) }
+    
+    private var netTotal: Double {
+        slicesState.reduce(0, { $0 + (($1.category.kind == .income) ? $1.value : -$1.value) })
+    }
+    
+    private func onTouchMoved(_ point: CGPoint, in frame: CGRect, slices: [_Slice]) {
+        let center = CGPoint(x: frame.midX, y: frame.midY)
+        let fraction: CGFloat = {
+            var angle = angleBetween(center: center, point: point)
+            angle += 90 // Take chart rotation into accoun
+            angle = angle > 360 ? angle - 360 : angle
+            return angle / 360
+        }()
+        
+        let selectedSlice = slices.first { $0.touchFrom <= fraction && $0.touchTo >= fraction }
+        
+        if touchStart == nil || self.selectedSlice?.id != selectedSlice?.id {
+            touchStart = .now
+        }
+        
+        withAnimation(.snappy) {
+            self.selectedSlice = selectedSlice
+        }
+    }
+    
+    private func onTouchEnded() {
+        if let touchStart = touchStart {
+            let interval = Date.now.timeIntervalSince(touchStart)
+            if interval < tapMaxDuration {
+                return
+            }
+        }
+        
+        withAnimation(.snappy) {
+            touchStart = nil
+            selectedSlice = nil
+        }
+    }
     
     var body: some View {
         GeometryReader { geo in
-            let slices = makeSlices(pieSize: geo.size)
+            let pieRadius = min(geo.size.width, geo.size.height) / 2
+            let pieCircumference = min(geo.size.width, geo.size.height) * Double.pi
+
+            let slices = makeSlices(pieCircumference: pieCircumference)
             
             ZStack {
                 if slices.isEmpty {
@@ -144,52 +221,35 @@ struct PieChart: View {
                 }
                 ZStack {
                     ForEach(slices) { slice in
-                        SliceView(slice)
+                        SliceView(slice, radius: pieRadius)
                     }
                 }
                 .onTouchGesture { point in
-                    let center = CGPoint(x: geo.frame(in: .local).midX, y: geo.frame(in: .local).midY)
-                    let angle = angleBetween(center: center, point: point)
-                    let fraction = angle / 360
-                    let selectedSlice = slices.first { $0.touchFrom <= fraction && $0.touchTo >= fraction }
-                    
-                    if touchStart == nil || self.selectedSlice?.id != selectedSlice?.id {
-                        touchStart = .now
-                    }
-                    
-                    withAnimation(.snappy) {
-                        self.selectedSlice = selectedSlice
-                    }
+                    onTouchMoved(point, in: geo.frame(in: .local), slices: slices)
                 } onTouchEnded: {
-                    if let touchStart = touchStart {
-                        let interval = Date.now.timeIntervalSince(touchStart)
-                        if interval < tapMaxDuration {
-                            return
-                        }
-                    }
-                    
-                    withAnimation(.snappy) {
-                        touchStart = nil
-                        selectedSlice = nil
-                    }
+                    onTouchEnded()
                 }
-                VStack {
-                    Text("Total")
-                        .font(.title2.weight(.semibold))
-                        .opacity(0)
-                    Text("\(formatValue(selectedSlice == nil ? total : selectedSlice!.value))")
-                        .font(.largeTitle.weight(.bold))
-                        .contentTransition(.numericText())
-                    Text(selectedSlice == nil ? "Total" : "\(selectedSlice!.name)")
-                        .font(.title2.weight(.semibold))
-                        .multilineTextAlignment(.center)
-                }
+                Labels()
             }
-            .foregroundStyle(_color)
+            .foregroundStyle(Color.text)
         }
         .padding(lineWidth / 2)
         .aspectRatio(1, contentMode: .fit)
         .onChange(of: slices, initial: true) { _, slices in slicesState = slices }
+    }
+    
+    @ViewBuilder private func Labels() -> some View {
+        VStack {
+            Text("Total")
+                .font(.title2.weight(.semibold))
+                .opacity(0)
+            Text("\(formatValue(selectedSlice == nil ? netTotal : selectedSlice!.value))")
+                .font(.largeTitle.weight(.bold))
+                .contentTransition(.numericText())
+            Text(selectedSlice == nil ? "Net Total" : "\(selectedSlice!.name)")
+                .font(.title2.weight(.semibold))
+                .multilineTextAlignment(.center)
+        }
     }
     
     @ViewBuilder private func NoSlicesCircle() -> some View {
@@ -198,32 +258,63 @@ struct PieChart: View {
                 lineWidth: lineWidth,
                 lineCap: .round
             ))
-            .foregroundStyle(_color)
+            .foregroundStyle(Color.text)
             .opacity(0.5)
     }
     
-    @ViewBuilder private func SliceView(_ slice: _Slice) -> some View {
+    @ViewBuilder private func SliceView(_ slice: _Slice, radius: CGFloat) -> some View {
         let isHighlighted = selectedSlice == nil || selectedSlice?.id == slice.id
         let isEnlarged = selectedSlice != nil && selectedSlice?.id == slice.id
         let isEnsmalled = selectedSlice != nil && selectedSlice?.id != slice.id
+        
+        let lineWidth = isEnlarged ? lineWidth + (.padding / 2) : isEnsmalled ? lineWidth - (.padding / 2) : lineWidth
 
         Circle()
             .trim(from: slice.from, to: slice.to)
             .stroke(style: .init(
-                lineWidth: isEnlarged ? lineWidth + (.padding / 2) : isEnsmalled ? lineWidth - (.padding / 2) : lineWidth,
+                lineWidth: lineWidth,
                 lineCap: .round
             ))
-            .foregroundStyle(_color)
+            .foregroundStyle(Color.text)
             .opacity(isHighlighted ? 1 : 0.5)
+            .overlay {
+                if slice.kind == .expense {
+                    Circle()
+                        .trim(from: slice.from, to: slice.to)
+                        .stroke(style: .init(
+                            lineWidth: lineWidth - .borderWidthMedium,
+                            lineCap: .round
+                        ))
+                        .foregroundStyle(Color.background)
+                }
+            }
+            .overlay {
+                SliceIconView(slice, radius: radius)
+            }
+            .rotationEffect(.degrees(-90))
+    }
+    
+    @ViewBuilder private func SliceIconView(_ slice: _Slice, radius: CGFloat) -> some View {
+        let degrees: Double = {
+            let fraction = slice.from + ((slice.to - slice.from) / 2)
+            return fraction * 360
+        }()
+        
+        Image(systemName: slice.sfSymbol.value)
+            .font(.system(size: lineWidth * 0.65))
+            .bold()
+            .foregroundStyle(slice.kind == .expense ? Color.text : Color.background)
+            .frame(width: lineWidth, height: lineWidth)
+            .rotationEffect(.degrees(90))
+            .offset(x: radius)
+            .rotationEffect(.degrees(degrees))
     }
 }
 
 #Preview {
     PieChart(slices: PieChart.Slice.samples)
-        .color(Color.blue)
 }
 
 #Preview("Empty") {
     PieChart(slices: [])
-        .color(Color.blue)
 }
