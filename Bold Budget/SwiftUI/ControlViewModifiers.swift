@@ -34,14 +34,15 @@ extension View {
             }
     }
     
-    func buttonLabelMedium() -> some View {
+    func buttonLabelMedium(isProminent: Bool = false) -> some View {
         self
-            .foregroundStyle(Color.text)
+            .foregroundStyle(isProminent ? Color.background : Color.text)
             .padding(.horizontal, .paddingHorizontalButtonMedium)
             .padding(.vertical, .paddingVerticalButtonMedium)
             .background {
                 RoundedRectangle(cornerRadius: .cornerRadiusMedium, style: .continuous)
-                    .foregroundStyle(Color.text.opacity(Double.opacityButtonBackground))
+                    .foregroundStyle(Color.text)
+                    .opacity(isProminent ? 1 : Double.opacityButtonBackground)
             }
     }
     

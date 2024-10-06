@@ -27,9 +27,12 @@ struct TransactionsFilter {
     }
     
     func shouldInclude(_ transaction: Transaction) -> Bool {
-        if !descriptionContainsText.isEmpty, !transaction.description.contains(descriptionContainsText) {
+        if !descriptionContainsText.isEmpty,
+           !transaction.description.lowercased().contains(descriptionContainsText.lowercased())
+        {
             return false
         }
+        
         if let category = category, category != transaction.category {
             return false
         }
@@ -40,12 +43,14 @@ struct TransactionsFilter {
 
 struct TransactionsFilterMenu: View {
     
+    @Binding var isMenuVisible: Bool
     @Binding var transactionsFilter: TransactionsFilter
+    @Binding var transactionCount: Int
     
     @State private var showCategoryPicker: Bool = false
     
     var body: some View {
-        VStack(spacing: 0) {
+        VStack {
             Form {
                 Section {
                     ContainsAnyTextField()
@@ -58,8 +63,33 @@ struct TransactionsFilterMenu: View {
             .scrollDismissesKeyboard(.immediately)
             .formStyle(.grouped)
             .scrollContentBackground(.hidden)
+            SeeTransactionsButton()
+                .padding(.horizontal)
+            ClearAllButton()
+                .padding(.horizontal)
         }
+        .padding(.bottom)
         .background(Color.background)
+    }
+    
+    @ViewBuilder private func SeeTransactionsButton() -> some View {
+        Button {
+            withAnimation(.snappy) { isMenuVisible = false }
+        } label: {
+            Text("See \(transactionCount) Transactions")
+                .frame(maxWidth: .infinity)
+                .buttonLabelMedium(isProminent: true)
+        }
+    }
+    
+    @ViewBuilder func ClearAllButton() -> some View {
+        Button {
+            withAnimation(.snappy) { self.transactionsFilter = .none }
+        } label: {
+            Text("Clear All")
+                .frame(maxWidth: .infinity)
+                .buttonLabelMedium()
+        }
     }
     
     @ViewBuilder func CategoryField() -> some View {
@@ -128,6 +158,10 @@ struct TransactionsFilterMenu: View {
 
 #Preview {
     StatefulPreviewContainer(TransactionsFilter.none) { filter in
-        TransactionsFilterMenu(transactionsFilter: filter)
+        TransactionsFilterMenu(
+            isMenuVisible: .constant(true),
+            transactionsFilter: filter,
+            transactionCount: .constant(10)
+        )
     }
 }

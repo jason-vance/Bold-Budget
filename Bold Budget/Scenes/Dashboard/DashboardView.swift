@@ -131,7 +131,11 @@ struct DashboardView: View {
         if showExtraOptionsMenu {
             VStack(spacing: 0) {
                 if showFilterTransactionsOptions {
-                    TransactionsFilterMenu(transactionsFilter: $transactionsFilter)
+                    TransactionsFilterMenu(
+                        isMenuVisible: $showFilterTransactionsOptions,
+                        transactionsFilter: $transactionsFilter,
+                        transactionCount: .init(get: { filteredTransactions.count }, set: {_ in})
+                    )
                 } else if showTimeFramePicker {
                     TimeFramePicker(timeFrame: .init(
                         get: { timeFrame },
