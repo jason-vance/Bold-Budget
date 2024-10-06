@@ -10,20 +10,26 @@ import SwiftUI
 struct TransactionsFilter {
     
     static let none: TransactionsFilter = .init(
+        descriptionContainsText: "",
         category: nil
     )
     
+    var descriptionContainsText: String
     var category: Transaction.Category?
     
     var count: Int {
         var rv: Int = 0
         
+        if !descriptionContainsText.isEmpty { rv += 1 }
         if category != nil { rv += 1 }
         
         return rv
     }
     
     func shouldInclude(_ transaction: Transaction) -> Bool {
+        if !descriptionContainsText.isEmpty, !transaction.description.contains(descriptionContainsText) {
+            return false
+        }
         if let category = category, category != transaction.category {
             return false
         }
@@ -42,6 +48,7 @@ struct TransactionsFilterMenu: View {
         VStack(spacing: 0) {
             Form {
                 Section {
+                    ContainsAnyTextField()
                     CategoryField()
                 } header: {
                     Text("Filter Transactions")
@@ -91,6 +98,31 @@ struct TransactionsFilterMenu: View {
             Image(systemName: "xmark")
                 .buttonSymbolCircleSmall()
         }
+    }
+    
+    @ViewBuilder func ContainsAnyTextField() -> some View {
+        VStack {
+            HStack {
+                Text("Description Contains Text")
+                    .foregroundStyle(Color.text)
+                Spacer(minLength: 0)
+            }
+            TextField("Description Contains Text",
+                      text: $transactionsFilter.descriptionContainsText,
+                      prompt: Text("Milk Tea, Movie Tickets, etc...").foregroundStyle(Color.text.opacity(0.7))
+            )
+            .overlay(alignment: .trailing) {
+                Button {
+                    transactionsFilter.descriptionContainsText = ""
+                } label: {
+                    Image(systemName: "xmark")
+                        .buttonSymbolCircleSmall()
+                }
+                .opacity(transactionsFilter.descriptionContainsText.isEmpty ? 0 : 1)
+            }
+            .textFieldSmall()
+        }
+        .formRow()
     }
 }
 
