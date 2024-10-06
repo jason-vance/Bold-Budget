@@ -1,0 +1,130 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "" : {
+
+    },
+    "%@" : {
+
+    },
+    "Add Category" : {
+
+    },
+    "Add Transaction" : {
+
+    },
+    "Amount" : {
+
+    },
+    "Any transactions you add will show up here" : {
+
+    },
+    "Cancel" : {
+
+    },
+    "Category" : {
+
+    },
+    "City and State" : {
+
+    },
+    "Clear All" : {
+
+    },
+    "Date" : {
+
+    },
+    "Description Contains Text" : {
+
+    },
+    "Discard" : {
+
+    },
+    "Discard this transaction?" : {
+
+    },
+    "Expense" : {
+
+    },
+    "Filter Transactions" : {
+
+    },
+    "Groceries, Rent, Paycheck, etc..." : {
+
+    },
+    "Income" : {
+
+    },
+    "Income or Expense" : {
+
+    },
+    "Milk Tea, Movie Tickets, etc..." : {
+
+    },
+    "Month" : {
+
+    },
+    "N/A" : {
+
+    },
+    "Name" : {
+
+    },
+    "Net Total" : {
+
+    },
+    "No Transactions" : {
+
+    },
+    "Optional" : {
+
+    },
+    "Pick a Category" : {
+
+    },
+    "Required" : {
+
+    },
+    "Search for a category" : {
+
+    },
+    "Search for a symbol" : {
+
+    },
+    "See %lld Transactions" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "See %lld Transaction"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "See %lld Transactions"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Symbol" : {
+
+    },
+    "Title" : {
+
+    },
+    "Total" : {
+
+    },
+    "Year" : {
+
+    }
+  },
+  "version" : "1.0"
+}

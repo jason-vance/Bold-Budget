@@ -27,9 +27,8 @@ struct TransactionsFilter {
     }
     
     func shouldInclude(_ transaction: Transaction) -> Bool {
-        if !descriptionContainsText.isEmpty,
-           !transaction.description.lowercased().contains(descriptionContainsText.lowercased())
-        {
+        let descriptionContainsText = descriptionContainsText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if !descriptionContainsText.isEmpty, !transaction.description.lowercased().contains(descriptionContainsText) {
             return false
         }
         
