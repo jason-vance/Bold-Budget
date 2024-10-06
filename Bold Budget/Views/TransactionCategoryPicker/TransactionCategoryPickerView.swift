@@ -24,6 +24,8 @@ struct TransactionCategoryPickerView: View {
     @State private var searchText: String = ""
     @State private var searchPresented: Bool = false
     @State private var showAddTransactionCategoryView: Bool = false
+    @State private var isEditing: Bool = false
+    @State private var categoryToEdit: Transaction.Category? = nil
     
     public var onSelected: (Transaction.Category) -> ()
     
@@ -31,10 +33,14 @@ struct TransactionCategoryPickerView: View {
     
     private var filteredCategories: [Transaction.Category] {
         guard let categories = categories else { return [] }
-        guard !searchText.isEmpty else { return categories }
-        return categories
+        let sortedCategories = categories.sorted { $0.name.value < $1.name.value }
+        
+        guard !searchText.isEmpty else {
+            return sortedCategories
+        }
+        
+        return sortedCategories
             .filter { $0.name.value.contains(searchText) }
-            .sorted { $0.name.value < $1.name.value }
     }
     
     private var categoriesPublisher: AnyPublisher<[Transaction.Category],Never> {
@@ -45,8 +51,12 @@ struct TransactionCategoryPickerView: View {
     }
     
     private func select(category: Transaction.Category) {
-        onSelected(category)
-        dismiss()
+        if isEditing {
+            categoryToEdit = category
+        } else {
+            onSelected(category)
+            dismiss()
+        }
     }
     
     var body: some View {
@@ -56,8 +66,8 @@ struct TransactionCategoryPickerView: View {
                 .padding(.padding)
             BarDivider()
             ScrollView {
-                VStack {
-                    if let _ = categories {
+                LazyVStack {
+                    if categories != nil {
                         ForEach(filteredCategories) { category in
                             CategoryButton(category)
                         }
@@ -70,6 +80,7 @@ struct TransactionCategoryPickerView: View {
                 }
                 .padding(.padding)
             }
+            .safeAreaInset(edge: .bottom, alignment: .trailing) { AddCategoryButton() }
         }
         .background(Color.background)
         .onReceive(categoriesPublisher) { categories = $0 }
@@ -113,9 +124,9 @@ struct TransactionCategoryPickerView: View {
     
     @ViewBuilder func TopBar() -> some View {
         ScreenTitleBar(
-            primaryContent: { Text("Pick a Category") },
+            primaryContent: { Text(isEditing ? "Edit a Category" : "Pick a Category") },
             leadingContent: { CloseButton() },
-            trailingContent: { AddButton() }
+            trailingContent: { EditButton() }
         )
     }
     
@@ -127,13 +138,40 @@ struct TransactionCategoryPickerView: View {
         }
     }
     
-    @ViewBuilder func AddButton() -> some View {
+    @ViewBuilder private func EditButton() -> some View {
+        Button {
+            withAnimation(.snappy) { isEditing.toggle() }
+        } label: {
+            TitleBarButtonLabel(sfSymbol: isEditing ? "pencil.slash" : "pencil")
+        }
+        .opacity(mode == .pickerAndEditor && categories?.isEmpty == false ? 1 : 0)
+        .fullScreenCover(isPresented: .init(
+            get: { categoryToEdit != nil },
+            set: { isPresented in categoryToEdit = isPresented ? categoryToEdit : nil }
+        )) {
+            if let category = categoryToEdit {
+                AddTransactionCategoryView()
+                    .editing(category)
+            }
+        }
+    }
+    
+    @ViewBuilder func AddCategoryButton() -> some View {
         Button {
             showAddTransactionCategoryView = true
         } label: {
-            TitleBarButtonLabel(sfSymbol: "plus")
+            Image(systemName: "plus")
+                .foregroundStyle(Color.background)
+                .font(.title)
+                .padding()
+                .background {
+                    Circle()
+                        .foregroundStyle(Color.text)
+                        .shadow(color: Color.background, radius: .padding)
+                }
         }
-        .opacity(mode == .pickerAndEditor ? 1 : 0)
+        .opacity(mode == .pickerAndEditor && isEditing == false ? 1 : 0)
+        .padding()
         .fullScreenCover(isPresented: $showAddTransactionCategoryView) {
             AddTransactionCategoryView()
         }
@@ -149,6 +187,10 @@ struct TransactionCategoryPickerView: View {
     }
 }
 
-#Preview {
+#Preview("Picker") {
+    TransactionCategoryPickerView(mode: .picker) { _ in }
+}
+
+#Preview("Picker And Editor") {
     TransactionCategoryPickerView(mode: .pickerAndEditor) { _ in }
 }

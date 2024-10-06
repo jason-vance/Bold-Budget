@@ -9,7 +9,7 @@ import Combine
 import Foundation
 
 protocol TransactionCategorySaver {
-    func save(category: Transaction.Category)
+    func save(newCategory: Transaction.Category)
 }
 
 class TransactionCategoryRepo {
@@ -34,13 +34,13 @@ class TransactionCategoryRepo {
                 var categories = Transaction.Category.samples
                 instance = .init(
                     getCategories: { categories },
-                    addCategory: { categories = categories + [$0] }
+                    addOrUpdateCategory: { categories = categories + [$0] }
                 )
             } else {
                 let cache = TransactionCategoriesCache()
                 instance = .init(
                     getCategories: { cache.categories },
-                    addCategory: { try cache.add(category: $0) }
+                    addOrUpdateCategory: { try cache.addOrUpdate(category: $0) }
                 )
             }
         }
@@ -49,15 +49,15 @@ class TransactionCategoryRepo {
     }
     
     private let getCategories: () -> [Transaction.Category]
-    private let addCategory: (Transaction.Category) throws -> ()
+    private let addOrUpdateCategory: (Transaction.Category) throws -> ()
     private let categoriesSubject: CurrentValueSubject<[Transaction.Category],Never> = .init([])
 
     init(
         getCategories: @escaping () -> [Transaction.Category],
-        addCategory: @escaping (Transaction.Category) throws -> ()
+        addOrUpdateCategory: @escaping (Transaction.Category) throws -> ()
     ) {
         self.getCategories = getCategories
-        self.addCategory = addCategory
+        self.addOrUpdateCategory = addOrUpdateCategory
         categoriesSubject.send(getCategories())
     }
     
@@ -67,9 +67,9 @@ class TransactionCategoryRepo {
     
     public var categories: [Transaction.Category] { categoriesSubject.value }
     
-    func save(category: Transaction.Category) {
+    func save(newCategory: Transaction.Category) {
         do {
-            try addCategory(category)
+            try addOrUpdateCategory(newCategory)
             categoriesSubject.send(getCategories())
         } catch {
             print("Failed to add category: \(error.localizedDescription)")

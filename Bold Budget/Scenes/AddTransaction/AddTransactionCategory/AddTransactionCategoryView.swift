@@ -9,8 +9,16 @@ import SwiftUI
 
 struct AddTransactionCategoryView: View {
     
+    private struct OptionalCategory: Equatable {
+        let category: Transaction.Category?
+        static let none: OptionalCategory = .init(category: nil)
+    }
+    
     @Environment(\.dismiss) private var dismiss
     
+    private var categoryToEdit: OptionalCategory = .none
+    
+    @State private var screenTitle: String = String(localized: "Add Category")
     @State private var kind: Transaction.Category.Kind = .expense
     @State private var symbolString: String? = nil
     @State private var nameString: String = ""
@@ -18,12 +26,19 @@ struct AddTransactionCategoryView: View {
     
     @State private var showSymbolPicker: Bool = false
     
+    public func editing(_ category: Transaction.Category) -> AddTransactionCategoryView {
+        var view = self
+        view.categoryToEdit = .init(category: category)
+        return view
+    }
+    
     private var category: Transaction.Category? {
         guard let name = Transaction.Category.Name(nameString) else { return nil }
         guard let symbolString = symbolString else { return nil }
         guard let sfSymbol = Transaction.Category.SfSymbol(symbolString) else { return nil }
 
         return .init(
+            id: UUID(),
             kind: kind,
             name: name,
             sfSymbol: sfSymbol
@@ -33,9 +48,17 @@ struct AddTransactionCategoryView: View {
     private var isFormComplete: Bool { category != nil }
     
     private func saveCategory() {
-        guard let category = category else { return }
+        guard var category = category else { return }
+        if let categoryToEdit = categoryToEdit.category {
+            category = .init(
+                id: categoryToEdit.id,
+                kind: category.kind,
+                name: category.name,
+                sfSymbol: category.sfSymbol
+            )
+        }
         guard let saver = iocContainer.resolve(TransactionCategorySaver.self) else { return }
-        saver.save(category: category)
+        saver.save(newCategory: category)
         dismiss()
     }
     
@@ -45,6 +68,15 @@ struct AddTransactionCategoryView: View {
             if nameString.count > Transaction.Category.Name.maxTextLength { nameInstructions = "Too long"; return }
             nameInstructions = "\(nameString.count)/\(Transaction.Category.Name.maxTextLength)"
         }
+    }
+    
+    private func populateFields(_ category: OptionalCategory) {
+        guard let category = category.category else { return }
+        print("populating fields")
+        screenTitle = String(localized: "Edit Category")
+        kind = category.kind
+        symbolString = category.sfSymbol.value
+        nameString = category.name.value
     }
     
     var body: some View {
@@ -66,11 +98,12 @@ struct AddTransactionCategoryView: View {
         }
         .background(Color.background)
         .onChange(of: nameString) { _, nameString in setNameInstructions(nameString) }
+        .onChange(of: categoryToEdit, initial: true) { _, category in populateFields(category) }
     }
     
     @ViewBuilder func TopBar() -> some View {
         ScreenTitleBar(
-            primaryContent: { Text("Add Category") },
+            primaryContent: { Text(screenTitle) },
             leadingContent: { CloseButton() },
             trailingContent: { SaveButton() }
         )
@@ -171,6 +204,16 @@ struct AddTransactionCategoryView: View {
     }
 }
 
-#Preview {
+#Preview("New") {
     AddTransactionCategoryView()
+}
+
+#Preview("Edit") {
+    AddTransactionCategoryView()
+        .editing(.init(
+            id: UUID(),
+            kind: .income,
+            name: .init("Category To Edit")!,
+            sfSymbol: .init("pencil.and.outline")!
+        ))
 }
