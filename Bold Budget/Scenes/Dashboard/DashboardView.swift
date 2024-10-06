@@ -11,6 +11,11 @@ import Combine
 
 struct DashboardView: View {
     
+    private enum ExtraOptionsMenu {
+        case timeFrame
+        case transactionFilters
+    }
+    
     struct TransactionGroup: Identifiable {
         var id: SimpleDate { date }
         let date: SimpleDate
@@ -73,6 +78,24 @@ struct DashboardView: View {
         }
     }
     
+    private var showExtraOptionsMenu: Bool {
+        showTimeFramePicker || showFilterTransactionsOptions
+    }
+    
+    private func toggle(extraOptionsMenu: ExtraOptionsMenu) {
+        withAnimation(.snappy) {
+            showTimeFramePicker = extraOptionsMenu == .timeFrame && !showTimeFramePicker
+            showFilterTransactionsOptions = extraOptionsMenu == .transactionFilters && !showFilterTransactionsOptions
+        }
+    }
+    
+    private func hideExtraOptionsMenu() {
+        withAnimation(.snappy) {
+            showTimeFramePicker = false
+            showFilterTransactionsOptions = false
+        }
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
             TopBar()
@@ -83,50 +106,48 @@ struct DashboardView: View {
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
             .scrollIndicators(.hidden)
-            .safeAreaInset(edge: .bottom, alignment: .trailing) {
-                AddTransactionButton()
-            }
-            .overlay(alignment: .bottomTrailing) {
-                AddTransactionButton()
-            }
+            .safeAreaInset(edge: .bottom, alignment: .trailing) { AddTransactionButton() }
+            .overlay(alignment: .bottomTrailing) { AddTransactionButton() }
             .overlay(alignment: .top) {
                 Rectangle()
                     .opacity(0)
-                    .overlay(alignment: .top) {
-                        if showTimeFramePicker {
-                            VStack(spacing: 0) {
-                                TimeFramePicker(timeFrame: .init(
-                                    get: { timeFrame },
-                                    set: { timeFrame in withAnimation(.snappy) { self.timeFrame = timeFrame } }
-                                ))
-                                BarDivider()
-                                BarDivider()
-                                Spacer(minLength: 0)
-                            }
-                            .background {
-                                let colors = [
-                                    Color.background.opacity(0.85),
-                                    Color.background.opacity(0.65),
-                                    Color.background.opacity(0.45),
-                                    Color.background.opacity(0.25),
-                                    Color.clear,
-                                ]
-                                LinearGradient(colors: colors, startPoint: .top, endPoint: .bottom)
-                                    .onTapGesture {
-                                        withAnimation(.snappy) { showTimeFramePicker = false }
-                                    }
-                            }
-                            .transition(.asymmetric(insertion: .push(from: .top), removal: .push(from: .bottom)))
-                        }
-                    }
+                    .overlay(alignment: .top) { ExtraOptionsMenuOverlay() }
                     .clipped()
             }
         }
         .foregroundStyle(Color.text)
         .background(Color.background)
         .onReceive(transactionsPublisher) { transactions = $0 }
-        .fullScreenCover(isPresented: $showAddTransaction) {
-            AddTransactionView()
+        .fullScreenCover(isPresented: $showAddTransaction) { AddTransactionView() }
+    }
+    
+    @ViewBuilder private func ExtraOptionsMenuOverlay() -> some View {
+        if showExtraOptionsMenu {
+            VStack(spacing: 0) {
+                if showFilterTransactionsOptions {
+                    //TODO: add filter options menu
+                } else if showTimeFramePicker {
+                    TimeFramePicker(timeFrame: .init(
+                        get: { timeFrame },
+                        set: { timeFrame in withAnimation(.snappy) { self.timeFrame = timeFrame } }
+                    ))
+                }
+                BarDivider()
+                BarDivider() // For some reason this is not visible unless there are two of them
+                Spacer(minLength: 0)
+            }
+            .background {
+                let colors = [
+                    Color.background.opacity(0.85),
+                    Color.background.opacity(0.65),
+                    Color.background.opacity(0.45),
+                    Color.background.opacity(0.25),
+                    Color.clear,
+                ]
+                LinearGradient(colors: colors, startPoint: .top, endPoint: .bottom)
+                    .onTapGesture { hideExtraOptionsMenu() }
+            }
+            .transition(.asymmetric(insertion: .push(from: .top), removal: .push(from: .bottom)))
         }
     }
     
@@ -140,7 +161,7 @@ struct DashboardView: View {
     
     @ViewBuilder func FilterTransactionsButton() -> some View {
         Button {
-            withAnimation(.snappy) { showFilterTransactionsOptions.toggle() }
+            toggle(extraOptionsMenu: .transactionFilters)
         } label: {
             TitleBarButtonLabel(sfSymbol: "line.3.horizontal.decrease")
         }
@@ -150,7 +171,7 @@ struct DashboardView: View {
         HStack(spacing: 0) {
             DecrementTimeFrameButton()
             Button {
-                withAnimation(.snappy) { showTimeFramePicker.toggle() }
+                toggle(extraOptionsMenu: .timeFrame)
             } label: {
                 Text(timeFrame.toUiString())
                     .frame(width: 100)
