@@ -90,8 +90,9 @@ struct SfSymbolPickerView: View {
     
     @ViewBuilder func TopBar() -> some View {
         ScreenTitleBar(
-            "Pick a Symbol",
-            leadingContent: { CloseButton() }
+            primaryContent: { Text("Pick a Symbol") },
+            leadingContent: { CloseButton() },
+            trailingContent: { CloseButton().opacity(0) }
         )
     }
     
