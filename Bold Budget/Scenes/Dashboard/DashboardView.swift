@@ -28,6 +28,7 @@ struct DashboardView: View {
     @State private var timeFrame: TimeFrame = .init(period: .month, containing: .now)
     @State private var transactions: [Transaction] = []
     @State private var showTimeFramePicker: Bool = false
+    @State private var showFilterTransactionsOptions: Bool = false
     @State private var showAddTransaction: Bool = false
 
     private var filteredTransactions: [Transaction] {
@@ -89,31 +90,37 @@ struct DashboardView: View {
                 AddTransactionButton()
             }
             .overlay(alignment: .top) {
-                if showTimeFramePicker {
-                    VStack(spacing: 0) {
-                        TimeFramePicker(timeFrame: .init(
-                            get: { timeFrame },
-                            set: { timeFrame in withAnimation(.snappy) { self.timeFrame = timeFrame } }
-                        ))
-                        BarDivider()
-                        BarDivider()
-                        Spacer(minLength: 0)
+                Rectangle()
+                    .opacity(0)
+                    .overlay(alignment: .top) {
+                        if showTimeFramePicker {
+                            VStack(spacing: 0) {
+                                TimeFramePicker(timeFrame: .init(
+                                    get: { timeFrame },
+                                    set: { timeFrame in withAnimation(.snappy) { self.timeFrame = timeFrame } }
+                                ))
+                                BarDivider()
+                                BarDivider()
+                                Spacer(minLength: 0)
+                            }
+                            .background {
+                                let colors = [
+                                    Color.background.opacity(0.85),
+                                    Color.background.opacity(0.65),
+                                    Color.background.opacity(0.45),
+                                    Color.background.opacity(0.25),
+                                    Color.clear,
+                                ]
+                                LinearGradient(colors: colors, startPoint: .top, endPoint: .bottom)
+                                    .onTapGesture {
+                                        withAnimation(.snappy) { showTimeFramePicker = false }
+                                    }
+                            }
+                            .transition(.asymmetric(insertion: .push(from: .top), removal: .push(from: .bottom)))
+                        }
                     }
-                    .background {
-                        let colors = [
-                            Color.background.opacity(0.85),
-                            Color.background.opacity(0.65),
-                            Color.background.opacity(0.45),
-                            Color.background.opacity(0.25),
-                            Color.clear,
-                        ]
-                        LinearGradient(colors: colors, startPoint: .top, endPoint: .bottom)
-                            .onTapGesture { withAnimation(.snappy) { showTimeFramePicker.toggle() } }
-                    }
-                    .transition(.asymmetric(insertion: .push(from: .top), removal: .push(from: .bottom)))
-                }
+                    .clipped()
             }
-            .clipped()
         }
         .foregroundStyle(Color.text)
         .background(Color.background)
@@ -126,18 +133,31 @@ struct DashboardView: View {
     @ViewBuilder func TopBar() -> some View {
         ScreenTitleBar(
             primaryContent: { TimeFrameButton() },
-            leadingContent: { DecrementTimeFrameButton() },
-            trailingContent: { IncrementTimeFrameButton() }
+            leadingContent: { FilterTransactionsButton().opacity(0) },
+            trailingContent: { FilterTransactionsButton() }
         )
     }
     
-    @ViewBuilder func TimeFrameButton() -> some View {
+    @ViewBuilder func FilterTransactionsButton() -> some View {
         Button {
-            withAnimation(.snappy) { showTimeFramePicker.toggle() }
+            withAnimation(.snappy) { showFilterTransactionsOptions.toggle() }
         } label: {
-            Text(timeFrame.toUiString())
-                .buttonLabelSmall()
-                .contentTransition(.numericText())
+            TitleBarButtonLabel(sfSymbol: "line.3.horizontal.decrease")
+        }
+    }
+    
+    @ViewBuilder func TimeFrameButton() -> some View {
+        HStack(spacing: 0) {
+            DecrementTimeFrameButton()
+            Button {
+                withAnimation(.snappy) { showTimeFramePicker.toggle() }
+            } label: {
+                Text(timeFrame.toUiString())
+                    .frame(width: 100)
+                    .buttonLabelSmall()
+                    .contentTransition(.numericText())
+            }
+            IncrementTimeFrameButton()
         }
     }
     

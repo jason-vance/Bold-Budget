@@ -36,6 +36,7 @@ struct TimeFramePicker: View {
         .padding(.vertical, .padding)
         .background(Color.background)
         .onAppear { setState(timeFrame) }
+        .onChange(of: timeFrame) { _, timeFrame in setState(timeFrame) }
         .onChange(of: period) { _, period in setTimeFrame(period: period, year: year, month: month) }
         .onChange(of: year) { _, year in setTimeFrame(period: period, year: year, month: month) }
         .onChange(of: month) { _, month in setTimeFrame(period: period, year: year, month: month) }
@@ -63,6 +64,7 @@ struct TimeFramePicker: View {
         ScrollViewReader { value in
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack {
+                    //TODO: Make the year selection actually match what's in the TransactionLedger
                     ForEach((2016...SimpleDate.now.year).map { $0 }, id: \.self) { year in
                         Button {
                             withAnimation(.snappy) {

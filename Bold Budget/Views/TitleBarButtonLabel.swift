@@ -17,7 +17,7 @@ struct TitleBarButtonLabel: View {
             .font(.subheadline.bold())
             .foregroundStyle(Color.text)
             .aspectRatio(contentMode: .fit)
-            .frame(width: 24, height: .barHeight)
+            .frame(width: .barHeight, height: .barHeight)
             .contentTransition(.symbolEffect(.replace))
         .onChange(of: sfSymbol, initial: true) { oldSfSymbol, newSfSymbol in
             withAnimation(.snappy) {

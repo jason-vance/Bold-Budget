@@ -61,7 +61,6 @@ struct ScreenTitleBar<PrimaryContent:View,LeadingContent:View,TrailingContent:Vi
                 trailingContent()
             }
         }
-        .padding(.horizontal)
         .frame(height: .barHeight)
         .overlay(alignment: .bottom) { BarDivider() }
     }
