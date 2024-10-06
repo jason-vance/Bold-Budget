@@ -10,6 +10,18 @@ import SwiftUI
 
 extension View {
     
+    func buttonSymbolCircleSmall(isProminent: Bool = false) -> some View {
+        self
+            .font(.caption2)
+            .foregroundStyle(isProminent ? Color.text : Color.background)
+            .padding(.paddingCircleButtonSmall)
+            .background {
+                Circle()
+                    .foregroundStyle(Color.text)
+                    .opacity(isProminent ? 1 : Double.opacityButtonBackground)
+            }
+    }
+    
     func buttonLabelSmall(isProminent: Bool = false) -> some View {
         self
             .foregroundStyle(isProminent ? Color.background : Color.text)

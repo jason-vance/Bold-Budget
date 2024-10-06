@@ -64,7 +64,6 @@ struct TimeFramePicker: View {
         ScrollViewReader { value in
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack {
-                    //TODO: Make the year selection actually match what's in the TransactionLedger
                     ForEach((2016...SimpleDate.now.year).map { $0 }, id: \.self) { year in
                         Button {
                             withAnimation(.snappy) {

@@ -30,15 +30,21 @@ struct DashboardView: View {
             .eraseToAnyPublisher()
     }
     
-    @State private var timeFrame: TimeFrame = .init(period: .month, containing: .now)
     @State private var transactions: [Transaction] = []
+    @State private var timeFrame: TimeFrame = .init(period: .month, containing: .now)
+    @State private var transactionsFilter: TransactionsFilter = .none
+    
     @State private var showTimeFramePicker: Bool = false
     @State private var showFilterTransactionsOptions: Bool = false
     @State private var showAddTransaction: Bool = false
 
     private var filteredTransactions: [Transaction] {
         transactions
-            .filter { $0.date >= timeFrame.start && $0.date <= timeFrame.end }
+            .filter {
+                $0.date >= timeFrame.start &&
+                $0.date <= timeFrame.end &&
+                transactionsFilter.shouldInclude($0)
+            }
     }
     
     private var transactionGroups: [TransactionGroup] {
@@ -125,7 +131,7 @@ struct DashboardView: View {
         if showExtraOptionsMenu {
             VStack(spacing: 0) {
                 if showFilterTransactionsOptions {
-                    //TODO: add filter options menu
+                    TransactionsFilterMenu(transactionsFilter: $transactionsFilter)
                 } else if showTimeFramePicker {
                     TimeFramePicker(timeFrame: .init(
                         get: { timeFrame },
@@ -164,6 +170,13 @@ struct DashboardView: View {
             toggle(extraOptionsMenu: .transactionFilters)
         } label: {
             TitleBarButtonLabel(sfSymbol: "line.3.horizontal.decrease")
+                .overlay(alignment: .topLeading) {
+                    if transactionsFilter.count > 0 {
+                        Image(systemName: "\(transactionsFilter.count).circle.fill")
+                            .font(.caption2)
+                            .padding(.paddingCircleButtonSmall)
+                    }
+                }
         }
     }
     
