@@ -26,6 +26,12 @@ struct TimeFramePicker: View {
         timeFrame = .init(period: period, containing: date)
     }
     
+    private var oldestTransactionDate: SimpleDate {
+        guard let ledger = iocContainer.resolve(TransactionLedger.self) else { return .now }
+        guard let oldestTransaction = (ledger.transactions.min { $0.date < $1.date }) else { return .now }
+        return oldestTransaction.date
+    }
+    
     var body: some View {
         VStack(spacing: .padding) {
             PeriodPicker()
@@ -64,7 +70,7 @@ struct TimeFramePicker: View {
         ScrollViewReader { value in
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack {
-                    ForEach((2016...SimpleDate.now.year).map { $0 }, id: \.self) { year in
+                    ForEach((oldestTransactionDate.year...SimpleDate.now.year).map { $0 }, id: \.self) { year in
                         Button {
                             withAnimation(.snappy) {
                                 self.year = year
