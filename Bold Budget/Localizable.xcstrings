@@ -28,9 +28,6 @@
     "Category" : {
 
     },
-    "City and State" : {
-
-    },
     "Clear All" : {
 
     },
@@ -68,6 +65,9 @@
 
     },
     "Income or Expense" : {
+
+    },
+    "Location" : {
 
     },
     "Milk Tea, Movie Tickets, etc..." : {

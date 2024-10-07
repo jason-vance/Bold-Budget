@@ -14,14 +14,10 @@ struct Transaction: Identifiable {
     let amount: Money
     let date: SimpleDate
     let category: Transaction.Category
-    let cityAndState: Transaction.CityAndState?
+    let location: Transaction.Location?
     
     var description: String {
         return title?.text ?? category.name.value
-    }
-    
-    var location: String? {
-        return cityAndState?.value
     }
 }
 
@@ -33,7 +29,7 @@ extension Transaction {
             amount: .sampleRandom,
             date: .now,
             category: Category.samples[.random(in: 0..<Category.samples.count)],
-            cityAndState: .sample
+            location: .sample
         )
     }
     
@@ -48,7 +44,7 @@ extension Transaction {
             amount: .init(47.52)!,
             date: .now,
             category: .sampleEntertainment,
-            cityAndState: .init("Redmond, WA")
+            location: .init("Redmond, WA")
         ),
         .init(
             id: UUID(),
@@ -56,7 +52,7 @@ extension Transaction {
             amount: .init(87.63)!,
             date: .now,
             category: .sampleGroceries,
-            cityAndState: .init("Seattle, WA")
+            location: .init("Seattle, WA")
         ),
         .init(
             id: UUID(),
@@ -64,7 +60,7 @@ extension Transaction {
             amount: .init(750)!,
             date: .now,
             category: .sampleHousing,
-            cityAndState: nil
+            location: nil
         ),
         .init(
             id: UUID(),
@@ -72,7 +68,7 @@ extension Transaction {
             amount: .init(1084.62)!,
             date: .now,
             category: .samplePaycheck,
-            cityAndState: nil
+            location: nil
         ),
         .init(
             id: UUID(),
@@ -80,7 +76,7 @@ extension Transaction {
             amount: .init(57.30)!,
             date: .now,
             category: .sampleVehicle,
-            cityAndState: .init("Redmond, WA")
+            location: .init("Redmond, WA")
         ),
         .init(
             id: UUID(),
@@ -88,7 +84,7 @@ extension Transaction {
             amount: .init(65.24)!,
             date: .startOfMonth(containing: .now),
             category: .sampleGroceries,
-            cityAndState: .init("Seattle, WA")
+            location: .init("Seattle, WA")
         ),
     ]
 }

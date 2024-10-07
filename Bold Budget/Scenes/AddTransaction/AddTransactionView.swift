@@ -16,8 +16,8 @@ struct AddTransactionView: View {
     @State private var transactionDate: Date = .now
     @State private var titleString: String = ""
     @State private var titleInstructions: String = ""
-    @State private var cityAndStateString: String = ""
-    @State private var cityAndStateInstructions: String = ""
+    @State private var locationString: String = ""
+    @State private var locationInstructions: String = ""
 
     @State private var showDiscardDialog: Bool = false
     @State private var showCategoryPicker: Bool = false
@@ -37,10 +37,10 @@ struct AddTransactionView: View {
             title = tmpTitle
         }
         
-        var cityAndState: Transaction.CityAndState? = nil
-        if !cityAndStateString.isEmpty {
-            guard let tmpCityState = Transaction.CityAndState(cityAndStateString) else { return nil }
-            cityAndState = tmpCityState
+        var location: Transaction.Location? = nil
+        if !locationString.isEmpty {
+            guard let tmpLocation = Transaction.Location(locationString) else { return nil }
+            location = tmpLocation
         }
         
         return .init(
@@ -49,7 +49,7 @@ struct AddTransactionView: View {
             amount: amount,
             date: date,
             category: category,
-            cityAndState: cityAndState
+            location: location
         )
     }
     
@@ -70,12 +70,12 @@ struct AddTransactionView: View {
         }
     }
     
-    private func setCityStateInstructions(_ cityAndStateString: String) {
+    private func setLocationInstructions(_ locationString: String) {
         withAnimation(.snappy) {
-            if cityAndStateString.isEmpty { cityAndStateInstructions = ""; return }
-            if cityAndStateString.count < Transaction.CityAndState.minTextLength { cityAndStateInstructions = "Too short"; return }
-            if cityAndStateString.count > Transaction.CityAndState.maxTextLength { cityAndStateInstructions = "Too long"; return }
-            cityAndStateInstructions = "\(cityAndStateString.count)/\(Transaction.CityAndState.maxTextLength)"
+            if locationString.isEmpty { locationInstructions = ""; return }
+            if locationString.count < Transaction.Location.minTextLength { locationInstructions = "Too short"; return }
+            if locationString.count > Transaction.Location.maxTextLength { locationInstructions = "Too long"; return }
+            locationInstructions = "\(locationString.count)/\(Transaction.Location.maxTextLength)"
         }
     }
     
@@ -114,7 +114,7 @@ struct AddTransactionView: View {
                 }
                 Section {
                     TitleField()
-                    CityAndStateField()
+                    LocationField()
                 } header: {
                     Text("Optional")
                         .foregroundStyle(Color.text)
@@ -126,7 +126,7 @@ struct AddTransactionView: View {
         }
         .background(Color.background)
         .onChange(of: titleString) { _, titleString in setTitleInstructions(titleString) }
-        .onChange(of: cityAndStateString) { _, cityAndStateString in setCityStateInstructions(cityAndStateString) }
+        .onChange(of: locationString) { _, locationString in setLocationInstructions(locationString) }
         .alert(alertMessage, isPresented: $showAlert) {}
     }
     
@@ -274,20 +274,20 @@ struct AddTransactionView: View {
         .formRow()
     }
     
-    @ViewBuilder func CityAndStateField() -> some View {
+    @ViewBuilder func LocationField() -> some View {
         VStack {
             HStack {
-                Text("City and State")
+                Text("Location")
                     .foregroundStyle(Color.text)
                 Spacer(minLength: 0)
-                Text(cityAndStateInstructions)
+                Text(locationInstructions)
                     .font(.caption2)
                     .foregroundStyle(Color.text.opacity( 0.75))
                     .padding(.horizontal, .paddingHorizontalButtonXSmall)
             }
-            TextField("City and State",
-                      text: $cityAndStateString,
-                      prompt: Text(Transaction.CityAndState.sample.value).foregroundStyle(Color.text.opacity(0.7))
+            TextField("Location",
+                      text: $locationString,
+                      prompt: Text(Transaction.Location.sample.value).foregroundStyle(Color.text.opacity(0.7))
             )
             .textFieldSmall()
         }

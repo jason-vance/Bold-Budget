@@ -145,7 +145,7 @@ struct TransactionDetailView: View {
     @ViewBuilder private func PropertiesSection() -> some View {
         Section {
             TitleRow()
-            CityAndStateRow()
+            LocationRow()
         } header: {
             ZStack {}
         }
@@ -203,9 +203,9 @@ struct TransactionDetailView: View {
         }
     }
     
-    @ViewBuilder private func CityAndStateRow() -> some View {
-        if let cityAndState = transaction.cityAndState {
-            LongerTextRow(label: String(localized: "City and State"), value: cityAndState.value)
+    @ViewBuilder private func LocationRow() -> some View {
+        if let location = transaction.location {
+            LongerTextRow(label: String(localized: "Location"), value: location.value)
         }
     }
     

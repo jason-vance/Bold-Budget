@@ -42,7 +42,7 @@ struct TransactionRowView: View {
         VStack(spacing: 0) {
             Description()
             HStack {
-                Text(transaction.location ?? "Unknown Location")
+                Text(transaction.location?.value ?? "Unknown Location")
                     .font(.caption.weight(.light))
                     .lineLimit(1)
                     .opacity(transaction.location == nil ? 0 : 1)

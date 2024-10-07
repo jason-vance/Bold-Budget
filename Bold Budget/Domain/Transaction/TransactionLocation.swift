@@ -8,10 +8,10 @@
 import Foundation
 
 extension Transaction {
-    struct CityAndState {
+    struct Location {
         
-        static let minTextLength: Int = 5
-        static let maxTextLength: Int = 50
+        static let minTextLength: Int = 3
+        static let maxTextLength: Int = 100
 
         let value: String
         
@@ -32,6 +32,6 @@ extension Transaction {
             self.value = trimmedText
         }
         
-        static let sample: Transaction.CityAndState = .init("Cupertino, CA")!
+        static let sample: Transaction.Location = .init("Cupertino, CA")!
     }
 }
