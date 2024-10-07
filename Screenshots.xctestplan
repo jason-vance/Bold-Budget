@@ -1,0 +1,30 @@
+{
+  "configurations" : [
+    {
+      "id" : "1C3059B2-B8E8-4535-A50D-05C7C1603DF9",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "testTimeoutsEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "selectedTests" : [
+        "Bold_BudgetUITestsLaunchTests\/testLaunch()",
+        "ScreenshotGatherer\/testAddTransactionScreenshot()",
+        "ScreenshotGatherer\/testDashboardScreenshot()",
+        "ScreenshotGatherer\/testTransactionDetailScreenshot()"
+      ],
+      "target" : {
+        "containerPath" : "container:Bold Budget.xcodeproj",
+        "identifier" : "5673DA282CA7FA5A007833E0",
+        "name" : "Bold BudgetUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

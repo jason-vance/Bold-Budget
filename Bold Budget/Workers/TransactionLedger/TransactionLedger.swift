@@ -18,42 +18,28 @@ protocol TransactionDeleter {
 
 class TransactionLedger {
     
-    private static let envKey_useMocks: String = "TransactionLedger.envKey_useMocks"
-    
-    public static func set(useMocks: Bool = true, in environment: inout [String:String]) {
-        environment[TransactionLedger.envKey_useMocks] = String(useMocks)
-    }
-    
-    private static func shouldUseMocks() -> Bool {
-        if let useMocks = ProcessInfo.processInfo.environment[Self.envKey_useMocks] {
-            return Bool(useMocks) ?? false
-        }
-        return false
-    }
-    
     static var instance: TransactionLedger? = nil
     static func getInstance() -> TransactionLedger {
         if instance == nil {
-            if Self.shouldUseMocks() {
-                var transactions = Transaction.samples
-                instance = .init(
-                    getTransactions: { transactions },
-                    addTransaction: { transactions = transactions + [$0] },
-                    removeTransaction: { transaction in transactions.removeAll { $0.id == transaction.id } }
-                )
+            if let testInstance = getTestInstance() {
+                instance = testInstance
             } else {
-                let cache = TransactionsCache(
-                    categoryRepo: TransactionCategoryRepo.getInstance()
-                )
-                instance = .init(
-                    getTransactions: { cache.transactions },
-                    addTransaction: { try cache.add(transaction: $0) },
-                    removeTransaction: { try cache.remove(transaction: $0) }
-                )
+                instance = getDefaultInstance()
             }
         }
         
         return instance!
+    }
+    
+    private static func getDefaultInstance() -> TransactionLedger {
+        let cache = TransactionsCache(
+            categoryRepo: TransactionCategoryRepo.getInstance()
+        )
+        return .init(
+            getTransactions: { cache.transactions },
+            addTransaction: { try cache.add(transaction: $0) },
+            removeTransaction: { try cache.remove(transaction: $0) }
+        )
     }
     
     private let getTransactions: () -> [Transaction]
@@ -104,3 +90,42 @@ extension TransactionLedger: TransactionProvider {}
 extension TransactionLedger: TransactionSaver {}
 
 extension TransactionLedger: TransactionDeleter {}
+
+extension TransactionLedger {
+    public enum TestTransactions: String, RawRepresentable {
+        case empty
+        case transactionSamples
+        case screenshotSamples
+    }
+    
+    private static let envKey_TestTransactions: String = "TransactionLedger.envKey_TestTransactions"
+    
+    public static func test(using testTransactions: TestTransactions = .transactionSamples, in environment: inout [String:String]) {
+        environment[TransactionLedger.envKey_TestTransactions] = testTransactions.rawValue
+    }
+    
+    private static func getTestTransactions() -> [Transaction]? {
+        if let testTransactions = TestTransactions(rawValue: ProcessInfo.processInfo.environment[Self.envKey_TestTransactions] ?? "") {
+            switch testTransactions {
+            case .empty:
+                return []
+            case .transactionSamples:
+                return Transaction.samples
+            case .screenshotSamples:
+                return Transaction.screenshotSamples
+            }
+        }
+        return nil
+    }
+    
+    private static func getTestInstance() -> TransactionLedger? {
+        if var testTransactions = getTestTransactions() {
+            return .init(
+                getTransactions: { testTransactions },
+                addTransaction: { testTransactions = testTransactions + [$0] },
+                removeTransaction: { transaction in testTransactions.removeAll { $0.id == transaction.id } }
+            )
+        }
+        return nil
+    }
+}

@@ -175,6 +175,7 @@ struct TransactionCategoryPickerView: View {
         .fullScreenCover(isPresented: $showAddTransactionCategoryView) {
             AddTransactionCategoryView()
         }
+        .accessibilityIdentifier("Add Category Button")
     }
     
     @ViewBuilder func SearchArea() -> some View {

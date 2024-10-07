@@ -14,38 +14,25 @@ protocol TransactionCategorySaver {
 
 class TransactionCategoryRepo {
     
-    private static let envKey_useMocks: String = "TransactionCategoryRepo.envKey_useMocks"
-    
-    public static func set(useMocks: Bool = true, in environment: inout [String:String]) {
-        environment[TransactionCategoryRepo.envKey_useMocks] = String(useMocks)
-    }
-    
-    private static func shouldUseMocks() -> Bool {
-        if let useMocks = ProcessInfo.processInfo.environment[Self.envKey_useMocks] {
-            return Bool(useMocks) ?? false
-        }
-        return false
-    }
-    
     static var instance: TransactionCategoryRepo? = nil
     static func getInstance() -> TransactionCategoryRepo {
         if instance == nil {
-            if Self.shouldUseMocks() {
-                var categories = Transaction.Category.samples
-                instance = .init(
-                    getCategories: { categories },
-                    addOrUpdateCategory: { categories = categories + [$0] }
-                )
+            if let testInstance = getTestInstance() {
+                instance = testInstance
             } else {
-                let cache = TransactionCategoriesCache()
-                instance = .init(
-                    getCategories: { cache.categories },
-                    addOrUpdateCategory: { try cache.addOrUpdate(category: $0) }
-                )
+                instance = getDefaultInstance()
             }
         }
         
         return instance!
+    }
+    
+    private static func getDefaultInstance() -> TransactionCategoryRepo {
+        let cache = TransactionCategoriesCache()
+        return .init(
+            getCategories: { cache.categories },
+            addOrUpdateCategory: { try cache.addOrUpdate(category: $0) }
+        )
     }
     
     private let getCategories: () -> [Transaction.Category]
@@ -78,3 +65,38 @@ class TransactionCategoryRepo {
 }
 
 extension TransactionCategoryRepo: TransactionCategorySaver { }
+
+extension TransactionCategoryRepo {
+    public enum TestCategories: String, RawRepresentable {
+        case empty
+        case categorySamples
+    }
+    
+    private static let envKey_TestCategories: String = "TransactionCategoryRepo.envKey_TestCategories"
+    
+    public static func test(using testCategories: TestCategories = .categorySamples, in environment: inout [String:String]) {
+        environment[TransactionCategoryRepo.envKey_TestCategories] = testCategories.rawValue
+    }
+    
+    private static func getTestCategories() -> [Transaction.Category]? {
+        if let testCategories = TestCategories(rawValue: ProcessInfo.processInfo.environment[Self.envKey_TestCategories] ?? "") {
+            switch testCategories {
+            case .empty:
+                return []
+            case .categorySamples:
+                return Transaction.Category.samples
+            }
+        }
+        return nil
+    }
+    
+    private static func getTestInstance() -> TransactionCategoryRepo? {
+        if var testCategories = Self.getTestCategories() {
+            return .init(
+                getCategories: { testCategories },
+                addOrUpdateCategory: { testCategories = testCategories + [$0] }
+            )
+        }
+        return nil
+    }
+}

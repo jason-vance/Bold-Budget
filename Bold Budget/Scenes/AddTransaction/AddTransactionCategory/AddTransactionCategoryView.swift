@@ -125,6 +125,7 @@ struct AddTransactionCategoryView: View {
         }
         .opacity(isFormComplete ? 1 : .opacityButtonBackground)
         .disabled(!isFormComplete)
+        .accessibilityIdentifier("Save Category Button")
     }
     
     @ViewBuilder func KindField() -> some View {
@@ -196,6 +197,7 @@ struct AddTransactionCategoryView: View {
                         .buttonLabelSmall()
                 }
             }
+            .accessibilityIdentifier("Symbol Picker Button")
         }
         .formRow()
         .fullScreenCover(isPresented: $showSymbolPicker) {

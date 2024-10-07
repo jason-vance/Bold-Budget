@@ -40,4 +40,55 @@ extension Transaction {
     static var samples: [Transaction] {
         (0...100).map { _ in Transaction.sampleRandomBasic }
     }
+    
+    static let screenshotSamples: [Transaction] = [
+        .init(
+            id: UUID(),
+            title: .init("Movie Tickets")!,
+            amount: .init(47.52)!,
+            date: .now,
+            category: .sampleEntertainment,
+            cityAndState: .init("Redmond, WA")
+        ),
+        .init(
+            id: UUID(),
+            title: .init("Walmart")!,
+            amount: .init(87.63)!,
+            date: .now,
+            category: .sampleGroceries,
+            cityAndState: .init("Seattle, WA")
+        ),
+        .init(
+            id: UUID(),
+            title: .init("Rent"),
+            amount: .init(750)!,
+            date: .now,
+            category: .sampleHousing,
+            cityAndState: nil
+        ),
+        .init(
+            id: UUID(),
+            title: .init("Paycheck")!,
+            amount: .init(1084.62)!,
+            date: .now,
+            category: .samplePaycheck,
+            cityAndState: nil
+        ),
+        .init(
+            id: UUID(),
+            title: .init("Gas"),
+            amount: .init(57.30)!,
+            date: .now,
+            category: .sampleVehicle,
+            cityAndState: .init("Redmond, WA")
+        ),
+        .init(
+            id: UUID(),
+            title: .init("Walmart")!,
+            amount: .init(65.24)!,
+            date: .startOfMonth(containing: .now),
+            category: .sampleGroceries,
+            cityAndState: .init("Seattle, WA")
+        ),
+    ]
 }

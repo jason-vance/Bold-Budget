@@ -1,0 +1,37 @@
+{
+  "configurations" : [
+    {
+      "id" : "9CEF6FFA-E043-4994-98F1-9ECE80BD8506",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "testTimeoutsEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:Bold Budget.xcodeproj",
+        "identifier" : "5673DA1E2CA7FA5A007833E0",
+        "name" : "Bold BudgetTests"
+      }
+    },
+    {
+      "skippedTests" : [
+        "ScreenshotGatherer",
+        "ScreenshotGatherer\/testAddTransactionScreenshot()",
+        "ScreenshotGatherer\/testDashboardScreenshot()",
+        "ScreenshotGatherer\/testTransactionDetailScreenshot()"
+      ],
+      "target" : {
+        "containerPath" : "container:Bold Budget.xcodeproj",
+        "identifier" : "5673DA282CA7FA5A007833E0",
+        "name" : "Bold BudgetUITests"
+      }
+    }
+  ],
+  "version" : 1
+}
