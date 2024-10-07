@@ -67,7 +67,9 @@ struct TransactionCategoryPickerView: View {
             BarDivider()
             ScrollView {
                 LazyVStack {
-                    if categories != nil {
+                    if categories?.isEmpty == true {
+                        NoCategoriesView()
+                    } else if categories != nil {
                         ForEach(filteredCategories) { category in
                             CategoryButton(category)
                         }
@@ -84,6 +86,17 @@ struct TransactionCategoryPickerView: View {
         }
         .background(Color.background)
         .onReceive(categoriesPublisher) { categories = $0 }
+    }
+    
+    @ViewBuilder func NoCategoriesView() -> some View {
+        ContentUnavailableView(
+            "No Categories",
+            systemImage: "list.bullet",
+            description: Text("Any categories you add will show up here")
+        )
+        .foregroundStyle(Color.text)
+        .listRowBackground(Color.background)
+        .listRowSeparator(.hidden)
     }
     
     @ViewBuilder func CategoryButton(_ category: Transaction.Category) -> some View {
