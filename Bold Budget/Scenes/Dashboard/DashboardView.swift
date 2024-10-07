@@ -296,6 +296,14 @@ struct DashboardView: View {
             )
             .listRowBackground(Color.background)
             .listRowSeparator(.hidden)
+        } else if transactionGroups.isEmpty {
+            ContentUnavailableView(
+                "No Transactions",
+                systemImage: "dollarsign",
+                description: Text("There are no transactions in this time period")
+            )
+            .listRowBackground(Color.background)
+            .listRowSeparator(.hidden)
         }
     }
     
