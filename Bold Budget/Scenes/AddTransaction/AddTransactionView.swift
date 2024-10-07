@@ -23,6 +23,9 @@ struct AddTransactionView: View {
     @State private var showCategoryPicker: Bool = false
     @State private var showTransactionDatePicker: Bool = false
     
+    @State private var showAlert: Bool = false
+    @State private var alertMessage: String = ""
+    
     private var transaction: Transaction? {
         guard let category = category else { return nil }
         guard let amount = Money(amountDouble) else { return nil }
@@ -78,9 +81,22 @@ struct AddTransactionView: View {
     
     private func saveTransaction() {
         guard let transaction = transaction else { return }
-        guard let saver = iocContainer.resolve(TransactionSaver.self) else { return }
-        saver.save(transaction: transaction)
-        dismiss()
+        guard let saver = iocContainer.resolve(TransactionSaver.self) else {
+            show(alert: "Failed to save transaction. Service unavailable.")
+            return
+        }
+        
+        do {
+            try saver.save(transaction: transaction)
+            dismiss()
+        } catch {
+            show(alert: "Failed to save the transaction. \(error.localizedDescription)")
+        }
+    }
+    
+    private func show(alert: String) {
+        showAlert = true
+        alertMessage = alert
     }
 
     var body: some View {
@@ -111,6 +127,7 @@ struct AddTransactionView: View {
         .background(Color.background)
         .onChange(of: titleString) { _, titleString in setTitleInstructions(titleString) }
         .onChange(of: cityAndStateString) { _, cityAndStateString in setCityStateInstructions(cityAndStateString) }
+        .alert(alertMessage, isPresented: $showAlert) {}
     }
     
     @ViewBuilder func TopBar() -> some View {

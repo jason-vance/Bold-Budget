@@ -19,6 +19,9 @@
     "Any transactions you add will show up here" : {
 
     },
+    "Are you sure you want to delete this transaction?" : {
+
+    },
     "Cancel" : {
 
     },
@@ -32,6 +35,9 @@
 
     },
     "Date" : {
+
+    },
+    "Delete" : {
 
     },
     "Description Contains Text" : {
@@ -86,6 +92,9 @@
 
     },
     "Pick a Category" : {
+
+    },
+    "Pick a Symbol" : {
 
     },
     "Required" : {

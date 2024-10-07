@@ -9,7 +9,7 @@ import Combine
 import Foundation
 
 protocol TransactionSaver {
-    func save(transaction: Transaction)
+    func save(transaction: Transaction) throws
 }
 
 protocol TransactionDeleter {
@@ -78,13 +78,13 @@ class TransactionLedger {
     
     public var transactions: [Transaction] { transactionsSubject.value }
     
-    //TODO: Pass this on to UI somehow
-    func save(transaction: Transaction) {
+    func save(transaction: Transaction) throws {
         do {
             try addTransaction(transaction)
             transactionsSubject.send(getTransactions())
         } catch {
             print("Failed to add transaction: \(error.localizedDescription)")
+            throw error
         }
     }
     
