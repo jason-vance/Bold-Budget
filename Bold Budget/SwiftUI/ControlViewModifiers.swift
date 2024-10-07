@@ -78,4 +78,10 @@ extension View {
                                  bottom: .paddingVerticalButtonXSmall,
                                  trailing: .paddingHorizontalButtonXSmall))
     }
+    
+    func transactionPropertyRow() -> some View {
+        self
+            .listRowBackground(Color.text.opacity(.opacityButtonBackground))
+            .listRowSeparatorTint(Color.text.opacity(.opacityButtonBackground))
+    }
 }

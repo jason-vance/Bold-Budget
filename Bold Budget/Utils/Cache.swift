@@ -168,6 +168,7 @@ private extension Cache {
 
         var url = folderURLs[0].appendingPathComponent(name + ".cache")
         
+        //TODO: Remove the following
         var values = URLResourceValues()
         values.isExcludedFromBackup = true
         try? url.setResourceValues(values)

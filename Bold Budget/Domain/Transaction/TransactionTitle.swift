@@ -28,6 +28,6 @@ extension Transaction {
             self.text = trimmedText
         }
         
-        static let sample: Transaction.Title = .init("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore.")!
+        static let sample: Transaction.Title = .init("Lorem ipsum dolor sit amet, consectetur adipiscing")!
     }
 }

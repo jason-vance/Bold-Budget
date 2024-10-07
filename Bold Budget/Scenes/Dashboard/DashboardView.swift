@@ -37,6 +37,7 @@ struct DashboardView: View {
     @State private var showTimeFramePicker: Bool = false
     @State private var showFilterTransactionsOptions: Bool = false
     @State private var showAddTransaction: Bool = false
+    @State private var selectedTransaction: Transaction? = nil
 
     private var filteredTransactions: [Transaction] {
         transactions
@@ -125,6 +126,15 @@ struct DashboardView: View {
         .background(Color.background)
         .onReceive(transactionsPublisher) { transactions = $0 }
         .fullScreenCover(isPresented: $showAddTransaction) { AddTransactionView() }
+        .sheet(isPresented: .init(
+            get: { selectedTransaction != nil },
+            set: { isPresented in selectedTransaction = isPresented ? selectedTransaction : nil }
+        )) {
+            if let selectedTransaction = selectedTransaction {
+                TransactionDetailView(transaction: selectedTransaction)
+                    .presentationDragIndicator(.visible)
+            }
+        }
     }
     
     @ViewBuilder private func ExtraOptionsMenuOverlay() -> some View {
@@ -269,8 +279,7 @@ struct DashboardView: View {
             Section {
                 let transactions = transactionGroup.transactions.sorted { $0.description < $1.description }
                 ForEach(transactions) { transaction in
-                    TransactionRowView(transaction)
-                        .dashboardTransactionRow()
+                    TransactionRow(transaction)
                 }
             } header: {
                 Text(transactionGroup.date.toDate()?.toBasicUiString() ?? "Unknown Date")
@@ -288,6 +297,15 @@ struct DashboardView: View {
             .listRowBackground(Color.background)
             .listRowSeparator(.hidden)
         }
+    }
+    
+    @ViewBuilder private func TransactionRow(_ transaction: Transaction) -> some View {
+        Button {
+            selectedTransaction = transaction
+        } label: {
+            TransactionRowView(transaction)
+        }
+        .dashboardTransactionRow()
     }
 }
 
