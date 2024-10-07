@@ -12,6 +12,10 @@ protocol TransactionSaver {
     func save(transaction: Transaction)
 }
 
+protocol TransactionDeleter {
+    func delete(transaction: Transaction) throws
+}
+
 class TransactionLedger {
     
     private static let envKey_useMocks: String = "TransactionLedger.envKey_useMocks"
@@ -34,7 +38,8 @@ class TransactionLedger {
                 var transactions = Transaction.samples
                 instance = .init(
                     getTransactions: { transactions },
-                    addTransaction: { transactions = transactions + [$0] }
+                    addTransaction: { transactions = transactions + [$0] },
+                    removeTransaction: { transaction in transactions.removeAll { $0.id == transaction.id } }
                 )
             } else {
                 let cache = TransactionsCache(
@@ -42,7 +47,8 @@ class TransactionLedger {
                 )
                 instance = .init(
                     getTransactions: { cache.transactions },
-                    addTransaction: { try cache.add(transaction: $0) }
+                    addTransaction: { try cache.add(transaction: $0) },
+                    removeTransaction: { try cache.remove(transaction: $0) }
                 )
             }
         }
@@ -52,14 +58,17 @@ class TransactionLedger {
     
     private let getTransactions: () -> [Transaction]
     private let addTransaction: (Transaction) throws -> ()
+    private let removeTransaction: (Transaction) throws -> ()
     private let transactionsSubject: CurrentValueSubject<[Transaction],Never> = .init([])
 
     init(
         getTransactions: @escaping () -> [Transaction],
-        addTransaction: @escaping (Transaction) throws -> ()
+        addTransaction: @escaping (Transaction) throws -> (),
+        removeTransaction: @escaping (Transaction) throws -> ()
     ) {
         self.getTransactions = getTransactions
         self.addTransaction = addTransaction
+        self.removeTransaction = removeTransaction
         transactionsSubject.send(getTransactions())
     }
 
@@ -69,6 +78,7 @@ class TransactionLedger {
     
     public var transactions: [Transaction] { transactionsSubject.value }
     
+    //TODO: Pass this on to UI somehow
     func save(transaction: Transaction) {
         do {
             try addTransaction(transaction)
@@ -77,8 +87,20 @@ class TransactionLedger {
             print("Failed to add transaction: \(error.localizedDescription)")
         }
     }
+    
+    func delete(transaction: Transaction) throws {
+        do {
+            try removeTransaction(transaction)
+            transactionsSubject.send(getTransactions())
+        } catch {
+            print("Failed to remove transaction: \(error.localizedDescription)")
+            throw error
+        }
+    }
 }
 
 extension TransactionLedger: TransactionProvider {}
 
 extension TransactionLedger: TransactionSaver {}
+
+extension TransactionLedger: TransactionDeleter {}

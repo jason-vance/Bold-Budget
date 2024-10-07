@@ -13,6 +13,29 @@ struct TransactionDetailView: View {
     
     @State var transaction: Transaction
     
+    @State private var showDeleteDialog: Bool = false
+    @State private var showAlert: Bool = false
+    @State private var alertMessage: String = ""
+    
+    private func deleteTransaction() {
+        guard let deleter = iocContainer.resolve(TransactionDeleter.self) else {
+            show(alert: "Failed to delete. Service unavailable.")
+            return
+        }
+        
+        do {
+            try deleter.delete(transaction: transaction)
+            dismiss()
+        } catch {
+            show(alert: "Failed to delete the transaction. \(error.localizedDescription)")
+        }
+    }
+    
+    private func show(alert: String) {
+        showAlert = true
+        alertMessage = alert
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
             TopBar()
@@ -26,13 +49,14 @@ struct TransactionDetailView: View {
             .scrollContentBackground(.hidden)
         }
         .background(Color.background)
+        .alert(alertMessage, isPresented: $showAlert) {}
     }
     
     @ViewBuilder private func TopBar() -> some View {
         ScreenTitleBar(
             primaryContent: { Text("") },
             leadingContent: { CloseButton() },
-            trailingContent: { ZStack {} }
+            trailingContent: { DeleteButton() }
         )
     }
     
@@ -41,6 +65,37 @@ struct TransactionDetailView: View {
             dismiss()
         } label: {
             TitleBarButtonLabel(sfSymbol: "xmark")
+        }
+    }
+    
+    @ViewBuilder private func DeleteButton() -> some View {
+        Button {
+            showDeleteDialog = true
+        } label: {
+            TitleBarButtonLabel(sfSymbol: "trash.fill")
+        }
+        .confirmationDialog(
+            "Are you sure you want to delete this transaction?",
+            isPresented: $showDeleteDialog,
+            titleVisibility: .visible
+        ) {
+            ConfirmDeleteTransactionButton()
+            CancelDeleteTransactionButton()
+        }
+    }
+    
+    @ViewBuilder private func ConfirmDeleteTransactionButton() -> some View {
+        Button(role: .destructive) {
+            deleteTransaction()
+        } label: {
+            Text("Delete")
+        }
+    }
+    
+    @ViewBuilder private func CancelDeleteTransactionButton() -> some View {
+        Button(role: .cancel) {
+        } label: {
+            Text("Cancel")
         }
     }
     

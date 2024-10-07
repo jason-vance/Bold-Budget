@@ -35,6 +35,11 @@ class TransactionsCache {
         cache[transaction.id] = .from(transaction)
         try cache.saveToDisk(withName: Self.cacheName)
     }
+    
+    public func remove(transaction: Transaction) throws {
+        cache[transaction.id] = nil
+        try cache.saveToDisk(withName: Self.cacheName)
+    }
 }
 
 fileprivate extension TransactionsCache {
