@@ -10,7 +10,7 @@ import SwiftData
 
 extension Transaction {
     @Model
-    class Category: Equatable, Hashable, Identifiable {
+    class Category {
         
         enum Kind: Codable {
             case expense
@@ -43,10 +43,20 @@ extension Transaction {
             self.name = name
             self.sfSymbol = sfSymbol
         }
-                
-        func hash(into hasher: inout Hasher) {
-            hasher.combine(id)
-        }
+    }
+}
+
+extension Transaction.Category: Identifiable {}
+
+extension Transaction.Category: Equatable {
+    static func == (lhs: Transaction.Category, rhs: Transaction.Category) -> Bool {
+        lhs.id == rhs.id
+    }
+}
+
+extension Transaction.Category: Hashable {
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
     }
 }
 
