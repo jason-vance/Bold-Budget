@@ -30,7 +30,7 @@ final class DashboardTests: XCTestCase {
         TransactionLedger.test(using: .transactionSamples, in: &app.launchEnvironment)
         
         app.launch()
-
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+        
+        //TODO: Do a test
     }
 }
