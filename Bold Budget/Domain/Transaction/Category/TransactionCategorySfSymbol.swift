@@ -14,7 +14,7 @@ extension Transaction.Category {
             lhs.value == rhs.value
         }
         
-        var value: String
+        let value: String
         
         init?(_ value: String) {
             let trimmedText = value.trimmingCharacters(in: .whitespacesAndNewlines)

@@ -7,13 +7,9 @@
 
 import Foundation
 
-struct SimpleDate: Equatable, Comparable, Hashable {
+class SimpleDate {
     
     public typealias RawValue = UInt32
-    
-    static func < (lhs: SimpleDate, rhs: SimpleDate) -> Bool {
-        lhs.rawValue < rhs.rawValue
-    }
     
     static var now: SimpleDate { .init(date: .now)! }
     
@@ -105,5 +101,50 @@ extension SimpleDate {
         let startOfMonth = startOfYear(containing: date)
         let startOfNext = Calendar.current.date(byAdding: .year, value: 1, to: startOfMonth.toDate()!)
         return .init(date: Calendar.current.date(byAdding: .day, value: -1, to: startOfNext!)!)!
+    }
+}
+
+extension SimpleDate: Equatable {
+    static func == (lhs: SimpleDate, rhs: SimpleDate) -> Bool {
+        lhs.rawValue == rhs.rawValue
+    }
+}
+
+extension SimpleDate: Comparable {
+    static func < (lhs: SimpleDate, rhs: SimpleDate) -> Bool {
+        lhs.rawValue < rhs.rawValue
+    }
+}
+
+extension SimpleDate: Hashable {
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(rawValue)
+    }
+}
+
+@objc(SimpleDateValueTransformer)
+class SimpleDateValueTransformer: ValueTransformer {
+    
+    static let name = NSValueTransformerName(rawValue: String(describing: SimpleDateValueTransformer.self))
+    
+    override class func transformedValueClass() -> AnyClass {
+        return SimpleDate.self
+    }
+    
+    override class func allowsReverseTransformation() -> Bool {
+        return true
+    }
+    
+    override func transformedValue(_ value: Any?) -> Any? {
+        guard let value = value as? SimpleDate else { return nil }
+        let root = NSNumber(value: value.rawValue)
+        let data = try? NSKeyedArchiver.archivedData(withRootObject: root, requiringSecureCoding: true)
+        return data
+    }
+    
+    override func reverseTransformedValue(_ value: Any?) -> Any? {
+        guard let data = value as? Data else { return nil }
+        guard let value = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSNumber.self, from: data) else { return nil }
+        return SimpleDate(rawValue: SimpleDate.RawValue(truncating: value))
     }
 }

@@ -8,16 +8,16 @@
 import Foundation
 
 extension Transaction {
-    struct Title {
+    class Title {
         
         static let minTextLength: Int = 3
         static let maxTextLength: Int = 50
 
-        let text: String
+        let value: String
         
-        init?(_ text: String) {
+        init?(_ value: String) {
             // Trim whitespace
-            let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            let trimmedText = value.trimmingCharacters(in: .whitespacesAndNewlines)
             
             // Check for minimum and maximum length
             guard trimmedText.count >= Self.minTextLength, trimmedText.count <= Self.maxTextLength else {
@@ -25,9 +25,36 @@ extension Transaction {
             }
             
             // Convert to lowercase
-            self.text = trimmedText
+            self.value = trimmedText
         }
         
         static let sample: Transaction.Title = .init("Lorem ipsum dolor sit amet, consectetur adipiscing")!
+    }
+}
+
+@objc(TransactionTitleValueTransformer)
+class TransactionTitleValueTransformer: ValueTransformer {
+    
+    static let name = NSValueTransformerName(rawValue: String(describing: TransactionTitleValueTransformer.self))
+    
+    override class func transformedValueClass() -> AnyClass {
+        return Transaction.Title.self
+    }
+    
+    override class func allowsReverseTransformation() -> Bool {
+        return true
+    }
+    
+    override func transformedValue(_ value: Any?) -> Any? {
+        guard let value = value as? Transaction.Title else { return nil }
+        let root = NSString(string: value.value)
+        let data = try? NSKeyedArchiver.archivedData(withRootObject: root, requiringSecureCoding: true)
+        return data
+    }
+    
+    override func reverseTransformedValue(_ value: Any?) -> Any? {
+        guard let data = value as? Data else { return nil }
+        guard let value = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSString.self, from: data) else { return nil }
+        return Transaction.Title(String(value))
     }
 }

@@ -199,7 +199,7 @@ struct TransactionDetailView: View {
     
     @ViewBuilder private func TitleRow() -> some View {
         if let title = transaction.title {
-            LongerTextRow(label: String(localized: "Title"), value: title.text)
+            LongerTextRow(label: String(localized: "Title"), value: title.value)
         }
     }
     

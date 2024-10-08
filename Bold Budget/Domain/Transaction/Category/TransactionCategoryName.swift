@@ -13,7 +13,7 @@ extension Transaction.Category {
         static let minTextLength: Int = 3
         static let maxTextLength: Int = 20
         
-        var value: String
+        let value: String
         
         init?(_ value: String) {
             // Trim whitespace

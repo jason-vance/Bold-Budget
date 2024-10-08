@@ -86,12 +86,8 @@ struct AddTransactionView: View {
             return
         }
         
-        do {
-            try saver.save(transaction: transaction)
-            dismiss()
-        } catch {
-            show(alert: "Failed to save the transaction. \(error.localizedDescription)")
-        }
+        saver.insert(transaction: transaction)
+        dismiss()
     }
     
     private func show(alert: String) {

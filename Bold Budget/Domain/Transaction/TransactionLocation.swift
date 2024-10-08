@@ -8,7 +8,7 @@
 import Foundation
 
 extension Transaction {
-    struct Location {
+    class Location {
         
         static let minTextLength: Int = 3
         static let maxTextLength: Int = 100
@@ -33,5 +33,32 @@ extension Transaction {
         }
         
         static let sample: Transaction.Location = .init("Cupertino, CA")!
+    }
+}
+
+@objc(TransactionLocationValueTransformer)
+class TransactionLocationValueTransformer: ValueTransformer {
+    
+    static let name = NSValueTransformerName(rawValue: String(describing: TransactionLocationValueTransformer.self))
+    
+    override class func transformedValueClass() -> AnyClass {
+        return Transaction.Location.self
+    }
+    
+    override class func allowsReverseTransformation() -> Bool {
+        return true
+    }
+    
+    override func transformedValue(_ value: Any?) -> Any? {
+        guard let value = value as? Transaction.Location else { return nil }
+        let root = NSString(string: value.value)
+        let data = try? NSKeyedArchiver.archivedData(withRootObject: root, requiringSecureCoding: true)
+        return data
+    }
+    
+    override func reverseTransformedValue(_ value: Any?) -> Any? {
+        guard let data = value as? Data else { return nil }
+        guard let value = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSString.self, from: data) else { return nil }
+        return Transaction.Location(String(value))
     }
 }

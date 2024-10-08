@@ -7,13 +7,14 @@
 
 import Combine
 import Foundation
+import SwiftData
 
 protocol TransactionSaver {
-    func save(transaction: Transaction) throws
+    func insert(transaction: Transaction)
 }
 
 protocol TransactionDeleter {
-    func delete(transaction: Transaction) throws
+    func delete(transaction: Transaction)
 }
 
 class TransactionLedger {
@@ -32,30 +33,33 @@ class TransactionLedger {
     }
     
     private static func getDefaultInstance() -> TransactionLedger {
-        let cache = TransactionsCache(
-            categoryRepo: TransactionCategoryRepo.getInstance()
-        )
+        let context: ModelContext = {
+            let context = ModelContext(sharedModelContainer)
+            context.autosaveEnabled = true
+            return context
+        }()
+        
+        guard let initial = try? context.fetch(FetchDescriptor<Transaction>()) else { fatalError("Could not fetch initial transactions") }
+        
         return .init(
-            getTransactions: { cache.transactions },
-            addTransaction: { try cache.add(transaction: $0) },
-            removeTransaction: { try cache.remove(transaction: $0) }
+            initialTransactions: initial,
+            insertTransaction: { context.insert($0) },
+            deleteTransaction: { context.delete($0) }
         )
     }
     
-    private let getTransactions: () -> [Transaction]
-    private let addTransaction: (Transaction) throws -> ()
-    private let removeTransaction: (Transaction) throws -> ()
+    private let insertTransaction: (Transaction) -> ()
+    private let deleteTransaction: (Transaction) -> ()
     private let transactionsSubject: CurrentValueSubject<[Transaction],Never> = .init([])
 
     init(
-        getTransactions: @escaping () -> [Transaction],
-        addTransaction: @escaping (Transaction) throws -> (),
-        removeTransaction: @escaping (Transaction) throws -> ()
+        initialTransactions: [Transaction],
+        insertTransaction: @escaping (Transaction) -> (),
+        deleteTransaction: @escaping (Transaction) -> ()
     ) {
-        self.getTransactions = getTransactions
-        self.addTransaction = addTransaction
-        self.removeTransaction = removeTransaction
-        transactionsSubject.send(getTransactions())
+        self.insertTransaction = insertTransaction
+        self.deleteTransaction = deleteTransaction
+        transactionsSubject.send(initialTransactions)
     }
 
     public var transactionPublisher: AnyPublisher<[Transaction],Never> {
@@ -64,24 +68,14 @@ class TransactionLedger {
     
     public var transactions: [Transaction] { transactionsSubject.value }
     
-    func save(transaction: Transaction) throws {
-        do {
-            try addTransaction(transaction)
-            transactionsSubject.send(getTransactions())
-        } catch {
-            print("Failed to add transaction: \(error.localizedDescription)")
-            throw error
-        }
+    func insert(transaction: Transaction) {
+        insertTransaction(transaction)
+        transactionsSubject.send(transactionsSubject.value + [transaction])
     }
-    
-    func delete(transaction: Transaction) throws {
-        do {
-            try removeTransaction(transaction)
-            transactionsSubject.send(getTransactions())
-        } catch {
-            print("Failed to remove transaction: \(error.localizedDescription)")
-            throw error
-        }
+
+    func delete(transaction: Transaction) {
+        deleteTransaction(transaction)
+        transactionsSubject.send(transactionsSubject.value.filter { $0.id != transaction.id })
     }
 }
 
@@ -121,9 +115,9 @@ extension TransactionLedger {
     private static func getTestInstance() -> TransactionLedger? {
         if var testTransactions = getTestTransactions() {
             return .init(
-                getTransactions: { testTransactions },
-                addTransaction: { testTransactions = testTransactions + [$0] },
-                removeTransaction: { transaction in testTransactions.removeAll { $0.id == transaction.id } }
+                initialTransactions: testTransactions,
+                insertTransaction: { testTransactions = testTransactions + [$0] },
+                deleteTransaction: { transaction in testTransactions.removeAll { $0.id == transaction.id } }
             )
         }
         return nil

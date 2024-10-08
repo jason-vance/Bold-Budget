@@ -35,10 +35,10 @@ class TransactionCategoryRepo {
             return context
         }()
         
-        guard let initialCategories = try? context.fetch(FetchDescriptor<Transaction.Category>()) else { fatalError("Could not") }
+        guard let initial = try? context.fetch(FetchDescriptor<Transaction.Category>()) else { fatalError("Could not fetch initial categories") }
         
         return .init(
-            initialCategories: initialCategories,
+            initialCategories: initial,
             insertCategory: { context.insert($0) }
         )
     }
@@ -62,7 +62,7 @@ class TransactionCategoryRepo {
     
     func insert(category: Transaction.Category) {
         insertCategory(category)
-        Task { categoriesSubject.send(categoriesSubject.value + [category]) }
+        categoriesSubject.send(categoriesSubject.value + [category])
     }
 }
 

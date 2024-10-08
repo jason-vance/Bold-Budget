@@ -6,18 +6,44 @@
 //
 
 import Foundation
+import SwiftData
 
-struct Transaction: Identifiable {
+@Model
+class Transaction: Identifiable {
     
-    let id: UUID
-    let title: Transaction.Title?
-    let amount: Money
-    let date: SimpleDate
-    let category: Transaction.Category
-    let location: Transaction.Location?
+    @Attribute(.unique)
+    var id: UUID
     
-    var description: String {
-        return title?.text ?? category.name.value
+    @Attribute(.transformable(by: TransactionTitleValueTransformer.self))
+    var title: Transaction.Title?
+    
+    @Attribute(.transformable(by: MoneyValueTransformer.self))
+    var amount: Money
+    
+    @Attribute(.transformable(by: SimpleDateValueTransformer.self))
+    var date: SimpleDate
+    
+    var category: Transaction.Category
+    
+    @Attribute(.transformable(by: TransactionLocationValueTransformer.self))
+    var location: Transaction.Location?
+    
+    var description: String { title?.value ?? category.name.value }
+    
+    init(
+        id: UUID,
+        title: Transaction.Title? = nil,
+        amount: Money,
+        date: SimpleDate,
+        category: Transaction.Category,
+        location: Transaction.Location? = nil
+    ) {
+        self.id = id
+        self.title = title
+        self.amount = amount
+        self.date = date
+        self.category = category
+        self.location = location
     }
 }
 
@@ -59,16 +85,14 @@ extension Transaction {
             title: .init("Rent"),
             amount: .init(750)!,
             date: .now,
-            category: .sampleHousing,
-            location: nil
+            category: .sampleHousing
         ),
         .init(
             id: UUID(),
             title: .init("Paycheck")!,
             amount: .init(1084.62)!,
             date: .now,
-            category: .samplePaycheck,
-            location: nil
+            category: .samplePaycheck
         ),
         .init(
             id: UUID(),
