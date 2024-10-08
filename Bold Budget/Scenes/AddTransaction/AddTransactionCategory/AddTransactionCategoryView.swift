@@ -48,17 +48,17 @@ struct AddTransactionCategoryView: View {
     private var isFormComplete: Bool { category != nil }
     
     private func saveCategory() {
-        guard var category = category else { return }
+        guard let category = category else { return }
+        
         if let categoryToEdit = categoryToEdit.category {
-            category = .init(
-                id: categoryToEdit.id,
-                kind: category.kind,
-                name: category.name,
-                sfSymbol: category.sfSymbol
-            )
+            categoryToEdit.kind = category.kind
+            categoryToEdit.name = category.name
+            categoryToEdit.sfSymbol = category.sfSymbol
+        } else {
+            guard let saver = iocContainer.resolve(TransactionCategorySaver.self) else { return }
+            saver.insert(category: category)
         }
-        guard let saver = iocContainer.resolve(TransactionCategorySaver.self) else { return }
-        saver.save(newCategory: category)
+        
         dismiss()
     }
     

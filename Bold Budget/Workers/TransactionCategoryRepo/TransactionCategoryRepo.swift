@@ -7,9 +7,10 @@
 
 import Combine
 import Foundation
+import SwiftData
 
 protocol TransactionCategorySaver {
-    func save(newCategory: Transaction.Category)
+    func insert(category: Transaction.Category)
 }
 
 class TransactionCategoryRepo {
@@ -28,24 +29,23 @@ class TransactionCategoryRepo {
     }
     
     private static func getDefaultInstance() -> TransactionCategoryRepo {
-        let cache = TransactionCategoriesCache()
         return .init(
-            getCategories: { cache.categories },
-            addOrUpdateCategory: { try cache.addOrUpdate(category: $0) }
+            getCategories: { try ModelContext(sharedModelContainer).fetch(FetchDescriptor<Transaction.Category>()) },
+            insertCategory: { ModelContext(sharedModelContainer).insert($0) }
         )
     }
     
-    private let getCategories: () -> [Transaction.Category]
-    private let addOrUpdateCategory: (Transaction.Category) throws -> ()
+    private let getCategories: () throws -> [Transaction.Category]
+    private let insertCategory: (Transaction.Category) -> ()
     private let categoriesSubject: CurrentValueSubject<[Transaction.Category],Never> = .init([])
 
     init(
-        getCategories: @escaping () -> [Transaction.Category],
-        addOrUpdateCategory: @escaping (Transaction.Category) throws -> ()
+        getCategories: @escaping () throws -> [Transaction.Category],
+        insertCategory: @escaping (Transaction.Category) -> ()
     ) {
         self.getCategories = getCategories
-        self.addOrUpdateCategory = addOrUpdateCategory
-        categoriesSubject.send(getCategories())
+        self.insertCategory = insertCategory
+        Task { try? categoriesSubject.send(getCategories()) }
     }
     
     public var categoriesPublisher: AnyPublisher<[Transaction.Category],Never> {
@@ -54,13 +54,9 @@ class TransactionCategoryRepo {
     
     public var categories: [Transaction.Category] { categoriesSubject.value }
     
-    func save(newCategory: Transaction.Category) {
-        do {
-            try addOrUpdateCategory(newCategory)
-            categoriesSubject.send(getCategories())
-        } catch {
-            print("Failed to add category: \(error.localizedDescription)")
-        }
+    func insert(category: Transaction.Category) {
+        insertCategory(category)
+        Task { categoriesSubject.send(categoriesSubject.value + [category]) }
     }
 }
 
@@ -94,7 +90,7 @@ extension TransactionCategoryRepo {
         if var testCategories = Self.getTestCategories() {
             return .init(
                 getCategories: { testCategories },
-                addOrUpdateCategory: { testCategories = testCategories + [$0] }
+                insertCategory: { testCategories = testCategories + [$0] }
             )
         }
         return nil

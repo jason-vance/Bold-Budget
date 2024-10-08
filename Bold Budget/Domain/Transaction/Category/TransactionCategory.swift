@@ -6,9 +6,11 @@
 //
 
 import Foundation
+import SwiftData
 
 extension Transaction {
-    struct Category: Equatable, Hashable, Identifiable {
+    @Model
+    class Category: Equatable, Hashable, Identifiable {
         
         enum Kind: Codable {
             case expense
@@ -24,10 +26,23 @@ extension Transaction {
             }
         }
         
-        let id: UUID
-        let kind: Kind
-        let name: Name
-        let sfSymbol: SfSymbol
+        @Attribute(.unique)
+        var id: UUID
+        
+        var kind: Kind
+        
+        @Attribute(.transformable(by: TransactionCategoryNameValueTransformer.self))
+        var name: Name
+        
+        @Attribute(.transformable(by: TransactionCategorySfSymbolValueTransformer.self))
+        var sfSymbol: SfSymbol
+        
+        init(id: UUID, kind: Kind, name: Name, sfSymbol: SfSymbol) {
+            self.id = id
+            self.kind = kind
+            self.name = name
+            self.sfSymbol = sfSymbol
+        }
                 
         func hash(into hasher: inout Hasher) {
             hasher.combine(id)
