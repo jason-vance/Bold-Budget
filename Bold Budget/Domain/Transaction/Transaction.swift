@@ -23,6 +23,7 @@ class Transaction: Identifiable {
     @Attribute(.transformable(by: SimpleDateValueTransformer.self))
     var date: SimpleDate
     
+    @Relationship(deleteRule: .noAction)
     var category: Transaction.Category
     
     @Attribute(.transformable(by: TransactionLocationValueTransformer.self))
