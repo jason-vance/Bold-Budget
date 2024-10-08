@@ -114,7 +114,6 @@ struct DashboardView: View {
             .scrollContentBackground(.hidden)
             .scrollIndicators(.hidden)
             .safeAreaInset(edge: .bottom, alignment: .trailing) { AddTransactionButton() }
-            .overlay(alignment: .bottomTrailing) { AddTransactionButton() }
             .overlay(alignment: .top) {
                 Rectangle()
                     .opacity(0)
@@ -254,6 +253,7 @@ struct DashboardView: View {
                 }
         }
         .padding()
+        .accessibilityIdentifier("Add Transaction Button")
     }
     
     @ViewBuilder func Chart() -> some View {

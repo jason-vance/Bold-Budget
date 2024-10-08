@@ -29,23 +29,29 @@ class TransactionCategoryRepo {
     }
     
     private static func getDefaultInstance() -> TransactionCategoryRepo {
+        let context: ModelContext = {
+            let context = ModelContext(sharedModelContainer)
+            context.autosaveEnabled = true
+            return context
+        }()
+        
+        guard let initialCategories = try? context.fetch(FetchDescriptor<Transaction.Category>()) else { fatalError("Could not") }
+        
         return .init(
-            getCategories: { try ModelContext(sharedModelContainer).fetch(FetchDescriptor<Transaction.Category>()) },
-            insertCategory: { ModelContext(sharedModelContainer).insert($0) }
+            initialCategories: initialCategories,
+            insertCategory: { context.insert($0) }
         )
     }
     
-    private let getCategories: () throws -> [Transaction.Category]
     private let insertCategory: (Transaction.Category) -> ()
     private let categoriesSubject: CurrentValueSubject<[Transaction.Category],Never> = .init([])
 
     init(
-        getCategories: @escaping () throws -> [Transaction.Category],
+        initialCategories: [Transaction.Category],
         insertCategory: @escaping (Transaction.Category) -> ()
     ) {
-        self.getCategories = getCategories
         self.insertCategory = insertCategory
-        Task { try? categoriesSubject.send(getCategories()) }
+        Task { categoriesSubject.send(initialCategories) }
     }
     
     public var categoriesPublisher: AnyPublisher<[Transaction.Category],Never> {
@@ -89,7 +95,7 @@ extension TransactionCategoryRepo {
     private static func getTestInstance() -> TransactionCategoryRepo? {
         if var testCategories = Self.getTestCategories() {
             return .init(
-                getCategories: { testCategories },
+                initialCategories: testCategories,
                 insertCategory: { testCategories = testCategories + [$0] }
             )
         }

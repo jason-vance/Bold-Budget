@@ -41,8 +41,8 @@ final class ScreenshotGatherer: XCTestCase {
         app.launch()
         
         // Dashboard
-        app.windows.children(matching: .other).element.children(matching: .other).element.children(matching: .other).element.children(matching: .other).element.children(matching: .button).matching(identifier: "plus").element(boundBy: 1).tap()
-        
+        app.buttons["Add Transaction Button"].tap()
+
         // AddTransaction
         app.collectionViews.buttons["N/A"].tap()
         
