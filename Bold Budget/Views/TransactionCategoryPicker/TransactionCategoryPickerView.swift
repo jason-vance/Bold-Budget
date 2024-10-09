@@ -111,9 +111,20 @@ struct TransactionCategoryPickerView: View {
                         Text(category.name.value)
                     }
                     .buttonLabelSmall()
+                    Spacer(minLength: 0)
+                    CategoryButtonIsEditingIndicator()
                 }
             }
             Spacer(minLength: 0)
+        }
+    }
+    
+    @ViewBuilder func CategoryButtonIsEditingIndicator() -> some View {
+        if isEditing {
+            Image(systemName: "pencil")
+                .bold()
+                .frame(width: 22, height: 22)
+                .padding(.padding)
         }
     }
     
