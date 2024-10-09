@@ -218,16 +218,19 @@ struct PieChart: View {
             ZStack {
                 if slices.isEmpty {
                     NoSlicesCircle()
-                }
-                ZStack {
-                    ForEach(slices) { slice in
-                        SliceView(slice, radius: pieRadius)
+                } else if slices.count == 1 {
+                    SingleSliceView(slices.first!, radius: pieRadius)
+                } else {
+                    ZStack {
+                        ForEach(slices) { slice in
+                            SliceView(slice, radius: pieRadius)
+                        }
                     }
-                }
-                .onTouchGesture { point in
-                    onTouchMoved(point, in: geo.frame(in: .local), slices: slices)
-                } onTouchEnded: {
-                    onTouchEnded()
+                    .onTouchGesture { point in
+                        onTouchMoved(point, in: geo.frame(in: .local), slices: slices)
+                    } onTouchEnded: {
+                        onTouchEnded()
+                    }
                 }
                 Labels()
             }
@@ -238,6 +241,16 @@ struct PieChart: View {
         .onChange(of: slices, initial: true) { _, slices in slicesState = slices }
     }
     
+    private var textLabelString: String {
+        if (slices.reduce(into: Set<Transaction.Category>()) { set, slice in set.insert(slice.category) }).count == 1 {
+            return slices.first!.category.name.value
+        }
+        if let selectedSlice = selectedSlice {
+            return selectedSlice.name
+        }
+        return String(localized: "Net Total")
+    }
+    
     @ViewBuilder private func Labels() -> some View {
         VStack {
             Text("Total")
@@ -246,7 +259,7 @@ struct PieChart: View {
             Text("\(formatValue(selectedSlice == nil ? netTotal : selectedSlice!.value))")
                 .font(.largeTitle.weight(.bold))
                 .contentTransition(.numericText())
-            Text(selectedSlice == nil ? "Net Total" : "\(selectedSlice!.name)")
+            Text(textLabelString)
                 .font(.title2.weight(.semibold))
                 .multilineTextAlignment(.center)
         }
@@ -260,6 +273,31 @@ struct PieChart: View {
             ))
             .foregroundStyle(Color.text)
             .opacity(0.5)
+    }
+    
+    @ViewBuilder private func SingleSliceView(_ slice: _Slice, radius: CGFloat) -> some View {
+        Circle()
+            .stroke(style: .init(
+                lineWidth: lineWidth,
+                lineCap: .round
+            ))
+            .foregroundStyle(Color.text)
+            .overlay {
+                if slice.kind == .expense {
+                    Circle()
+                        .stroke(style: .init(
+                            lineWidth: lineWidth - .borderWidthMedium,
+                            lineCap: .round
+                        ))
+                        .foregroundStyle(Color.background)
+                }
+            }
+            .overlay {
+                SliceIconView(slice, radius: radius)
+                    .rotationEffect(.degrees(180))
+            }
+            .rotationEffect(.degrees(-90))
+            .accessibilityIdentifier("PieChart.SingleSliceView.\(slice.name)")
     }
     
     @ViewBuilder private func SliceView(_ slice: _Slice, radius: CGFloat) -> some View {
@@ -292,6 +330,7 @@ struct PieChart: View {
                 SliceIconView(slice, radius: radius)
             }
             .rotationEffect(.degrees(-90))
+            .accessibilityIdentifier("PieChart.SliceView.\(slice.name)")
     }
     
     @ViewBuilder private func SliceIconView(_ slice: _Slice, radius: CGFloat) -> some View {

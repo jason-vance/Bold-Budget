@@ -72,6 +72,7 @@ extension TransactionCategoryRepo {
     public enum TestCategories: String, RawRepresentable {
         case empty
         case categorySamples
+        case singleCategory_Groceries
     }
     
     private static let envKey_TestCategories: String = "TransactionCategoryRepo.envKey_TestCategories"
@@ -87,6 +88,8 @@ extension TransactionCategoryRepo {
                 return []
             case .categorySamples:
                 return Transaction.Category.samples
+            case .singleCategory_Groceries:
+                return [ .sampleGroceries ]
             }
         }
         return nil

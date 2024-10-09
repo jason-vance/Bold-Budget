@@ -90,6 +90,7 @@ extension TransactionLedger {
         case empty
         case transactionSamples
         case screenshotSamples
+        case onlyGroceryTransactions
     }
     
     private static let envKey_TestTransactions: String = "TransactionLedger.envKey_TestTransactions"
@@ -107,6 +108,8 @@ extension TransactionLedger {
                 return Transaction.samples
             case .screenshotSamples:
                 return Transaction.screenshotSamples
+            case .onlyGroceryTransactions:
+                return Transaction.samplesOnlyInGroceriesCategory
             }
         }
         return nil

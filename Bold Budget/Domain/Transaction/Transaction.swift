@@ -64,6 +64,14 @@ extension Transaction {
         (0...100).map { _ in Transaction.sampleRandomBasic }
     }
     
+    static var samplesOnlyInGroceriesCategory: [Transaction] {
+        samples.map { _ in
+            let t = Transaction.sampleRandomBasic
+            t.category = .sampleGroceries
+            return t
+        }
+    }
+    
     static let screenshotSamples: [Transaction] = [
         .init(
             id: UUID(),
