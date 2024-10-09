@@ -23,12 +23,8 @@ struct TransactionDetailView: View {
             return
         }
         
-        do {
-            try deleter.delete(transaction: transaction)
-            dismiss()
-        } catch {
-            show(alert: "Failed to delete the transaction. \(error.localizedDescription)")
-        }
+        deleter.delete(transaction: transaction)
+        dismiss()
     }
     
     private func show(alert: String) {
