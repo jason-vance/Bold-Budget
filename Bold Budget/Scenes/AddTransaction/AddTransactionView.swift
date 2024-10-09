@@ -266,6 +266,7 @@ struct AddTransactionView: View {
                       prompt: Text("Milk Tea, Movie Tickets, etc...").foregroundStyle(Color.text.opacity(0.7))
             )
             .textFieldSmall()
+            .autocapitalization(.words)
         }
         .formRow()
     }

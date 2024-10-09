@@ -170,6 +170,7 @@ struct AddTransactionCategoryView: View {
                       prompt: Text("Groceries, Rent, Paycheck, etc...").foregroundStyle(Color.text.opacity(0.7))
             )
             .textFieldSmall()
+            .autocapitalization(.words)
             HStack {
                 Spacer(minLength: 0)
                 Text(nameInstructions)
