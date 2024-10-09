@@ -210,7 +210,7 @@ struct DashboardView: View {
     
     @ViewBuilder func DecrementTimeFrameButton() -> some View {
         let isDisabled: Bool = {
-            guard let _ = (transactions.first { $0.date < timeFrame.previous.end }) else { return true }
+            guard let _ = (transactions.first { $0.date <= timeFrame.previous.end }) else { return true }
             return false
         }()
         
@@ -225,7 +225,7 @@ struct DashboardView: View {
     
     @ViewBuilder func IncrementTimeFrameButton() -> some View {
         let isDisabled: Bool = {
-            guard let _ = (transactions.first { $0.date > timeFrame.next.start }) else { return true }
+            guard let _ = (transactions.first { $0.date >= timeFrame.next.start }) else { return true }
             return false
         }()
         
