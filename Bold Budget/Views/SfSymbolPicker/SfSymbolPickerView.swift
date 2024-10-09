@@ -19,7 +19,7 @@ struct SfSymbolPickerView: View {
     
     private var filteredSymbols: [String] {
         guard !searchText.isEmpty else { return symbols }
-        let terms = searchText.split(separator: " ").map { String($0) }
+        let terms = searchText.lowercased().split(separator: " ").map { String($0) }
         
         return symbols.filter { symbol in
             terms.allSatisfy { term in
