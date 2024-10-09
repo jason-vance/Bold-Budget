@@ -216,6 +216,7 @@ struct PieChart: View {
             let slices = makeSlices(pieCircumference: pieCircumference)
             
             ZStack {
+                Labels()
                 if slices.isEmpty {
                     NoSlicesCircle()
                 } else if slices.count == 1 {
@@ -232,7 +233,6 @@ struct PieChart: View {
                         onTouchEnded()
                     }
                 }
-                Labels()
             }
             .foregroundStyle(Color.text)
         }
