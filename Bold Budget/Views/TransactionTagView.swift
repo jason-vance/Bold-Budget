@@ -16,27 +16,20 @@ struct TransactionTagView: View {
     }
     
     var body: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: .paddingHorizontalButtonXSmall) {
             Image(systemName: "tag")
-                .frame(width: 24, height: 24)
-                .background(Color.text.opacity(.opacityButtonBackground))
-                .overlay(alignment: .trailing) {
-                    Rectangle()
-                        .frame(width: .borderWidthThin)
-                        .foregroundStyle(Color.text)
-                        .offset(x: .borderWidthThin)
-                }
+                .foregroundStyle(Color.text)
+                .frame(height: 24)
             Text(tag.value)
-                .padding(.horizontal, .padding)
-        }
-        .font(.caption)
-        .foregroundStyle(Color.text)
-        .clipShape(RoundedRectangle(cornerRadius: .cornerRadiusSmall, style: .continuous))
-        .background {
-            RoundedRectangle(cornerRadius: .cornerRadiusSmall, style: .continuous)
-                .stroke(style: .init(lineWidth: .borderWidthThin))
                 .foregroundStyle(Color.text)
         }
+        .font(.caption)
+        .padding(.horizontal, .paddingHorizontalButtonXSmall)
+        .background {
+            RoundedRectangle(cornerRadius: .cornerRadiusSmall, style: .continuous)
+                .foregroundStyle(Color.text.opacity(.opacityButtonBackground))
+        }
+        .clipShape(RoundedRectangle(cornerRadius: .cornerRadiusSmall, style: .continuous))
     }
 }
 

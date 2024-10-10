@@ -7,6 +7,9 @@
     "%@" : {
 
     },
+    "Add" : {
+
+    },
     "Add Category" : {
 
     },
@@ -68,6 +71,9 @@
 
     },
     "Income or Expense" : {
+
+    },
+    "Invalid Tag" : {
 
     },
     "Location" : {

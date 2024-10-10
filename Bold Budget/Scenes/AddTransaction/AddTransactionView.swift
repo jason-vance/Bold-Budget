@@ -18,6 +18,9 @@ struct AddTransactionView: View {
     @State private var titleInstructions: String = ""
     @State private var locationString: String = ""
     @State private var locationInstructions: String = ""
+    @State private var newTagString: String = ""
+    @State private var newTagInstructions: String = ""
+    @State private var tags: Set<Transaction.Tag> = []
 
     @State private var showDiscardDialog: Bool = false
     @State private var showCategoryPicker: Bool = false
@@ -49,7 +52,8 @@ struct AddTransactionView: View {
             amount: amount,
             date: date,
             category: category,
-            location: location
+            location: location,
+            tags: tags
         )
     }
     
@@ -77,6 +81,28 @@ struct AddTransactionView: View {
             if locationString.count > Transaction.Location.maxTextLength { locationInstructions = "Too long"; return }
             locationInstructions = "\(locationString.count)/\(Transaction.Location.maxTextLength)"
         }
+    }
+    
+    private func setNewTagInstructions(_ newTagString: String) {
+        withAnimation(.snappy) {
+            if newTagString.isEmpty { newTagInstructions = ""; return }
+            if newTagString.count < Transaction.Tag.minTextLength { newTagInstructions = "Too short"; return }
+            if newTagString.count > Transaction.Tag.maxTextLength { newTagInstructions = "Too long"; return }
+            newTagInstructions = "\(newTagString.count)/\(Transaction.Tag.maxTextLength)"
+        }
+    }
+    
+    private func saveNewTag() {
+        if let tag = Transaction.Tag(newTagString) {
+            tags.insert(tag)
+            newTagString = ""
+        } else {
+            newTagInstructions = String(localized: "Invalid Tag")
+        }
+    }
+    
+    private func remove(tag: Transaction.Tag) {
+        tags.remove(tag)
     }
     
     private func saveTransaction() {
@@ -111,6 +137,7 @@ struct AddTransactionView: View {
                 Section {
                     TitleField()
                     LocationField()
+                    TagsField()
                 } header: {
                     Text("Optional")
                         .foregroundStyle(Color.text)
@@ -119,10 +146,14 @@ struct AddTransactionView: View {
             .scrollDismissesKeyboard(.immediately)
             .formStyle(.grouped)
             .scrollContentBackground(.hidden)
+            .safeAreaInset(edge: .bottom) { //this will push the view farther when the keyboad is shown
+                Color.clear.frame(height: 100)
+            }
         }
         .background(Color.background)
         .onChange(of: titleString) { _, titleString in setTitleInstructions(titleString) }
         .onChange(of: locationString) { _, locationString in setLocationInstructions(locationString) }
+        .onChange(of: newTagString) { _, newTagString in setNewTagInstructions(newTagString) }
         .alert(alertMessage, isPresented: $showAlert) {}
     }
     
@@ -258,7 +289,7 @@ struct AddTransactionView: View {
                 Spacer(minLength: 0)
                 Text(titleInstructions)
                     .font(.caption2)
-                    .foregroundStyle(Color.text.opacity( 0.75))
+                    .foregroundStyle(Color.text.opacity(0.75))
                     .padding(.horizontal, .paddingHorizontalButtonXSmall)
             }
             TextField("Title",
@@ -279,7 +310,7 @@ struct AddTransactionView: View {
                 Spacer(minLength: 0)
                 Text(locationInstructions)
                     .font(.caption2)
-                    .foregroundStyle(Color.text.opacity( 0.75))
+                    .foregroundStyle(Color.text.opacity(0.75))
                     .padding(.horizontal, .paddingHorizontalButtonXSmall)
             }
             TextField("Location",
@@ -287,6 +318,54 @@ struct AddTransactionView: View {
                       prompt: Text(Transaction.Location.sample.value).foregroundStyle(Color.text.opacity(0.7))
             )
             .textFieldSmall()
+        }
+        .formRow()
+    }
+    
+    @ViewBuilder func TagsField() -> some View {
+        VStack {
+            HStack {
+                Text("Tags")
+                    .foregroundStyle(Color.text)
+                Spacer(minLength: 0)
+                Text(newTagInstructions)
+                    .font(.caption2)
+                    .foregroundStyle(Color.text.opacity(0.75))
+                    .padding(.horizontal, .paddingHorizontalButtonXSmall)
+            }
+            HStack {
+                TextField("Tags",
+                          text: $newTagString,
+                          prompt: Text(Transaction.Tag.sample.value).foregroundStyle(Color.text.opacity(0.7))
+                )
+                .textFieldSmall()
+                .textInputAutocapitalization(.words)
+                SaveNewTagButton()
+            }
+        }
+        .formRow()
+        ForEach(tags.sorted { $0.value < $1.value }) { tag in
+            TagRow(tag)
+        }
+    }
+    
+    @ViewBuilder func SaveNewTagButton() -> some View {
+        Button {
+            saveNewTag()
+        } label: {
+            Text("Add")
+                .buttonLabelMedium()
+        }
+    }
+    
+    @ViewBuilder func TagRow(_ tag: Transaction.Tag) -> some View {
+        HStack {
+            Image(systemName: "xmark")
+                .buttonSymbolCircleSmall()
+                .onTapGesture {
+                    remove(tag: tag)
+                }
+            TransactionTagView(tag)
         }
         .formRow()
     }

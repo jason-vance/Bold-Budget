@@ -32,6 +32,8 @@ extension Transaction {
 
 extension Transaction.Tag: Codable {}
 
+extension Transaction.Tag: Hashable {}
+
 extension Transaction.Tag: Identifiable {
     var id: String { value }
 }

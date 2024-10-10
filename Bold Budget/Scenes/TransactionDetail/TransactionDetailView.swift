@@ -209,13 +209,13 @@ struct TransactionDetailView: View {
     }
     
     @ViewBuilder private func TagsRow() -> some View {
-        if let tags = transaction.tags {
+        if let tags = transaction.tags, !tags.isEmpty {
             VStack(alignment: .leading, spacing: .padding) {
                 HStack {
                     RowLabel(String(localized: "Tags"))
                     Spacer(minLength: 0)
                 }
-                ForEach(tags) { tag in
+                ForEach(tags.sorted { $0.value < $1.value }) { tag in
                     TransactionTagView(tag)
                 }
             }

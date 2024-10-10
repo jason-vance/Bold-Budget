@@ -29,7 +29,7 @@ class Transaction: Identifiable {
     @Attribute(.transformable(by: TransactionLocationValueTransformer.self))
     var location: Transaction.Location?
     
-    var tags: [Transaction.Tag]?
+    var tags: Set<Transaction.Tag>?
     
     var description: String { title?.value ?? category.name.value }
     
@@ -40,7 +40,7 @@ class Transaction: Identifiable {
         date: SimpleDate,
         category: Transaction.Category,
         location: Transaction.Location? = nil,
-        tags: [Transaction.Tag] = []
+        tags: Set<Transaction.Tag> = []
     ) {
         self.id = id
         self.title = title
