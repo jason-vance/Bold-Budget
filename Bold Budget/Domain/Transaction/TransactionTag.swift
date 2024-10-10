@@ -32,6 +32,10 @@ extension Transaction {
 
 extension Transaction.Tag: Codable {}
 
+extension Transaction.Tag: Identifiable {
+    var id: String { value }
+}
+
 extension Transaction.Tag {
     
     static let sample: Transaction.Tag = .init("Beach Trip")!

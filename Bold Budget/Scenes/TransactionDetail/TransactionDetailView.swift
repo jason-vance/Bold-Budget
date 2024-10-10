@@ -142,6 +142,7 @@ struct TransactionDetailView: View {
         Section {
             TitleRow()
             LocationRow()
+            TagsRow()
         } header: {
             ZStack {}
         }
@@ -155,6 +156,13 @@ struct TransactionDetailView: View {
         }
     }
     
+    @ViewBuilder private func RowLabel(_ label: String, labelFont: Font = .caption.bold()) -> some View {
+        Text(label)
+            .font(labelFont)
+            .foregroundStyle(Color.text.opacity(0.75))
+            .lineLimit(1)
+    }
+    
     @ViewBuilder private func ShorterTextRow(
         label: String,
         labelFont: Font = .caption.bold(),
@@ -162,10 +170,7 @@ struct TransactionDetailView: View {
         valueFont: Font = .body
     ) -> some View {
         HStack {
-            Text(label)
-                .font(labelFont)
-                .foregroundStyle(Color.text.opacity(0.75))
-                .lineLimit(1)
+            RowLabel(label, labelFont: labelFont)
             Spacer(minLength: .padding)
             Text(value)
                 .font(valueFont)
@@ -177,9 +182,7 @@ struct TransactionDetailView: View {
     @ViewBuilder private func LongerTextRow(label: String, value: String) -> some View {
         VStack {
             HStack {
-                Text(label)
-                    .font(.caption.bold())
-                    .foregroundStyle(Color.text.opacity(0.75))
+                RowLabel(label)
                 Spacer(minLength: 0)
             }
             HStack {
@@ -202,6 +205,21 @@ struct TransactionDetailView: View {
     @ViewBuilder private func LocationRow() -> some View {
         if let location = transaction.location {
             LongerTextRow(label: String(localized: "Location"), value: location.value)
+        }
+    }
+    
+    @ViewBuilder private func TagsRow() -> some View {
+        if let tags = transaction.tags {
+            VStack(alignment: .leading, spacing: .padding) {
+                HStack {
+                    RowLabel(String(localized: "Tags"))
+                    Spacer(minLength: 0)
+                }
+                ForEach(tags) { tag in
+                    TransactionTagView(tag)
+                }
+            }
+            .transactionPropertyRow()
         }
     }
     
