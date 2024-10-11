@@ -22,6 +22,9 @@
     "Any categories you add will show up here" : {
 
     },
+    "Any tags you add to your transactions will show up here" : {
+
+    },
     "Any transactions you add will show up here" : {
 
     },
@@ -97,6 +100,9 @@
     "No Categories" : {
 
     },
+    "No Tags" : {
+
+    },
     "No Transactions" : {
 
     },
@@ -107,6 +113,9 @@
 
     },
     "Pick a Symbol" : {
+
+    },
+    "Pick a Tag" : {
 
     },
     "Required" : {

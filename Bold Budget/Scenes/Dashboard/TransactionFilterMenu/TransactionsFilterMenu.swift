@@ -11,17 +11,20 @@ struct TransactionsFilter {
     
     static let none: TransactionsFilter = .init(
         descriptionContainsText: "",
-        category: nil
+        category: nil,
+        tags: []
     )
     
     var descriptionContainsText: String
     var category: Transaction.Category?
+    var tags: Set<Transaction.Tag>
     
     var count: Int {
         var rv: Int = 0
         
         if !descriptionContainsText.isEmpty { rv += 1 }
         if category != nil { rv += 1 }
+        rv += tags.count
         
         return rv
     }
@@ -36,6 +39,11 @@ struct TransactionsFilter {
             return false
         }
         
+        let transactionTags = transaction.tags ?? []
+        if !tags.isEmpty && transactionTags.intersection(tags).isEmpty {
+            return false
+        }
+        
         return true
     }
 }
@@ -47,13 +55,15 @@ struct TransactionsFilterMenu: View {
     @Binding var transactionCount: Int
     
     @State private var showCategoryPicker: Bool = false
-    
+    @State private var showTagPicker: Bool = false
+
     var body: some View {
         VStack {
             Form {
                 Section {
                     ContainsAnyTextField()
                     CategoryField()
+                    TagsField()
                 } header: {
                     Text("Filter Transactions")
                         .foregroundStyle(Color.text)
@@ -69,6 +79,59 @@ struct TransactionsFilterMenu: View {
         }
         .padding(.bottom)
         .background(Color.background)
+    }
+    
+    @ViewBuilder private func TagsField() -> some View {
+        HStack {
+            Text("Tags")
+                .foregroundStyle(Color.text)
+            Spacer(minLength: 0)
+            Button {
+                showTagPicker = true
+            } label: {
+                HStack {
+                    AddTagButtonLabel()
+                }
+            }
+        }
+        .formRow()
+        .fullScreenCover(isPresented: $showTagPicker) {
+            TransactionTagPickerView { transactionsFilter.tags.insert($0) }
+        }
+        if !transactionsFilter.tags.isEmpty {
+            ForEach(transactionsFilter.tags.sorted { $0.value < $1.value }) { tag in
+                HStack {
+                    Button {
+                        withAnimation(.snappy) { transactionsFilter.tags = transactionsFilter.tags.subtracting([tag]) }
+                    } label: {
+                        Image(systemName: "xmark")
+                            .buttonSymbolCircleSmall()
+                    }
+                    TransactionTagView(tag)
+                    Spacer(minLength: 0)
+                }
+                .formRow()
+                .listRowSeparator(.hidden)
+            }
+        }
+    }
+    
+    @ViewBuilder private func AddTagButtonLabel() -> some View {
+        HStack {
+            Image(systemName: "tag")
+                .overlay(alignment: .bottomTrailing) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 8))
+                        .bold()
+                        .foregroundStyle(Color.background)
+                        .padding(.borderWidthThin)
+                        .background {
+                            Circle()
+                                .foregroundStyle(Color.text)
+                        }
+                }
+        }
+        .buttonLabelSmall()
     }
     
     @ViewBuilder private func SeeTransactionsButton() -> some View {
@@ -106,7 +169,7 @@ struct TransactionsFilterMenu: View {
                             Text(category.name.value)
                         }
                         .buttonLabelSmall()
-                        ClearCategoryButton()
+                        ClearCategoryButton() // Inside the other button's label to allow two buttons in one form row
                     }
                 } else {
                     Text(transactionsFilter.category?.name.value ?? "N/A")

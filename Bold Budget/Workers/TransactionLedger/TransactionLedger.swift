@@ -17,6 +17,10 @@ protocol TransactionDeleter {
     func delete(transaction: Transaction)
 }
 
+protocol TransactionTagProvider {
+    var tagsPublisher: AnyPublisher<Set<Transaction.Tag>,Never> { get }
+}
+
 class TransactionLedger {
     
     static var instance: TransactionLedger? = nil
@@ -84,6 +88,14 @@ extension TransactionLedger: TransactionProvider {}
 extension TransactionLedger: TransactionSaver {}
 
 extension TransactionLedger: TransactionDeleter {}
+
+extension TransactionLedger: TransactionTagProvider {
+    var tagsPublisher: AnyPublisher<Set<Transaction.Tag>, Never> {
+        transactionPublisher
+            .map { $0.reduce(Set<Transaction.Tag>()) { tags, transaction in tags.union(transaction.tags ?? []) } }
+            .eraseToAnyPublisher()
+    }
+}
 
 extension TransactionLedger {
     public enum TestTransactions: String, RawRepresentable {

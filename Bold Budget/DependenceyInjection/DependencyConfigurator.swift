@@ -12,6 +12,7 @@ import SwinjectAutoregistration
 let iocContainer: Container = Container()
 
 func setup(iocContainer: Container) {
+    iocContainer.autoregister(TransactionTagProvider.self, initializer: TransactionLedger.getInstance)
     iocContainer.autoregister(TransactionCategoryRepo.self, initializer: TransactionCategoryRepo.getInstance)
     iocContainer.autoregister(TransactionLedger.self, initializer: TransactionLedger.getInstance)
     
