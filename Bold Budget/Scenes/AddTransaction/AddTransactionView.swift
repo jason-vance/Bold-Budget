@@ -246,6 +246,7 @@ struct AddTransactionView: View {
             .keyboardType(.decimalPad)
             .textFieldSmall()
             .frame(width: 128)
+            .accessibilityIdentifier("AddTransactionView.AmountField.TextField")
         }
         .formRow()
     }
@@ -340,6 +341,7 @@ struct AddTransactionView: View {
                 )
                 .textFieldSmall()
                 .textInputAutocapitalization(.words)
+                .accessibilityIdentifier("AddTransactionView.TagsField.TextField")
                 SaveNewTagButton()
             }
         }
