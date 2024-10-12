@@ -7,14 +7,29 @@
 
 import SwiftUI
 import SwiftData
+import FirebaseCore
 
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
     func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil
     ) -> Bool {
+        configureFirebase()
         setup(iocContainer: iocContainer)
         return true
+    }
+    
+    private func configureFirebase() {
+#if DEBUG
+        let fileName = "GoogleService-Info-Dev"
+#else
+        let fileName = "GoogleService-Info"
+#endif
+        print("Firebase fileName: \(fileName)")
+        
+        if let path = Bundle.main.path(forResource:fileName, ofType:"plist") {
+            FirebaseApp.configure(options: .init(contentsOfFile: path)!)
+        }
     }
 }
 

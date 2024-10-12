@@ -8,6 +8,11 @@
 
 /* Begin PBXBuildFile section */
 		565082842CA8179A009D9417 /* SwinjectAutoregistration in Frameworks */ = {isa = PBXBuildFile; productRef = 565082832CA8179A009D9417 /* SwinjectAutoregistration */; };
+		569088452CBA38AB00BFADCF /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 569088442CBA38AB00BFADCF /* FirebaseAnalytics */; };
+		569088472CBA38AB00BFADCF /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 569088462CBA38AB00BFADCF /* FirebaseAuth */; };
+		569088492CBA38AB00BFADCF /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 569088482CBA38AB00BFADCF /* FirebaseFirestore */; };
+		5690884B2CBA38AB00BFADCF /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 5690884A2CBA38AB00BFADCF /* FirebaseStorage */; };
+		5690884D2CBA3B3000BFADCF /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 5690884C2CBA3B3000BFADCF /* FirebaseCore */; };
 		5690C4982CAE0F8700A389F4 /* SwiftUIFlowLayout in Frameworks */ = {isa = PBXBuildFile; productRef = 5690C4972CAE0F8700A389F4 /* SwiftUIFlowLayout */; };
 		5690C6F52CB3C60200A389F4 /* Screenshots.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 5690C6F42CB3C60200A389F4 /* Screenshots.xctestplan */; };
 		5690C6F72CB3C83000A389F4 /* Comprehensive.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 5690C6F62CB3C83000A389F4 /* Comprehensive.xctestplan */; };
@@ -42,6 +47,7 @@
 		5673DAAE2CA8069B007833E0 /* Exceptions for "Bold Budget" folder in "Bold BudgetTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				DependenceyInjection/IocContainer.swift,
 				Domain/Money.swift,
 				Domain/SimpleDate.swift,
 				Domain/Transaction/Category/TransactionCategory.swift,
@@ -51,6 +57,7 @@
 				Domain/Transaction/TransactionLocation.swift,
 				Domain/Transaction/TransactionTag.swift,
 				Domain/Transaction/TransactionTitle.swift,
+				Domain/Users/UserAuthState.swift,
 				Extensions/CGFloatExtensions.swift,
 				Extensions/DateExtensions.swift,
 				Extensions/DoubleExtensions.swift,
@@ -59,6 +66,7 @@
 				SwiftDataModelContainer.swift,
 				Utils/Cache.swift,
 				Utils/GeometryUtils.swift,
+				Utils/TextError.swift,
 				Views/Gestures/TouchWithLocation.swift,
 				Workers/TransactionCategoryRepo/TransactionCategoryRepo.swift,
 				Workers/TransactionLedger/TransactionLedger.swift,
@@ -84,6 +92,7 @@
 				SwiftDataModelContainer.swift,
 				Utils/Cache.swift,
 				Utils/GeometryUtils.swift,
+				Utils/TextError.swift,
 				Views/Gestures/TouchWithLocation.swift,
 				Workers/TransactionCategoryRepo/TransactionCategoryRepo.swift,
 				Workers/TransactionLedger/TransactionLedger.swift,
@@ -121,6 +130,11 @@
 			files = (
 				5690C4982CAE0F8700A389F4 /* SwiftUIFlowLayout in Frameworks */,
 				565082842CA8179A009D9417 /* SwinjectAutoregistration in Frameworks */,
+				569088452CBA38AB00BFADCF /* FirebaseAnalytics in Frameworks */,
+				569088492CBA38AB00BFADCF /* FirebaseFirestore in Frameworks */,
+				5690884D2CBA3B3000BFADCF /* FirebaseCore in Frameworks */,
+				569088472CBA38AB00BFADCF /* FirebaseAuth in Frameworks */,
+				5690884B2CBA38AB00BFADCF /* FirebaseStorage in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -193,6 +207,11 @@
 			packageProductDependencies = (
 				565082832CA8179A009D9417 /* SwinjectAutoregistration */,
 				5690C4972CAE0F8700A389F4 /* SwiftUIFlowLayout */,
+				569088442CBA38AB00BFADCF /* FirebaseAnalytics */,
+				569088462CBA38AB00BFADCF /* FirebaseAuth */,
+				569088482CBA38AB00BFADCF /* FirebaseFirestore */,
+				5690884A2CBA38AB00BFADCF /* FirebaseStorage */,
+				5690884C2CBA3B3000BFADCF /* FirebaseCore */,
 			);
 			productName = "Bold Budget";
 			productReference = 5673DA0F2CA7FA58007833E0 /* Bold Budget.app */;
@@ -279,6 +298,7 @@
 			packageReferences = (
 				565082822CA8179A009D9417 /* XCRemoteSwiftPackageReference "SwinjectAutoregistration" */,
 				5690C4962CAE0F8700A389F4 /* XCRemoteSwiftPackageReference "swiftui-flow-layout" */,
+				569088432CBA38AB00BFADCF /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 5673DA102CA7FA58007833E0 /* Products */;
@@ -482,6 +502,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Bold Budget/Bold Budget.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Bold Budget/Preview Content\"";
@@ -518,6 +539,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Bold Budget/Bold Budget.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Bold Budget/Preview Content\"";
@@ -689,6 +711,14 @@
 				minimumVersion = 2.9.1;
 			};
 		};
+		569088432CBA38AB00BFADCF /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.3.0;
+			};
+		};
 		5690C4962CAE0F8700A389F4 /* XCRemoteSwiftPackageReference "swiftui-flow-layout" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/globulus/swiftui-flow-layout.git";
@@ -704,6 +734,31 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 565082822CA8179A009D9417 /* XCRemoteSwiftPackageReference "SwinjectAutoregistration" */;
 			productName = SwinjectAutoregistration;
+		};
+		569088442CBA38AB00BFADCF /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 569088432CBA38AB00BFADCF /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		569088462CBA38AB00BFADCF /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 569088432CBA38AB00BFADCF /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		569088482CBA38AB00BFADCF /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 569088432CBA38AB00BFADCF /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+		5690884A2CBA38AB00BFADCF /* FirebaseStorage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 569088432CBA38AB00BFADCF /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseStorage;
+		};
+		5690884C2CBA3B3000BFADCF /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 569088432CBA38AB00BFADCF /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
 		};
 		5690C4972CAE0F8700A389F4 /* SwiftUIFlowLayout */ = {
 			isa = XCSwiftPackageProductDependency;

@@ -9,12 +9,13 @@ import Foundation
 import Swinject
 import SwinjectAutoregistration
 
-let iocContainer: Container = Container()
-
 func setup(iocContainer: Container) {
     iocContainer.autoregister(TransactionTagProvider.self, initializer: TransactionLedger.getInstance)
     iocContainer.autoregister(TransactionCategoryRepo.self, initializer: TransactionCategoryRepo.getInstance)
     iocContainer.autoregister(TransactionLedger.self, initializer: TransactionLedger.getInstance)
+    
+    // Authentication
+    iocContainer.autoregister(AuthenticationProvider.self, initializer: getAuthenticationProvider)
     
     // Dashboard
     iocContainer.autoregister(TransactionProvider.self, initializer: TransactionLedger.getInstance)
@@ -25,4 +26,11 @@ func setup(iocContainer: Container) {
     
     // TransactionDetail
     iocContainer.autoregister(TransactionDeleter.self, initializer: TransactionLedger.getInstance)
+}
+
+fileprivate func getAuthenticationProvider() -> AuthenticationProvider {
+    if let mock = MockAuthenticationProvider.getTestInstance() {
+        return mock
+    }
+    return FirebaseAuthentication.instance
 }
