@@ -34,10 +34,27 @@ struct DashboardView: View {
     @State private var timeFrame: TimeFrame = .init(period: .month, containing: .now)
     @State private var transactionsFilter: TransactionsFilter = .none
     
+    @State private var showUserProfile: Bool = false
     @State private var showTimeFramePicker: Bool = false
     @State private var showFilterTransactionsOptions: Bool = false
     @State private var showAddTransaction: Bool = false
     @State private var selectedTransaction: Transaction? = nil
+    
+    private let currentUserIdProvider: CurrentUserIdProvider
+    
+    init() {
+        self.init(
+            currentUserIdProvider: iocContainer~>CurrentUserIdProvider.self
+        )
+    }
+    
+    init(
+        currentUserIdProvider: CurrentUserIdProvider
+    ) {
+        self.currentUserIdProvider = currentUserIdProvider
+    }
+    
+    private var currentUserId: UserId? { currentUserIdProvider.currentUserId }
 
     private var filteredTransactions: [Transaction] {
         transactions
@@ -104,34 +121,61 @@ struct DashboardView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            TopBar()
-            List {
-                Chart()
-                TransactionList()
+        NavigationStack {
+            VStack(spacing: 0) {
+                TopBar()
+                List {
+                    Chart()
+                    TransactionList()
+                }
+                .listStyle(.insetGrouped)
+                .scrollContentBackground(.hidden)
+                .scrollIndicators(.hidden)
+                .safeAreaInset(edge: .bottom, alignment: .trailing) { AddTransactionButton() }
+                .overlay(alignment: .top) {
+                    Rectangle()
+                        .opacity(0)
+                        .overlay(alignment: .top) { ExtraOptionsMenuOverlay() }
+                        .clipped()
+                }
             }
-            .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
-            .scrollIndicators(.hidden)
-            .safeAreaInset(edge: .bottom, alignment: .trailing) { AddTransactionButton() }
-            .overlay(alignment: .top) {
-                Rectangle()
-                    .opacity(0)
-                    .overlay(alignment: .top) { ExtraOptionsMenuOverlay() }
-                    .clipped()
+            .toolbar { Toolbar() }
+            .foregroundStyle(Color.text)
+            .background(Color.background)
+            .onReceive(transactionsPublisher) { transactions = $0 }
+            .sheet(isPresented: .init(
+                get: { selectedTransaction != nil },
+                set: { isPresented in selectedTransaction = isPresented ? selectedTransaction : nil }
+            )) {
+                if let selectedTransaction = selectedTransaction {
+                    TransactionDetailView(transaction: selectedTransaction)
+                        .presentationDragIndicator(.visible)
+                }
             }
         }
-        .foregroundStyle(Color.text)
-        .background(Color.background)
-        .onReceive(transactionsPublisher) { transactions = $0 }
-        .fullScreenCover(isPresented: $showAddTransaction) { AddTransactionView() }
-        .sheet(isPresented: .init(
-            get: { selectedTransaction != nil },
-            set: { isPresented in selectedTransaction = isPresented ? selectedTransaction : nil }
-        )) {
-            if let selectedTransaction = selectedTransaction {
-                TransactionDetailView(transaction: selectedTransaction)
-                    .presentationDragIndicator(.visible)
+    }
+    
+    @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
+        ToolbarItemGroup(placement: .topBarLeading) {
+            //TODO: Change this to the user's name
+            Text("\(currentUserId?.value ?? "User")'s Budget")
+                .font(.body.bold())
+        }
+        ToolbarItemGroup(placement: .topBarTrailing) {
+            UserProfileButton()
+        }
+    }
+    
+    @ViewBuilder func UserProfileButton() -> some View {
+        Button {
+            showUserProfile = true
+        } label: {
+            //TODO: Replace this with a UserProfileImage
+            Image(systemName: "person.circle.fill")
+        }
+        .sheet(isPresented: $showUserProfile) {
+            if let userId = currentUserId {
+                UserProfileView(userId: userId)
             }
         }
     }
@@ -254,6 +298,7 @@ struct DashboardView: View {
         }
         .padding()
         .accessibilityIdentifier("Add Transaction Button")
+        .fullScreenCover(isPresented: $showAddTransaction) { AddTransactionView() }
     }
     
     @ViewBuilder func Chart() -> some View {
@@ -318,5 +363,7 @@ struct DashboardView: View {
 }
 
 #Preview {
-    DashboardView()
+    DashboardView(
+        currentUserIdProvider: MockCurrentUserIdProvider(currentUserId: .init("previewUserId")!)
+    )
 }

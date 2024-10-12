@@ -79,6 +79,12 @@ extension View {
                                  trailing: .paddingHorizontalButtonXSmall))
     }
     
+    func listRowNoChrome() -> some View {
+        self
+            .listRowBackground(Color.background)
+            .listRowSeparator(.hidden)
+    }
+    
     func transactionPropertyRow() -> some View {
         self
             .listRowBackground(Color.text.opacity(.opacityButtonBackground))

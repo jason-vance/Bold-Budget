@@ -13,6 +13,7 @@ func setup(iocContainer: Container) {
     iocContainer.autoregister(TransactionTagProvider.self, initializer: TransactionLedger.getInstance)
     iocContainer.autoregister(TransactionCategoryRepo.self, initializer: TransactionCategoryRepo.getInstance)
     iocContainer.autoregister(TransactionLedger.self, initializer: TransactionLedger.getInstance)
+    iocContainer.autoregister(CurrentUserIdProvider.self, initializer: getCurrentUserIdProvider)
     
     // Authentication
     iocContainer.autoregister(AuthenticationProvider.self, initializer: getAuthenticationProvider)
@@ -26,6 +27,13 @@ func setup(iocContainer: Container) {
     
     // TransactionDetail
     iocContainer.autoregister(TransactionDeleter.self, initializer: TransactionLedger.getInstance)
+}
+
+fileprivate func getCurrentUserIdProvider() -> CurrentUserIdProvider {
+    if let mock = MockCurrentUserIdProvider.getTestInstance() {
+        return mock
+    }
+    return FirebaseAuthentication.instance
 }
 
 fileprivate func getAuthenticationProvider() -> AuthenticationProvider {

@@ -58,6 +58,7 @@
 				Domain/Transaction/TransactionTag.swift,
 				Domain/Transaction/TransactionTitle.swift,
 				Domain/Users/UserAuthState.swift,
+				Domain/Users/UserId.swift,
 				Extensions/CGFloatExtensions.swift,
 				Extensions/DateExtensions.swift,
 				Extensions/DoubleExtensions.swift,
@@ -70,6 +71,7 @@
 				Views/Gestures/TouchWithLocation.swift,
 				Workers/TransactionCategoryRepo/TransactionCategoryRepo.swift,
 				Workers/TransactionLedger/TransactionLedger.swift,
+				Workers/Users/CurrentUserIdProvider.swift,
 			);
 			target = 5673DA1E2CA7FA5A007833E0 /* Bold BudgetTests */;
 		};

@@ -48,10 +48,8 @@ extension MockAuthenticationProvider {
     }
     
     static func getTestInstance() -> MockAuthenticationProvider? {
-        if var testState = Self.getTestAuthState() {
-            return .init(
-                userAuthState: testState
-            )
+        if let testState = Self.getTestAuthState() {
+            return .init(userAuthState: testState)
         }
         return nil
     }

@@ -14,9 +14,10 @@ import FirebaseAnalytics
 class FirebaseAuthentication {
     
     @Published var currentUser: User?
-    var currentUserIdPublisher: AnyPublisher<String?,Never> {
+    var currentUserId: UserId? { .init(currentUser?.uid) }
+    var currentUserIdPublisher: AnyPublisher<UserId?,Never> {
         $currentUser
-            .map { $0?.uid }
+            .map { .init($0?.uid ?? "") }
             .eraseToAnyPublisher()
     }
     
@@ -129,4 +130,6 @@ class FirebaseAuthentication {
     }
 }
 
-extension FirebaseAuthentication: AuthenticationProvider {}
+extension FirebaseAuthentication: AuthenticationProvider { }
+
+extension FirebaseAuthentication: CurrentUserIdProvider { }
