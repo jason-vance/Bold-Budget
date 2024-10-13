@@ -33,8 +33,7 @@ struct TransactionDetailView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            TopBar()
+        NavigationStack {
             List {
                 HeaderSection()
                 PropertiesSection()
@@ -43,32 +42,37 @@ struct TransactionDetailView: View {
             .scrollDismissesKeyboard(.immediately)
             .formStyle(.grouped)
             .scrollContentBackground(.hidden)
+            .toolbar { Toolbar() }
+            .navigationBarTitleDisplayMode(.inline)
+            .foregroundStyle(Color.text)
+            .background(Color.background)
         }
-        .background(Color.background)
         .alert(alertMessage, isPresented: $showAlert) {}
     }
     
-    @ViewBuilder private func TopBar() -> some View {
-        ScreenTitleBar(
-            primaryContent: { Text("") },
-            leadingContent: { CloseButton() },
-            trailingContent: { DeleteButton() }
-        )
+    @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
+        ToolbarItemGroup(placement: .topBarLeading) {
+            CloseButton()
+        }
+        ToolbarItemGroup(placement: .topBarTrailing) {
+            DeleteButton()
+        }
     }
     
     @ViewBuilder private func CloseButton() -> some View {
-        Button{
+        Button {
             dismiss()
         } label: {
-            TitleBarButtonLabel(sfSymbol: "xmark")
+            Image(systemName: "xmark")
         }
+        .accessibilityIdentifier("TransactionDetailView.Toolbar.DismissButton")
     }
     
     @ViewBuilder private func DeleteButton() -> some View {
         Button {
             showDeleteDialog = true
         } label: {
-            TitleBarButtonLabel(sfSymbol: "trash.fill")
+            Image(systemName: "trash.fill")
         }
         .confirmationDialog(
             "Are you sure you want to delete this transaction?",

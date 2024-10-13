@@ -92,7 +92,10 @@ struct UserProfileView: View {
                 DeleteAccountButton()
                     .padding(.horizontal)
             }
+            .padding(.vertical)
             .toolbar { Toolbar() }
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(userId.value)
             .foregroundStyle(Color.text)
             .background(Color.background)
         }
@@ -108,10 +111,6 @@ struct UserProfileView: View {
                 Image(systemName: "xmark")
             }
             .accessibilityIdentifier("UserProfileView.Toolbar.DismissButton")
-        }
-        ToolbarItemGroup(placement: .principal) {
-            Text(userId.value)
-                .font(.body.bold())
         }
     }
     

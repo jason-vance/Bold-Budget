@@ -80,8 +80,7 @@ struct AddTransactionCategoryView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            TopBar()
+        NavigationStack {
             Form {
                 Section {
                     NameField()
@@ -95,37 +94,43 @@ struct AddTransactionCategoryView: View {
             .scrollDismissesKeyboard(.immediately)
             .formStyle(.grouped)
             .scrollContentBackground(.hidden)
+            .toolbar { Toolbar() }
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(screenTitle)
+            .foregroundStyle(Color.text)
+            .background(Color.background)
         }
-        .background(Color.background)
         .onChange(of: nameString) { _, nameString in setNameInstructions(nameString) }
         .onChange(of: categoryToEdit, initial: true) { _, category in populateFields(category) }
     }
     
-    @ViewBuilder func TopBar() -> some View {
-        ScreenTitleBar(
-            primaryContent: { Text(screenTitle) },
-            leadingContent: { CloseButton() },
-            trailingContent: { SaveButton() }
-        )
+    @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
+        ToolbarItemGroup(placement: .topBarLeading) {
+            CloseButton()
+        }
+        ToolbarItemGroup(placement: .topBarTrailing) {
+            SaveButton()
+        }
     }
     
     @ViewBuilder func CloseButton() -> some View {
         Button {
             dismiss()
         } label: {
-            TitleBarButtonLabel(sfSymbol: "xmark")
+            Image(systemName: "xmark")
         }
+        .accessibilityIdentifier("AddTransactionCategoryView.Toolbar.CloseButton")
     }
     
     @ViewBuilder func SaveButton() -> some View {
         Button {
             saveCategory()
         } label: {
-            TitleBarButtonLabel(sfSymbol: "checkmark")
+            Image(systemName: "checkmark")
         }
         .opacity(isFormComplete ? 1 : .opacityButtonBackground)
         .disabled(!isFormComplete)
-        .accessibilityIdentifier("Save Category Button")
+        .accessibilityIdentifier("AddTransactionCategoryView.Toolbar.SaveButton")
     }
     
     @ViewBuilder func KindField() -> some View {
@@ -198,7 +203,7 @@ struct AddTransactionCategoryView: View {
                         .buttonLabelSmall()
                 }
             }
-            .accessibilityIdentifier("Symbol Picker Button")
+            .accessibilityIdentifier("AddTransactionCategoryView.Toolbar.SymbolField.Button")
         }
         .formRow()
         .fullScreenCover(isPresented: $showSymbolPicker) {

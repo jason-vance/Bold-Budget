@@ -50,31 +50,35 @@ struct SfSymbolPickerView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            TopBar()
-            SearchArea()
-                .padding(.padding)
-            BarDivider()
-            ScrollView {
-                LazyVStack {
-                    ForEach(filteredSymbols, id: \.self) { symbol in
-                        Button {
-                            select(symbol: symbol)
-                        } label: {
-                            SymbolRow(symbol)
+        NavigationStack {
+            VStack(spacing: 0) {
+                SearchArea()
+                BarDivider()
+                ScrollView {
+                    LazyVStack {
+                        ForEach(filteredSymbols, id: \.self) { symbol in
+                            Button {
+                                select(symbol: symbol)
+                            } label: {
+                                SymbolRow(symbol)
+                            }
+                        }
+                        if symbols.isEmpty {
+                            ProgressView()
+                                .progressViewStyle(.circular)
+                                .tint(Color.text)
+                                .padding(.top, 100)
                         }
                     }
-                    if symbols.isEmpty {
-                        ProgressView()
-                            .progressViewStyle(.circular)
-                            .tint(Color.text)
-                            .padding(.top, 100)
-                    }
+                    .padding()
                 }
-                .padding()
             }
+            .toolbar { Toolbar() }
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationTitle("Pick a Symbol")
+            .foregroundStyle(Color.text)
+            .background(Color.background)
         }
-        .background(Color.background)
         .onAppear { fetchSymbols() }
     }
     
@@ -88,19 +92,17 @@ struct SfSymbolPickerView: View {
         }
     }
     
-    @ViewBuilder func TopBar() -> some View {
-        ScreenTitleBar(
-            primaryContent: { Text("Pick a Symbol") },
-            leadingContent: { CloseButton() },
-            trailingContent: { CloseButton().opacity(0) }
-        )
+    @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
+        ToolbarItemGroup(placement: .topBarLeading) {
+            CloseButton()
+        }
     }
     
     @ViewBuilder func CloseButton() -> some View {
         Button {
             dismiss()
         } label: {
-            TitleBarButtonLabel(sfSymbol: "xmark")
+            Image(systemName: "xmark")
         }
     }
     
@@ -111,6 +113,8 @@ struct SfSymbolPickerView: View {
             searchPresented: $searchPresented
         )
         .autocapitalization(.never)
+        .padding(.horizontal)
+        .padding(.vertical, .padding)
     }
 }
 

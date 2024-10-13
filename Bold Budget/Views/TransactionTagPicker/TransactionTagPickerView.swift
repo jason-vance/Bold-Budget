@@ -44,30 +44,34 @@ struct TransactionTagPickerView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            TopBar()
-            SearchArea()
-                .padding(.padding)
-            BarDivider()
-            ScrollView {
-                LazyVStack {
-                    if tags?.isEmpty == true {
-                        NoTagsView()
-                    } else if tags != nil {
-                        ForEach(filteredTags) { tag in
-                            TagButton(tag)
+        NavigationStack {
+            VStack(spacing: 0) {
+                SearchArea()
+                BarDivider()
+                ScrollView {
+                    LazyVStack {
+                        if tags?.isEmpty == true {
+                            NoTagsView()
+                        } else if tags != nil {
+                            ForEach(filteredTags) { tag in
+                                TagButton(tag)
+                            }
+                        } else {
+                            ProgressView()
+                                .progressViewStyle(.circular)
+                                .tint(Color.text)
+                                .padding(.top, 100)
                         }
-                    } else {
-                        ProgressView()
-                            .progressViewStyle(.circular)
-                            .tint(Color.text)
-                            .padding(.top, 100)
                     }
+                    .padding()
                 }
-                .padding(.padding)
             }
+            .toolbar { Toolbar() }
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationTitle("Pick a Tag")
+            .foregroundStyle(Color.text)
+            .background(Color.background)
         }
-        .background(Color.background)
         .onReceive(tagsPublisher) { tags = $0 }
     }
     
@@ -94,19 +98,17 @@ struct TransactionTagPickerView: View {
         .padding(.vertical, .paddingVerticalButtonXSmall)
     }
     
-    @ViewBuilder func TopBar() -> some View {
-        ScreenTitleBar(
-            primaryContent: { Text("Pick a Tag") },
-            leadingContent: { CloseButton() },
-            trailingContent: { CloseButton().opacity(0) }
-        )
+    @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
+        ToolbarItemGroup(placement: .topBarLeading) {
+            CloseButton()
+        }
     }
     
     @ViewBuilder func CloseButton() -> some View {
         Button {
             dismiss()
         } label: {
-            TitleBarButtonLabel(sfSymbol: "xmark")
+            Image(systemName: "xmark")
         }
     }
     
@@ -117,6 +119,8 @@ struct TransactionTagPickerView: View {
             searchPresented: $searchPresented,
             action: {}
         )
+        .padding(.horizontal)
+        .padding(.vertical, .padding)
     }
 }
 

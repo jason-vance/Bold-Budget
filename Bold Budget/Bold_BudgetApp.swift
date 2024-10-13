@@ -44,28 +44,27 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     
     fileprivate func setupNavBars() {
         let scrollEdgeAppearance = UINavigationBarAppearance()
-        scrollEdgeAppearance.configureWithTransparentBackground()
+        scrollEdgeAppearance.configureWithOpaqueBackground()
         scrollEdgeAppearance.largeTitleTextAttributes = [
             NSAttributedString.Key.foregroundColor : UIColor.init(Color.text)
         ]
         scrollEdgeAppearance.titleTextAttributes = [
             NSAttributedString.Key.foregroundColor : UIColor.init(Color.text)
         ]
+        scrollEdgeAppearance.shadowColor = .init(Color.text.opacity(0.25))
         scrollEdgeAppearance.backgroundColor = .init(Color.background)
         UINavigationBar.appearance().scrollEdgeAppearance = scrollEdgeAppearance
         
         let standardAppearance = UINavigationBarAppearance()
-        standardAppearance.configureWithTransparentBackground()
+        standardAppearance.configureWithOpaqueBackground()
         standardAppearance.largeTitleTextAttributes = [
             NSAttributedString.Key.foregroundColor : UIColor.init(Color.text)
         ]
         standardAppearance.titleTextAttributes = [
             NSAttributedString.Key.foregroundColor : UIColor.init(Color.text)
         ]
-        //TODO: Figure how exactly to style this
-        standardAppearance.backgroundEffect = .init(style: .systemUltraThinMaterialDark)
-//        standardAppearance.backgroundColor = .init(Color.background)
-        
+        standardAppearance.shadowColor = .init(Color.text.opacity(0.25))
+        standardAppearance.backgroundColor = .init(Color.background)
         UINavigationBar.appearance().standardAppearance = standardAppearance
     }
 }

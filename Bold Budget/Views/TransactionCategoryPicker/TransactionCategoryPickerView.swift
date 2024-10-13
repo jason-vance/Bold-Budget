@@ -60,31 +60,47 @@ struct TransactionCategoryPickerView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            TopBar()
-            SearchArea()
-                .padding(.padding)
-            BarDivider()
-            ScrollView {
-                LazyVStack {
-                    if categories?.isEmpty == true {
-                        NoCategoriesView()
-                    } else if categories != nil {
-                        ForEach(filteredCategories) { category in
-                            CategoryButton(category)
+        NavigationStack {
+            VStack(spacing: 0) {
+                SearchArea()
+                BarDivider()
+                ScrollView {
+                    LazyVStack {
+                        if categories?.isEmpty == true {
+                            NoCategoriesView()
+                        } else if categories != nil {
+                            ForEach(filteredCategories) { category in
+                                CategoryButton(category)
+                            }
+                        } else {
+                            ProgressView()
+                                .progressViewStyle(.circular)
+                                .tint(Color.text)
+                                .padding(.top, 100)
                         }
-                    } else {
-                        ProgressView()
-                            .progressViewStyle(.circular)
-                            .tint(Color.text)
-                            .padding(.top, 100)
                     }
+                    .padding()
                 }
-                .padding(.padding)
+                .safeAreaInset(edge: .bottom, alignment: .trailing) { AddCategoryButton() }
             }
-            .safeAreaInset(edge: .bottom, alignment: .trailing) { AddCategoryButton() }
+            .toolbar { Toolbar() }
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(isEditing ? "Edit a Category" : "Pick a Category")
+            .foregroundStyle(Color.text)
+            .background(Color.background)
+            .fullScreenCover(isPresented: .init(
+                get: { categoryToEdit != nil },
+                set: { isPresented in categoryToEdit = isPresented ? categoryToEdit : nil }
+            )) {
+                if let category = categoryToEdit {
+                    AddTransactionCategoryView()
+                        .editing(category)
+                }
+            }
+            .fullScreenCover(isPresented: $showAddTransactionCategoryView) {
+                AddTransactionCategoryView()
+            }
         }
-        .background(Color.background)
         .onReceive(categoriesPublisher) { categories = $0 }
     }
     
@@ -146,19 +162,20 @@ struct TransactionCategoryPickerView: View {
         }
     }
     
-    @ViewBuilder func TopBar() -> some View {
-        ScreenTitleBar(
-            primaryContent: { Text(isEditing ? "Edit a Category" : "Pick a Category") },
-            leadingContent: { CloseButton() },
-            trailingContent: { EditButton() }
-        )
+    @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
+        ToolbarItemGroup(placement: .topBarLeading) {
+            CloseButton()
+        }
+        ToolbarItemGroup(placement: .topBarTrailing) {
+            EditButton()
+        }
     }
     
     @ViewBuilder func CloseButton() -> some View {
         Button {
             dismiss()
         } label: {
-            TitleBarButtonLabel(sfSymbol: "xmark")
+            Image(systemName: "xmark")
         }
     }
     
@@ -166,18 +183,9 @@ struct TransactionCategoryPickerView: View {
         Button {
             withAnimation(.snappy) { isEditing.toggle() }
         } label: {
-            TitleBarButtonLabel(sfSymbol: isEditing ? "pencil.slash" : "pencil")
+            Image(systemName: isEditing ? "pencil.slash" : "pencil")
         }
         .opacity(mode == .pickerAndEditor && categories?.isEmpty == false ? 1 : 0)
-        .fullScreenCover(isPresented: .init(
-            get: { categoryToEdit != nil },
-            set: { isPresented in categoryToEdit = isPresented ? categoryToEdit : nil }
-        )) {
-            if let category = categoryToEdit {
-                AddTransactionCategoryView()
-                    .editing(category)
-            }
-        }
     }
     
     @ViewBuilder func AddCategoryButton() -> some View {
@@ -196,9 +204,6 @@ struct TransactionCategoryPickerView: View {
         }
         .opacity(mode == .pickerAndEditor && isEditing == false ? 1 : 0)
         .padding()
-        .fullScreenCover(isPresented: $showAddTransactionCategoryView) {
-            AddTransactionCategoryView()
-        }
         .accessibilityIdentifier("Add Category Button")
     }
     
@@ -209,6 +214,8 @@ struct TransactionCategoryPickerView: View {
             searchPresented: $searchPresented,
             action: {}
         )
+        .padding(.horizontal)
+        .padding(.vertical, .padding)
     }
 }
 

@@ -122,8 +122,7 @@ struct AddTransactionView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            TopBar()
+        NavigationStack {
             Form {
                 Section {
                     CategoryField()
@@ -149,20 +148,25 @@ struct AddTransactionView: View {
             .safeAreaInset(edge: .bottom) { //this will push the view farther when the keyboad is shown
                 Color.clear.frame(height: 100)
             }
+            .toolbar { Toolbar() }
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationTitle("Add Transaction")
+            .foregroundStyle(Color.text)
+            .background(Color.background)
         }
-        .background(Color.background)
         .onChange(of: titleString) { _, titleString in setTitleInstructions(titleString) }
         .onChange(of: locationString) { _, locationString in setLocationInstructions(locationString) }
         .onChange(of: newTagString) { _, newTagString in setNewTagInstructions(newTagString) }
         .alert(alertMessage, isPresented: $showAlert) {}
     }
     
-    @ViewBuilder func TopBar() -> some View {
-        ScreenTitleBar(
-            primaryContent: { Text("Add Transaction") },
-            leadingContent: { CloseButton() },
-            trailingContent: { SaveButton() }
-        )
+    @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
+        ToolbarItemGroup(placement: .topBarLeading) {
+            CloseButton()
+        }
+        ToolbarItemGroup(placement: .topBarTrailing) {
+            SaveButton()
+        }
     }
     
     @ViewBuilder func CloseButton() -> some View {
@@ -173,8 +177,9 @@ struct AddTransactionView: View {
                 dismiss()
             }
         } label: {
-            TitleBarButtonLabel(sfSymbol: "xmark")
+            Image(systemName: "xmark")
         }
+        .accessibilityIdentifier("AddTransactionView.Toolbar.DismissButton")
         .confirmationDialog("Discard this transaction?", isPresented: $showDiscardDialog, titleVisibility: .visible) {
             DiscardButton()
             CancelDiscardButton()
@@ -200,10 +205,11 @@ struct AddTransactionView: View {
         Button {
             saveTransaction()
         } label: {
-            TitleBarButtonLabel(sfSymbol: "checkmark")
+            Image(systemName: "checkmark")
         }
         .opacity(isFormComplete ? 1 : .opacityButtonBackground)
         .disabled(!isFormComplete)
+        .accessibilityIdentifier("AddTransactionView.Toolbar.SaveButton")
     }
     
     @ViewBuilder func CategoryField() -> some View {

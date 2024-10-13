@@ -149,7 +149,6 @@ struct DashboardView: View {
             )) {
                 if let selectedTransaction = selectedTransaction {
                     TransactionDetailView(transaction: selectedTransaction)
-                        .presentationDragIndicator(.visible)
                 }
             }
         }
