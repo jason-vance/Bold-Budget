@@ -29,8 +29,6 @@ class FirebaseAuthentication {
     static let instance: FirebaseAuthentication = .init()
     
     private init() {
-        //TODO: Remove this debug statement
-        try? signOut()
         listenForAuthStateChanges()
     }
     
@@ -125,6 +123,7 @@ class FirebaseAuthentication {
             throw TextError("User is not logged in")
         }
         
+        //TODO: Delete any user data?
         try await reathenticate(withAuthorization: authorization)
         try await currentUser.delete()
     }
@@ -135,3 +134,5 @@ extension FirebaseAuthentication: AuthenticationProvider { }
 extension FirebaseAuthentication: CurrentUserIdProvider { }
 
 extension FirebaseAuthentication: UserSignOutService { }
+
+extension FirebaseAuthentication: UserAccountDeleter { }

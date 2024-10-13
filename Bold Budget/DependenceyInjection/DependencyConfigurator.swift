@@ -18,6 +18,7 @@ func setup(iocContainer: Container) {
     // Authentication
     iocContainer.autoregister(AuthenticationProvider.self, initializer: getAuthenticationProvider)
     iocContainer.autoregister(UserSignOutService.self, initializer: getUserSignOutService)
+    iocContainer.autoregister(UserAccountDeleter.self, initializer: getUserAccountDeleter)
 
     // Dashboard
     iocContainer.autoregister(TransactionProvider.self, initializer: TransactionLedger.getInstance)
@@ -45,5 +46,9 @@ fileprivate func getAuthenticationProvider() -> AuthenticationProvider {
 }
 
 fileprivate func getUserSignOutService() -> UserSignOutService {
+    return FirebaseAuthentication.instance
+}
+
+fileprivate func getUserAccountDeleter() -> UserAccountDeleter {
     return FirebaseAuthentication.instance
 }

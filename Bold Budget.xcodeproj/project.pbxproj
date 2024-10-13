@@ -69,6 +69,7 @@
 				Utils/GeometryUtils.swift,
 				Utils/TextError.swift,
 				Views/Gestures/TouchWithLocation.swift,
+				Workers/Authentication/UserAccountDeleter.swift,
 				Workers/Authentication/UserSignOutService.swift,
 				Workers/TransactionCategoryRepo/TransactionCategoryRepo.swift,
 				Workers/TransactionLedger/TransactionLedger.swift,
