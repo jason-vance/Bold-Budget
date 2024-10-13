@@ -133,3 +133,5 @@ class FirebaseAuthentication {
 extension FirebaseAuthentication: AuthenticationProvider { }
 
 extension FirebaseAuthentication: CurrentUserIdProvider { }
+
+extension FirebaseAuthentication: UserSignOutService { }

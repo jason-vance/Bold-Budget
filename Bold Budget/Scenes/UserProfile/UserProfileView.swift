@@ -12,46 +12,60 @@ struct UserProfileView: View {
     
     @Environment(\.dismiss) private var dismiss
     
-    public let userId: UserId
-    private let currentUserIdProvider: CurrentUserIdProvider
-        
     @State private var userIdState: UserId?
     
-    private var currentUserId: UserId? { currentUserIdProvider.currentUserId }
+    @State private var showSignOutDialog: Bool = false
+    
+    @State private var showAlert: Bool = false
+    @State private var alertMessage: String = ""
+    
+    public let userId: UserId
+    
+    private let signOutService: UserSignOutService
     
     init(
         userId: UserId
     ) {
         self.init(
             userId: userId,
-            currentUserIdProvider: iocContainer~>CurrentUserIdProvider.self
+            signOutService: iocContainer~>UserSignOutService.self
         )
     }
     
     init(
         userId: UserId,
-        currentUserIdProvider: CurrentUserIdProvider
+        signOutService: UserSignOutService
     ) {
         self.userId = userId
-        self.currentUserIdProvider = currentUserIdProvider
+        self.signOutService = signOutService
+    }
+    
+    private func confirmedSignOut() {
+        do {
+            try signOutService.signOut()
+        } catch {
+            show(alert: "Could not sign out. \(error.localizedDescription)")
+        }
+    }
+    
+    private func show(alert: String) {
+        showAlert = true
+        alertMessage = alert
     }
     
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                List {
-                    Text("HEllo")
-                        .listRowNoChrome()
-                }
-                .listStyle(.insetGrouped)
-                .scrollContentBackground(.hidden)
-                .scrollIndicators(.hidden)
+            VStack {
+                Spacer(minLength: 0)
+                SignOutButton()
+                    .padding(.horizontal)
             }
             .toolbar { Toolbar() }
             .foregroundStyle(Color.text)
             .background(Color.background)
         }
         .onChange(of: userId, initial: true) { _, userId in userIdState = userId }
+        .alert(alertMessage, isPresented: $showAlert) {}
     }
     
     @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
@@ -59,16 +73,56 @@ struct UserProfileView: View {
             Button {
                 dismiss()
             } label: {
-                TitleBarButtonLabel(sfSymbol: "xmark")
+                Image(systemName: "xmark")
             }
+            .accessibilityIdentifier("UserProfileView.Toolbar.DismissButton")
         }
         ToolbarItemGroup(placement: .principal) {
-            Text(currentUserId?.value ?? "User")
+            Text(userId.value)
                 .font(.body.bold())
         }
+    }
+    
+    @ViewBuilder private func SignOutButton() -> some View {
+        Button {
+            showSignOutDialog = true
+        } label: {
+            Text("Logout")
+                .frame(maxWidth: .infinity)
+                .buttonLabelMedium(isProminent: true)
+        }
+        .accessibilityIdentifier("UserProfileView.SignOutButton")
+        .confirmationDialog(
+            "Are you sure you want to sign out?",
+            isPresented: $showSignOutDialog,
+            titleVisibility: .visible
+        ) {
+            ConfirmSignOutButton()
+            CancelSignOutButton()
+        }
+    }
+    
+    @ViewBuilder func ConfirmSignOutButton() -> some View {
+        Button(role: .destructive) {
+            confirmedSignOut()
+        } label: {
+            Text("Sign Out")
+        }
+        .accessibilityIdentifier("UserProfileView.ConfirmSignOutButton")
+    }
+    
+    @ViewBuilder func CancelSignOutButton() -> some View {
+        Button(role: .cancel) {
+        } label: {
+            Text("Cancel")
+        }
+        .accessibilityIdentifier("UserProfileView.CancelSignOutButton")
     }
 }
 
 #Preview {
-    UserProfileView(userId: .sample)
+    UserProfileView(
+        userId: .sample,
+        signOutService: MockUserSignOutService()
+    )
 }

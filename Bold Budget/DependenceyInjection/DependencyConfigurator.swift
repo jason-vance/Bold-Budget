@@ -17,7 +17,8 @@ func setup(iocContainer: Container) {
     
     // Authentication
     iocContainer.autoregister(AuthenticationProvider.self, initializer: getAuthenticationProvider)
-    
+    iocContainer.autoregister(UserSignOutService.self, initializer: getUserSignOutService)
+
     // Dashboard
     iocContainer.autoregister(TransactionProvider.self, initializer: TransactionLedger.getInstance)
     
@@ -40,5 +41,9 @@ fileprivate func getAuthenticationProvider() -> AuthenticationProvider {
     if let mock = MockAuthenticationProvider.getTestInstance() {
         return mock
     }
+    return FirebaseAuthentication.instance
+}
+
+fileprivate func getUserSignOutService() -> UserSignOutService {
     return FirebaseAuthentication.instance
 }
