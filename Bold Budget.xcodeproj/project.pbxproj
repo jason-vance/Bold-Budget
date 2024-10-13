@@ -13,6 +13,7 @@
 		569088492CBA38AB00BFADCF /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 569088482CBA38AB00BFADCF /* FirebaseFirestore */; };
 		5690884B2CBA38AB00BFADCF /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 5690884A2CBA38AB00BFADCF /* FirebaseStorage */; };
 		5690884D2CBA3B3000BFADCF /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 5690884C2CBA3B3000BFADCF /* FirebaseCore */; };
+		569088832CBBC70000BFADCF /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 569088822CBBC70000BFADCF /* Kingfisher */; };
 		5690C4982CAE0F8700A389F4 /* SwiftUIFlowLayout in Frameworks */ = {isa = PBXBuildFile; productRef = 5690C4972CAE0F8700A389F4 /* SwiftUIFlowLayout */; };
 		5690C6F52CB3C60200A389F4 /* Screenshots.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 5690C6F42CB3C60200A389F4 /* Screenshots.xctestplan */; };
 		5690C6F72CB3C83000A389F4 /* Comprehensive.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 5690C6F62CB3C83000A389F4 /* Comprehensive.xctestplan */; };
@@ -136,6 +137,7 @@
 				565082842CA8179A009D9417 /* SwinjectAutoregistration in Frameworks */,
 				569088452CBA38AB00BFADCF /* FirebaseAnalytics in Frameworks */,
 				569088492CBA38AB00BFADCF /* FirebaseFirestore in Frameworks */,
+				569088832CBBC70000BFADCF /* Kingfisher in Frameworks */,
 				5690884D2CBA3B3000BFADCF /* FirebaseCore in Frameworks */,
 				569088472CBA38AB00BFADCF /* FirebaseAuth in Frameworks */,
 				5690884B2CBA38AB00BFADCF /* FirebaseStorage in Frameworks */,
@@ -216,6 +218,7 @@
 				569088482CBA38AB00BFADCF /* FirebaseFirestore */,
 				5690884A2CBA38AB00BFADCF /* FirebaseStorage */,
 				5690884C2CBA3B3000BFADCF /* FirebaseCore */,
+				569088822CBBC70000BFADCF /* Kingfisher */,
 			);
 			productName = "Bold Budget";
 			productReference = 5673DA0F2CA7FA58007833E0 /* Bold Budget.app */;
@@ -303,6 +306,7 @@
 				565082822CA8179A009D9417 /* XCRemoteSwiftPackageReference "SwinjectAutoregistration" */,
 				5690C4962CAE0F8700A389F4 /* XCRemoteSwiftPackageReference "swiftui-flow-layout" */,
 				569088432CBA38AB00BFADCF /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				569088812CBBC70000BFADCF /* XCRemoteSwiftPackageReference "Kingfisher" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 5673DA102CA7FA58007833E0 /* Products */;
@@ -723,6 +727,14 @@
 				minimumVersion = 11.3.0;
 			};
 		};
+		569088812CBBC70000BFADCF /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/onevcat/Kingfisher.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.0.3;
+			};
+		};
 		5690C4962CAE0F8700A389F4 /* XCRemoteSwiftPackageReference "swiftui-flow-layout" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/globulus/swiftui-flow-layout.git";
@@ -763,6 +775,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 569088432CBA38AB00BFADCF /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseCore;
+		};
+		569088822CBBC70000BFADCF /* Kingfisher */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 569088812CBBC70000BFADCF /* XCRemoteSwiftPackageReference "Kingfisher" */;
+			productName = Kingfisher;
 		};
 		5690C4972CAE0F8700A389F4 /* SwiftUIFlowLayout */ = {
 			isa = XCSwiftPackageProductDependency;

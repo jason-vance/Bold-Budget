@@ -85,6 +85,7 @@ struct UserProfileView: View {
     var body: some View {
         NavigationStack {
             VStack {
+                ProfileImage()
                 Spacer(minLength: 0)
                 SignOutButton()
                     .padding(.horizontal)
@@ -112,6 +113,11 @@ struct UserProfileView: View {
             Text(userId.value)
                 .font(.body.bold())
         }
+    }
+    
+    @ViewBuilder private func ProfileImage() -> some View {
+        //TODO: Get profile image url
+        ProfileImageView(nil)
     }
     
     @ViewBuilder private func SignOutButton() -> some View {
