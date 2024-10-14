@@ -302,6 +302,7 @@ struct AddTransactionView: View {
             )
             .textFieldSmall()
             .autocapitalization(.words)
+            .accessibilityIdentifier("AddTransactionView.TitleField.TextField")
         }
         .formRow()
     }
@@ -322,6 +323,7 @@ struct AddTransactionView: View {
                       prompt: Text(Transaction.Location.sample.value).foregroundStyle(Color.text.opacity(0.7))
             )
             .textFieldSmall()
+            .accessibilityIdentifier("AddTransactionView.LocationField.TextField")
         }
         .formRow()
     }

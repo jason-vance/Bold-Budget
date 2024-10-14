@@ -173,6 +173,7 @@ struct AddTransactionCategoryView: View {
             )
             .textFieldSmall()
             .autocapitalization(.words)
+            .accessibilityIdentifier("AddTransactionCategoryView.NameField.TextField")
             HStack {
                 Spacer(minLength: 0)
                 Text(nameInstructions)

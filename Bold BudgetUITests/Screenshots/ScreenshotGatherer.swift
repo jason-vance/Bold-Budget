@@ -24,6 +24,7 @@ final class ScreenshotGatherer: XCTestCase {
     
     func testDashboardScreenshot() throws {
         let app = XCUIApplication()
+        MockAuthenticationProvider.test(using: .signedIn, in: &app.launchEnvironment)
         TransactionCategoryRepo.test(using: .categorySamples, in: &app.launchEnvironment)
         TransactionLedger.test(using: .screenshotSamples, in: &app.launchEnvironment)
         app.launch()
@@ -36,42 +37,43 @@ final class ScreenshotGatherer: XCTestCase {
     
     func testAddTransactionScreenshot() throws {
         let app = XCUIApplication()
+        MockAuthenticationProvider.test(using: .signedIn, in: &app.launchEnvironment)
         TransactionCategoryRepo.test(using: .empty, in: &app.launchEnvironment)
         TransactionLedger.test(using: .empty, in: &app.launchEnvironment)
         app.launch()
         
         // Dashboard
-        app.buttons["Add Transaction Button"].tap()
+        app.buttons["DashboardView.AddTransactionButton"].tap()
 
         // AddTransaction
-        app.collectionViews.buttons["N/A"].tap()
-        
+        app.collectionViews.buttons["AddTransactionView.CategoryField.SelectCategoryButton"].tap()
+
         // CategoryPicker
-        app.buttons["Add Category Button"].tap()
-        
+        app.buttons["TransactionCategoryPickerView.AddCategoryButton"].tap()
+
         // AddCategory
-        app.collectionViews.textFields["Groceries, Rent, Paycheck, etc..."].tap()
-        app.collectionViews.textFields["Groceries, Rent, Paycheck, etc..."].typeText("Groceries")
-        app.collectionViews.buttons["Symbol Picker Button"].tap()
+        app.collectionViews.textFields["AddTransactionCategoryView.NameField.TextField"].tap()
+        app.collectionViews.textFields["AddTransactionCategoryView.NameField.TextField"].typeText("Groceries")
+        app.collectionViews.buttons["AddTransactionCategoryView.SymbolField.SelectSymbolButton"].tap()
         
         // SfSymbolPicker
-        app.textFields["Search for a symbol"].tap()
-        app.textFields["Search for a symbol"].typeText("bag")
+        app.textFields["SfSymbolPickerView.SearchArea"].tap()
+        app.textFields["SfSymbolPickerView.SearchArea"].typeText("bag")
         app.scrollViews.otherElements.buttons["bag.fill"].tap()
         
         // AddCategory
-        app.buttons["Save Category Button"].tap()
+        app.buttons["AddTransactionCategoryView.Toolbar.SaveButton"].tap()
         
         // CategoryPicker
-        app.scrollViews.otherElements.staticTexts["Groceries"].tap()
-        
+        app.collectionViews/*@START_MENU_TOKEN@*/.staticTexts["Groceries"]/*[[".buttons[\"Groceries\"].staticTexts[\"Groceries\"]",".staticTexts[\"Groceries\"]"],[[[-1,1],[-1,0]]],[0]]@END_MENU_TOKEN@*/.tap()
+
         // AddTransaction
-        app.collectionViews.textFields["$0.00"].tap()
-        app.collectionViews.textFields["$0.00"].clearAndEnterText("$87.63")
-        app.collectionViews.textFields["Milk Tea, Movie Tickets, etc..."].tap()
-        app.collectionViews.textFields["Milk Tea, Movie Tickets, etc..."].typeText("Walmart")
-        app.collectionViews.textFields["Cupertino, CA"].tap()
-        app.collectionViews.textFields["Cupertino, CA"].typeText("Seattle, WA")
+        app.collectionViews.textFields["AddTransactionView.AmountField.TextField"].tap()
+        app.collectionViews.textFields["AddTransactionView.AmountField.TextField"].clearAndEnterText("$87.63")
+        app.collectionViews.textFields["AddTransactionView.TitleField.TextField"].tap()
+        app.collectionViews.textFields["AddTransactionView.TitleField.TextField"].typeText("Walmart")
+        app.collectionViews.textFields["AddTransactionView.LocationField.TextField"].tap()
+        app.collectionViews.textFields["AddTransactionView.LocationField.TextField"].typeText("Seattle, WA")
         
         let attachment = XCTAttachment(screenshot: app.screenshot())
         attachment.name = "AddTransaction"
@@ -81,6 +83,7 @@ final class ScreenshotGatherer: XCTestCase {
     
     func testTransactionDetailScreenshot() throws {
         let app = XCUIApplication()
+        MockAuthenticationProvider.test(using: .signedIn, in: &app.launchEnvironment)
         TransactionCategoryRepo.test(using: .categorySamples, in: &app.launchEnvironment)
         TransactionLedger.test(using: .screenshotSamples, in: &app.launchEnvironment)
         app.launch()
