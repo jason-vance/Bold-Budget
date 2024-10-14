@@ -44,34 +44,33 @@ struct TransactionTagPickerView: View {
     }
     
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                SearchArea()
-                BarDivider()
-                ScrollView {
-                    LazyVStack {
-                        if tags?.isEmpty == true {
-                            NoTagsView()
-                        } else if tags != nil {
-                            ForEach(filteredTags) { tag in
-                                TagButton(tag)
-                            }
-                        } else {
-                            ProgressView()
-                                .progressViewStyle(.circular)
-                                .tint(Color.text)
-                                .padding(.top, 100)
+        VStack(spacing: 0) {
+            SearchArea()
+            BarDivider()
+            ScrollView {
+                LazyVStack {
+                    if tags?.isEmpty == true {
+                        NoTagsView()
+                    } else if tags != nil {
+                        ForEach(filteredTags) { tag in
+                            TagButton(tag)
                         }
+                    } else {
+                        ProgressView()
+                            .progressViewStyle(.circular)
+                            .tint(Color.text)
+                            .padding(.top, 100)
                     }
-                    .padding()
                 }
+                .padding()
             }
-            .toolbar { Toolbar() }
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationTitle("Pick a Tag")
-            .foregroundStyle(Color.text)
-            .background(Color.background)
         }
+        .toolbar { Toolbar() }
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationTitle("Pick a Tag")
+        .navigationBarBackButtonHidden()
+        .foregroundStyle(Color.text)
+        .background(Color.background)
         .onReceive(tagsPublisher) { tags = $0 }
     }
     
@@ -108,7 +107,7 @@ struct TransactionTagPickerView: View {
         Button {
             dismiss()
         } label: {
-            Image(systemName: "xmark")
+            Image(systemName: "chevron.backward")
         }
     }
     
@@ -125,5 +124,7 @@ struct TransactionTagPickerView: View {
 }
 
 #Preview {
-    TransactionTagPickerView() { tag in }
+    NavigationStack {
+        TransactionTagPickerView() { tag in }
+    }
 }

@@ -33,20 +33,19 @@ struct TransactionDetailView: View {
     }
     
     var body: some View {
-        NavigationStack {
-            List {
-                HeaderSection()
-                PropertiesSection()
-                ItemizedSection()
-            }
-            .scrollDismissesKeyboard(.immediately)
-            .formStyle(.grouped)
-            .scrollContentBackground(.hidden)
-            .toolbar { Toolbar() }
-            .navigationBarTitleDisplayMode(.inline)
-            .foregroundStyle(Color.text)
-            .background(Color.background)
+        List {
+            HeaderSection()
+            PropertiesSection()
+            ItemizedSection()
         }
+        .scrollDismissesKeyboard(.immediately)
+        .formStyle(.grouped)
+        .scrollContentBackground(.hidden)
+        .toolbar { Toolbar() }
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden()
+        .foregroundStyle(Color.text)
+        .background(Color.background)
         .alert(alertMessage, isPresented: $showAlert) {}
     }
     
@@ -63,7 +62,7 @@ struct TransactionDetailView: View {
         Button {
             dismiss()
         } label: {
-            Image(systemName: "xmark")
+            Image(systemName: "chevron.backward")
         }
         .accessibilityIdentifier("TransactionDetailView.Toolbar.DismissButton")
     }
@@ -238,5 +237,7 @@ struct TransactionDetailView: View {
 }
 
 #Preview {
-    TransactionDetailView(transaction: .sampleRandomBasic)
+    NavigationStack {
+        TransactionDetailView(transaction: .sampleRandomBasic)
+    }
 }

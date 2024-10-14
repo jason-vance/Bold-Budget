@@ -34,11 +34,8 @@ struct DashboardView: View {
     @State private var timeFrame: TimeFrame = .init(period: .month, containing: .now)
     @State private var transactionsFilter: TransactionsFilter = .none
     
-    @State private var showUserProfile: Bool = false
     @State private var showTimeFramePicker: Bool = false
     @State private var showFilterTransactionsOptions: Bool = false
-    @State private var showAddTransaction: Bool = false
-    @State private var selectedTransaction: Transaction? = nil
     
     private let currentUserIdProvider: CurrentUserIdProvider
     
@@ -121,37 +118,27 @@ struct DashboardView: View {
     }
     
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                TopBar()
-                List {
-                    Chart()
-                    TransactionList()
-                }
-                .listStyle(.insetGrouped)
-                .scrollContentBackground(.hidden)
-                .scrollIndicators(.hidden)
-                .safeAreaInset(edge: .bottom, alignment: .trailing) { AddTransactionButton() }
-                .overlay(alignment: .top) {
-                    Rectangle()
-                        .opacity(0)
-                        .overlay(alignment: .top) { ExtraOptionsMenuOverlay() }
-                        .clipped()
-                }
+        VStack(spacing: 0) {
+            TopBar()
+            List {
+                Chart()
+                TransactionList()
             }
-            .toolbar { Toolbar() }
-            .foregroundStyle(Color.text)
-            .background(Color.background)
-            .onReceive(transactionsPublisher) { transactions = $0 }
-            .sheet(isPresented: .init(
-                get: { selectedTransaction != nil },
-                set: { isPresented in selectedTransaction = isPresented ? selectedTransaction : nil }
-            )) {
-                if let selectedTransaction = selectedTransaction {
-                    TransactionDetailView(transaction: selectedTransaction)
-                }
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .scrollIndicators(.hidden)
+            .safeAreaInset(edge: .bottom, alignment: .trailing) { AddTransactionButton() }
+            .overlay(alignment: .top) {
+                Rectangle()
+                    .opacity(0)
+                    .overlay(alignment: .top) { ExtraOptionsMenuOverlay() }
+                    .clipped()
             }
         }
+        .toolbar { Toolbar() }
+        .foregroundStyle(Color.text)
+        .background(Color.background)
+        .onReceive(transactionsPublisher) { transactions = $0 }
     }
     
     @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
@@ -166,16 +153,17 @@ struct DashboardView: View {
     }
     
     @ViewBuilder func UserProfileButton() -> some View {
-        Button {
-            showUserProfile = true
-        } label: {
-            //TODO: Replace this with a UserProfileImage
-            Image(systemName: "person.circle.fill")
-        }
-        .sheet(isPresented: $showUserProfile) {
+        NavigationLink {
             if let userId = currentUserId {
                 UserProfileView(userId: userId)
             }
+        } label: {
+            //TODO: Get the user's profile image url
+            ProfileImageView(
+                nil,
+                size: 22,
+                padding: .borderWidthThin
+            )
         }
     }
     
@@ -282,8 +270,8 @@ struct DashboardView: View {
     }
     
     @ViewBuilder func AddTransactionButton() -> some View {
-        Button {
-            showAddTransaction = true
+        NavigationLink {
+            AddTransactionView()
         } label: {
             Image(systemName: "plus")
                 .foregroundStyle(Color.background)
@@ -296,8 +284,7 @@ struct DashboardView: View {
                 }
         }
         .padding()
-        .accessibilityIdentifier("Add Transaction Button")
-        .fullScreenCover(isPresented: $showAddTransaction) { AddTransactionView() }
+        .accessibilityIdentifier("DashboardView.AddTransactionButton")
     }
     
     @ViewBuilder func Chart() -> some View {
@@ -352,8 +339,8 @@ struct DashboardView: View {
     }
     
     @ViewBuilder private func TransactionRow(_ transaction: Transaction) -> some View {
-        Button {
-            selectedTransaction = transaction
+        NavigationLink {
+            TransactionDetailView(transaction: transaction)
         } label: {
             TransactionRowView(transaction)
         }
@@ -362,7 +349,9 @@ struct DashboardView: View {
 }
 
 #Preview {
-    DashboardView(
-        currentUserIdProvider: MockCurrentUserIdProvider(currentUserId: .init("previewUserId")!)
-    )
+    NavigationStack {
+        DashboardView(
+            currentUserIdProvider: MockCurrentUserIdProvider(currentUserId: .init("previewUserId")!)
+        )
+    }
 }

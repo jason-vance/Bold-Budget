@@ -24,8 +24,6 @@ struct AddTransactionCategoryView: View {
     @State private var nameString: String = ""
     @State private var nameInstructions: String = ""
     
-    @State private var showSymbolPicker: Bool = false
-    
     public func editing(_ category: Transaction.Category) -> AddTransactionCategoryView {
         var view = self
         view.categoryToEdit = .init(category: category)
@@ -80,26 +78,25 @@ struct AddTransactionCategoryView: View {
     }
     
     var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    NameField()
-                    KindField()
-                    SymbolField()
-                } header: {
-                    Text("")
-                        .foregroundStyle(Color.text)
-                }
+        Form {
+            Section {
+                NameField()
+                KindField()
+                SymbolField()
+            } header: {
+                Text("")
+                    .foregroundStyle(Color.text)
             }
-            .scrollDismissesKeyboard(.immediately)
-            .formStyle(.grouped)
-            .scrollContentBackground(.hidden)
-            .toolbar { Toolbar() }
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationTitle(screenTitle)
-            .foregroundStyle(Color.text)
-            .background(Color.background)
         }
+        .scrollDismissesKeyboard(.immediately)
+        .formStyle(.grouped)
+        .scrollContentBackground(.hidden)
+        .toolbar { Toolbar() }
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationTitle(screenTitle)
+        .navigationBarBackButtonHidden()
+        .foregroundStyle(Color.text)
+        .background(Color.background)
         .onChange(of: nameString) { _, nameString in setNameInstructions(nameString) }
         .onChange(of: categoryToEdit, initial: true) { _, category in populateFields(category) }
     }
@@ -188,13 +185,13 @@ struct AddTransactionCategoryView: View {
     }
     
     @ViewBuilder func SymbolField() -> some View {
-        HStack {
-            Text("Symbol")
-                .foregroundStyle(Color.text)
-            Spacer(minLength: 0)
-            Button {
-                showSymbolPicker = true
-            } label: {
+        NavigationLink {
+            SfSymbolPickerView { symbolString = $0 }
+        } label: {
+            HStack {
+                Text("Symbol")
+                    .foregroundStyle(Color.text)
+                Spacer(minLength: 0)
                 if let sfSymbol = symbolString {
                     Image(systemName: sfSymbol)
                         .buttonLabelSmall()
@@ -203,25 +200,26 @@ struct AddTransactionCategoryView: View {
                         .buttonLabelSmall()
                 }
             }
-            .accessibilityIdentifier("AddTransactionCategoryView.Toolbar.SymbolField.Button")
         }
         .formRow()
-        .fullScreenCover(isPresented: $showSymbolPicker) {
-            SfSymbolPickerView { symbolString = $0 }
-        }
+        .accessibilityIdentifier("AddTransactionCategoryView.Toolbar.SymbolField.Button")
     }
 }
 
 #Preview("New") {
-    AddTransactionCategoryView()
+    NavigationStack {
+        AddTransactionCategoryView()
+    }
 }
 
 #Preview("Edit") {
-    AddTransactionCategoryView()
-        .editing(.init(
-            id: UUID(),
-            kind: .income,
-            name: .init("Category To Edit")!,
-            sfSymbol: .init("pencil.and.outline")!
-        ))
+    NavigationStack {
+        AddTransactionCategoryView()
+            .editing(.init(
+                id: UUID(),
+                kind: .income,
+                name: .init("Category To Edit")!,
+                sfSymbol: .init("pencil.and.outline")!
+            ))
+    }
 }

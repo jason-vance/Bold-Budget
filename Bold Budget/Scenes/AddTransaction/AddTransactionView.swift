@@ -23,7 +23,6 @@ struct AddTransactionView: View {
     @State private var tags: Set<Transaction.Tag> = []
 
     @State private var showDiscardDialog: Bool = false
-    @State private var showCategoryPicker: Bool = false
     @State private var showTransactionDatePicker: Bool = false
     
     @State private var showAlert: Bool = false
@@ -122,38 +121,37 @@ struct AddTransactionView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    CategoryField()
-                    AmountField()
-                    TransactionDateField()
-                    TransactionDatePicker()
-                } header: {
-                    Text("Required")
-                        .foregroundStyle(Color.text)
-                }
-                Section {
-                    TitleField()
-                    LocationField()
-                    TagsField()
-                } header: {
-                    Text("Optional")
-                        .foregroundStyle(Color.text)
-                }
+        Form {
+            Section {
+                CategoryField()
+                AmountField()
+                TransactionDateField()
+                TransactionDatePicker()
+            } header: {
+                Text("Required")
+                    .foregroundStyle(Color.text)
             }
-            .scrollDismissesKeyboard(.immediately)
-            .formStyle(.grouped)
-            .scrollContentBackground(.hidden)
-            .safeAreaInset(edge: .bottom) { //this will push the view farther when the keyboad is shown
-                Color.clear.frame(height: 100)
+            Section {
+                TitleField()
+                LocationField()
+                TagsField()
+            } header: {
+                Text("Optional")
+                    .foregroundStyle(Color.text)
             }
-            .toolbar { Toolbar() }
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationTitle("Add Transaction")
-            .foregroundStyle(Color.text)
-            .background(Color.background)
         }
+        .scrollDismissesKeyboard(.immediately)
+        .formStyle(.grouped)
+        .scrollContentBackground(.hidden)
+        .safeAreaInset(edge: .bottom) { //this will push the view farther when the keyboad is shown
+            Color.clear.frame(height: 100)
+        }
+        .toolbar { Toolbar() }
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationTitle("Add Transaction")
+        .navigationBarBackButtonHidden()
+        .foregroundStyle(Color.text)
+        .background(Color.background)
         .onChange(of: titleString) { _, titleString in setTitleInstructions(titleString) }
         .onChange(of: locationString) { _, locationString in setLocationInstructions(locationString) }
         .onChange(of: newTagString) { _, newTagString in setNewTagInstructions(newTagString) }
@@ -177,7 +175,7 @@ struct AddTransactionView: View {
                 dismiss()
             }
         } label: {
-            Image(systemName: "xmark")
+            Image(systemName: "chevron.backward")
         }
         .accessibilityIdentifier("AddTransactionView.Toolbar.DismissButton")
         .confirmationDialog("Discard this transaction?", isPresented: $showDiscardDialog, titleVisibility: .visible) {
@@ -213,13 +211,14 @@ struct AddTransactionView: View {
     }
     
     @ViewBuilder func CategoryField() -> some View {
-        HStack {
-            Text("Category")
-                .foregroundStyle(Color.text)
-            Spacer(minLength: 0)
-            Button {
-                showCategoryPicker = true
-            } label: {
+        NavigationLink {
+            TransactionCategoryPickerView(selectedCategory: $category)
+                .pickerMode(.pickerAndEditor)
+        } label: {
+            HStack {
+                Text("Category")
+                    .foregroundStyle(Color.text)
+                Spacer(minLength: 0)
                 if let category = category {
                     HStack {
                         Image(systemName: category.sfSymbol.value)
@@ -233,9 +232,6 @@ struct AddTransactionView: View {
             }
         }
         .formRow()
-        .fullScreenCover(isPresented: $showCategoryPicker) {
-            TransactionCategoryPickerView(mode: .pickerAndEditor) { category = $0 }
-        }
     }
     
     @ViewBuilder func AmountField() -> some View {
@@ -380,5 +376,7 @@ struct AddTransactionView: View {
 }
 
 #Preview {
-    AddTransactionView()
+    NavigationStack {
+        AddTransactionView()
+    }
 }

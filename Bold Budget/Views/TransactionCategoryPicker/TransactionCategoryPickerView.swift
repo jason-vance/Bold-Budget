@@ -19,17 +19,28 @@ struct TransactionCategoryPickerView: View {
     
     @Environment(\.dismiss) private var dismiss
     
-    @State var mode: Mode = .picker
+    @Binding public var selectedCategory: Transaction.Category?
+    
+    @State private var mode: Mode? = nil
     @State private var categories: [Transaction.Category]? = nil
     @State private var searchText: String = ""
     @State private var searchPresented: Bool = false
-    @State private var showAddTransactionCategoryView: Bool = false
     @State private var isEditing: Bool = false
-    @State private var categoryToEdit: Transaction.Category? = nil
-    
-    public var onSelected: (Transaction.Category) -> ()
     
     private let categoryProvider = iocContainer~>TransactionCategoryRepo.self
+    private var __mode: Mode?
+
+    public func pickerMode(_ mode: Mode) -> TransactionCategoryPickerView {
+        var view = self
+        view.__mode = mode
+        return view
+    }
+    
+    init(
+        selectedCategory: Binding<Transaction.Category?>
+    ) {
+        self._selectedCategory = selectedCategory
+    }
     
     private var filteredCategories: [Transaction.Category] {
         guard let categories = categories else { return [] }
@@ -51,57 +62,41 @@ struct TransactionCategoryPickerView: View {
     }
     
     private func select(category: Transaction.Category) {
-        if isEditing {
-            categoryToEdit = category
-        } else {
-            onSelected(category)
-            dismiss()
-        }
+        selectedCategory = category
+        dismiss()
     }
     
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                SearchArea()
-                BarDivider()
-                ScrollView {
-                    LazyVStack {
-                        if categories?.isEmpty == true {
-                            NoCategoriesView()
-                        } else if categories != nil {
-                            ForEach(filteredCategories) { category in
-                                CategoryButton(category)
-                            }
-                        } else {
-                            ProgressView()
-                                .progressViewStyle(.circular)
-                                .tint(Color.text)
-                                .padding(.top, 100)
-                        }
+        VStack(spacing: 0) {
+            SearchArea()
+            BarDivider()
+            List {
+                if categories?.isEmpty == true {
+                    NoCategoriesView()
+                } else if categories != nil {
+                    ForEach(filteredCategories) { category in
+                        CategoryButton(category)
+                            .listRowNoChrome()
+                            .listRowInsets(.init(top: 0,
+                                                 leading: 0,
+                                                 bottom: 0,
+                                                 trailing: 0))
                     }
-                    .padding()
-                }
-                .safeAreaInset(edge: .bottom, alignment: .trailing) { AddCategoryButton() }
-            }
-            .toolbar { Toolbar() }
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationTitle(isEditing ? "Edit a Category" : "Pick a Category")
-            .foregroundStyle(Color.text)
-            .background(Color.background)
-            .fullScreenCover(isPresented: .init(
-                get: { categoryToEdit != nil },
-                set: { isPresented in categoryToEdit = isPresented ? categoryToEdit : nil }
-            )) {
-                if let category = categoryToEdit {
-                    AddTransactionCategoryView()
-                        .editing(category)
+                } else {
+                    LoadingSpinner()
                 }
             }
-            .fullScreenCover(isPresented: $showAddTransactionCategoryView) {
-                AddTransactionCategoryView()
-            }
+            .listStyle(.insetGrouped)
+            .safeAreaInset(edge: .bottom, alignment: .trailing) { AddCategoryButton() }
         }
+        .toolbar { Toolbar() }
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationTitle(isEditing ? "Edit a Category" : "Pick a Category")
+        .navigationBarBackButtonHidden()
+        .foregroundStyle(Color.text)
+        .background(Color.background)
         .onReceive(categoriesPublisher) { categories = $0 }
+        .onChange(of: __mode, initial: true) { _, mode in self.mode = mode }
     }
     
     @ViewBuilder func NoCategoriesView() -> some View {
@@ -110,28 +105,48 @@ struct TransactionCategoryPickerView: View {
             systemImage: "list.bullet",
             description: Text("Any categories you add will show up here")
         )
-        .foregroundStyle(Color.text)
-        .listRowBackground(Color.background)
-        .listRowSeparator(.hidden)
+        .listRowNoChrome()
+    }
+    
+    @ViewBuilder private func LoadingSpinner() -> some View {
+        HStack {
+            Spacer()
+            ProgressView()
+                .progressViewStyle(.circular)
+                .tint(Color.text)
+            Spacer()
+        }
+        .padding(.top, 100)
+        .listRowNoChrome()
     }
     
     @ViewBuilder func CategoryButton(_ category: Transaction.Category) -> some View {
-        HStack {
+        if isEditing {
+            NavigationLink {
+                AddTransactionCategoryView()
+                    .editing(category)
+            } label: {
+                CategoryButtonLabel(category)
+            }
+        } else {
             Button {
                 select(category: category)
             } label: {
-                HStack {
-                    KindIndicator(category.kind)
-                    HStack {
-                        Image(systemName: category.sfSymbol.value)
-                        Text(category.name.value)
-                    }
-                    .buttonLabelSmall()
-                    Spacer(minLength: 0)
-                    CategoryButtonIsEditingIndicator()
-                }
+                CategoryButtonLabel(category)
             }
+        }
+    }
+    
+    @ViewBuilder private func CategoryButtonLabel(_ category: Transaction.Category) -> some View {
+        HStack {
+            KindIndicator(category.kind)
+            HStack {
+                Image(systemName: category.sfSymbol.value)
+                Text(category.name.value)
+            }
+            .buttonLabelSmall()
             Spacer(minLength: 0)
+            CategoryButtonIsEditingIndicator()
         }
     }
     
@@ -140,7 +155,6 @@ struct TransactionCategoryPickerView: View {
             Image(systemName: "pencil")
                 .bold()
                 .frame(width: 22, height: 22)
-                .padding(.padding)
         }
     }
     
@@ -186,11 +200,12 @@ struct TransactionCategoryPickerView: View {
             Image(systemName: isEditing ? "pencil.slash" : "pencil")
         }
         .opacity(mode == .pickerAndEditor && categories?.isEmpty == false ? 1 : 0)
+        .accessibilityIdentifier("TransactionCategoryPickerView.Toolbar.EditButton")
     }
     
     @ViewBuilder func AddCategoryButton() -> some View {
-        Button {
-            showAddTransactionCategoryView = true
+        NavigationLink {
+            AddTransactionCategoryView()
         } label: {
             Image(systemName: "plus")
                 .foregroundStyle(Color.background)
@@ -204,7 +219,7 @@ struct TransactionCategoryPickerView: View {
         }
         .opacity(mode == .pickerAndEditor && isEditing == false ? 1 : 0)
         .padding()
-        .accessibilityIdentifier("Add Category Button")
+        .accessibilityIdentifier("TransactionCategoryPickerView.AddCategoryButton")
     }
     
     @ViewBuilder func SearchArea() -> some View {
@@ -220,9 +235,15 @@ struct TransactionCategoryPickerView: View {
 }
 
 #Preview("Picker") {
-    TransactionCategoryPickerView(mode: .picker) { _ in }
+    NavigationStack {
+        TransactionCategoryPickerView(selectedCategory: .constant(nil))
+            .pickerMode(.picker)
+    }
 }
 
 #Preview("Picker And Editor") {
-    TransactionCategoryPickerView(mode: .pickerAndEditor) { _ in }
+    NavigationStack {
+        TransactionCategoryPickerView(selectedCategory: .constant(nil))
+            .pickerMode(.pickerAndEditor)
+    }
 }

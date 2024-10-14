@@ -54,9 +54,6 @@ struct TransactionsFilterMenu: View {
     @Binding var transactionsFilter: TransactionsFilter
     @Binding var transactionCount: Int
     
-    @State private var showCategoryPicker: Bool = false
-    @State private var showTagPicker: Bool = false
-
     var body: some View {
         VStack {
             Form {
@@ -78,26 +75,22 @@ struct TransactionsFilterMenu: View {
                 .padding(.horizontal)
         }
         .padding(.bottom)
+        .foregroundStyle(Color.text)
         .background(Color.background)
     }
     
     @ViewBuilder private func TagsField() -> some View {
-        HStack {
-            Text("Tags")
-                .foregroundStyle(Color.text)
-            Spacer(minLength: 0)
-            Button {
-                showTagPicker = true
-            } label: {
-                HStack {
-                    AddTagButtonLabel()
-                }
+        NavigationLink {
+            TransactionTagPickerView { transactionsFilter.tags.insert($0) }
+        } label: {
+            HStack {
+                Text("Tags")
+                    .foregroundStyle(Color.text)
+                Spacer(minLength: 0)
+                AddTagButtonLabel()
             }
         }
         .formRow()
-        .fullScreenCover(isPresented: $showTagPicker) {
-            TransactionTagPickerView { transactionsFilter.tags.insert($0) }
-        }
         if !transactionsFilter.tags.isEmpty {
             ForEach(transactionsFilter.tags.sorted { $0.value < $1.value }) { tag in
                 HStack {
@@ -155,13 +148,14 @@ struct TransactionsFilterMenu: View {
     }
     
     @ViewBuilder func CategoryField() -> some View {
-        HStack {
-            Text("Category")
-                .foregroundStyle(Color.text)
-            Spacer(minLength: 0)
-            Button {
-                showCategoryPicker = true
-            } label: {
+        NavigationLink {
+            TransactionCategoryPickerView(selectedCategory: $transactionsFilter.category)
+                .pickerMode(.picker)
+        } label: {
+            HStack {
+                Text("Category")
+                    .foregroundStyle(Color.text)
+                Spacer(minLength: 0)
                 if let category = transactionsFilter.category {
                     HStack {
                         HStack {
@@ -178,18 +172,14 @@ struct TransactionsFilterMenu: View {
             }
         }
         .formRow()
-        .fullScreenCover(isPresented: $showCategoryPicker) {
-            TransactionCategoryPickerView(mode: .picker) { transactionsFilter.category = $0 }
-        }
     }
     
     @ViewBuilder func ClearCategoryButton() -> some View {
-        Button {
-            withAnimation(.snappy) { transactionsFilter.category = nil }
-        } label: {
-            Image(systemName: "xmark")
-                .buttonSymbolCircleSmall()
-        }
+        Image(systemName: "xmark")
+            .buttonSymbolCircleSmall()
+            .onTapGesture {
+                withAnimation(.snappy) { transactionsFilter.category = nil }
+            }
     }
     
     @ViewBuilder func ContainsAnyTextField() -> some View {
@@ -219,11 +209,13 @@ struct TransactionsFilterMenu: View {
 }
 
 #Preview {
-    StatefulPreviewContainer(TransactionsFilter.none) { filter in
-        TransactionsFilterMenu(
-            isMenuVisible: .constant(true),
-            transactionsFilter: filter,
-            transactionCount: .constant(10)
-        )
+    NavigationStack {
+        StatefulPreviewContainer(TransactionsFilter.none) { filter in
+            TransactionsFilterMenu(
+                isMenuVisible: .constant(true),
+                transactionsFilter: filter,
+                transactionCount: .constant(10)
+            )
+        }
     }
 }

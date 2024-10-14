@@ -50,35 +50,34 @@ struct SfSymbolPickerView: View {
     }
     
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                SearchArea()
-                BarDivider()
-                ScrollView {
-                    LazyVStack {
-                        ForEach(filteredSymbols, id: \.self) { symbol in
-                            Button {
-                                select(symbol: symbol)
-                            } label: {
-                                SymbolRow(symbol)
-                            }
-                        }
-                        if symbols.isEmpty {
-                            ProgressView()
-                                .progressViewStyle(.circular)
-                                .tint(Color.text)
-                                .padding(.top, 100)
+        VStack(spacing: 0) {
+            SearchArea()
+            BarDivider()
+            ScrollView {
+                LazyVStack {
+                    ForEach(filteredSymbols, id: \.self) { symbol in
+                        Button {
+                            select(symbol: symbol)
+                        } label: {
+                            SymbolRow(symbol)
                         }
                     }
-                    .padding()
+                    if symbols.isEmpty {
+                        ProgressView()
+                            .progressViewStyle(.circular)
+                            .tint(Color.text)
+                            .padding(.top, 100)
+                    }
                 }
+                .padding()
             }
-            .toolbar { Toolbar() }
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationTitle("Pick a Symbol")
-            .foregroundStyle(Color.text)
-            .background(Color.background)
         }
+        .toolbar { Toolbar() }
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationTitle("Pick a Symbol")
+        .navigationBarBackButtonHidden()
+        .foregroundStyle(Color.text)
+        .background(Color.background)
         .onAppear { fetchSymbols() }
     }
     
@@ -102,7 +101,7 @@ struct SfSymbolPickerView: View {
         Button {
             dismiss()
         } label: {
-            Image(systemName: "xmark")
+            Image(systemName: "chevron.backward")
         }
     }
     
@@ -119,5 +118,7 @@ struct SfSymbolPickerView: View {
 }
 
 #Preview {
-    SfSymbolPickerView() { _ in }
+    NavigationStack {
+        SfSymbolPickerView() { _ in }
+    }
 }

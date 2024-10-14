@@ -40,11 +40,17 @@ struct ContentView: View {
     
     @ViewBuilder private func AuthenticationStateRouter() -> some View {
         if userAuthState == .loggedIn {
-            DashboardView()
+            SignedInView()
                 .transition(.asymmetric(insertion: .push(from: .trailing), removal: .push(from: .leading)))
         } else {
             AuthenticationView()
                 .transition(.asymmetric(insertion: .offset(x: 0), removal: .offset(x: -100)))
+        }
+    }
+    
+    @ViewBuilder private func SignedInView() -> some View {
+        NavigationStack {
+            DashboardView()
         }
     }
 }

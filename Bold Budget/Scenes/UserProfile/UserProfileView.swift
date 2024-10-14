@@ -83,22 +83,21 @@ struct UserProfileView: View {
     }
     
     var body: some View {
-        NavigationStack {
-            VStack {
-                ProfileImage()
-                Spacer(minLength: 0)
-                SignOutButton()
-                    .padding(.horizontal)
-                DeleteAccountButton()
-                    .padding(.horizontal)
-            }
-            .padding(.vertical)
-            .toolbar { Toolbar() }
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationTitle(userId.value)
-            .foregroundStyle(Color.text)
-            .background(Color.background)
+        VStack {
+            ProfileImage()
+            Spacer(minLength: 0)
+            SignOutButton()
+                .padding(.horizontal)
+            DeleteAccountButton()
+                .padding(.horizontal)
         }
+        .padding(.vertical)
+        .toolbar { Toolbar() }
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationTitle(userId.value)
+        .navigationBarBackButtonHidden()
+        .foregroundStyle(Color.text)
+        .background(Color.background)
         .onChange(of: userId, initial: true) { _, userId in userIdState = userId }
         .alert(alertMessage, isPresented: $showAlert) {}
     }
@@ -108,7 +107,7 @@ struct UserProfileView: View {
             Button {
                 dismiss()
             } label: {
-                Image(systemName: "xmark")
+                Image(systemName: "chevron.backward")
             }
             .accessibilityIdentifier("UserProfileView.Toolbar.DismissButton")
         }
@@ -234,9 +233,11 @@ struct UserProfileView: View {
 }
 
 #Preview {
-    UserProfileView(
-        userId: .sample,
-        signOutService: MockUserSignOutService(),
-        accountDeleter: MockUserAccountDeleter()
-    )
+    NavigationStack {
+        UserProfileView(
+            userId: .sample,
+            signOutService: MockUserSignOutService(),
+            accountDeleter: MockUserAccountDeleter()
+        )
+    }
 }
