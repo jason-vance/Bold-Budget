@@ -11,11 +11,11 @@ struct SfSymbolPickerView: View {
     
     @Environment(\.dismiss) private var dismiss
     
+    @Binding public var selectedSymbol: String?
+    
     @State private var symbols: [String] = []
     @State private var searchText: String = ""
     @State private var searchPresented: Bool = false
-    
-    public var onSelected: (String) -> ()
     
     private var filteredSymbols: [String] {
         guard !searchText.isEmpty else { return symbols }
@@ -45,7 +45,7 @@ struct SfSymbolPickerView: View {
     }
     
     private func select(symbol: String) {
-        onSelected(symbol)
+        selectedSymbol = symbol
         dismiss()
     }
     
@@ -114,11 +114,12 @@ struct SfSymbolPickerView: View {
         .autocapitalization(.never)
         .padding(.horizontal)
         .padding(.vertical, .padding)
+        .accessibilityIdentifier("SfSymbolPickerView.SearchArea")
     }
 }
 
 #Preview {
     NavigationStack {
-        SfSymbolPickerView() { _ in }
+        SfSymbolPickerView(selectedSymbol: .constant(nil))
     }
 }

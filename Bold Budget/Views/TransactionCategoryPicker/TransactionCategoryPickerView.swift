@@ -87,6 +87,7 @@ struct TransactionCategoryPickerView: View {
                 }
             }
             .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
             .safeAreaInset(edge: .bottom, alignment: .trailing) { AddCategoryButton() }
         }
         .toolbar { Toolbar() }

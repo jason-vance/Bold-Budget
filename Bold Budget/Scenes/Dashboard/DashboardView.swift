@@ -222,6 +222,7 @@ struct DashboardView: View {
                     }
                 }
         }
+        .accessibilityIdentifier("DashboardView.FilterTransactionsButton")
     }
     
     @ViewBuilder func TimeFrameButton() -> some View {

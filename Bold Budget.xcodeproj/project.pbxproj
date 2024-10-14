@@ -70,6 +70,7 @@
 				Utils/GeometryUtils.swift,
 				Utils/TextError.swift,
 				Views/Gestures/TouchWithLocation.swift,
+				Workers/Authentication/AuthenticationProvider.swift,
 				Workers/Authentication/UserAccountDeleter.swift,
 				Workers/Authentication/UserSignOutService.swift,
 				Workers/TransactionCategoryRepo/TransactionCategoryRepo.swift,
@@ -90,6 +91,7 @@
 				Domain/Transaction/TransactionLocation.swift,
 				Domain/Transaction/TransactionTag.swift,
 				Domain/Transaction/TransactionTitle.swift,
+				Domain/Users/UserAuthState.swift,
 				Extensions/CGFloatExtensions.swift,
 				Extensions/DateExtensions.swift,
 				Extensions/DoubleExtensions.swift,
@@ -99,6 +101,7 @@
 				Utils/GeometryUtils.swift,
 				Utils/TextError.swift,
 				Views/Gestures/TouchWithLocation.swift,
+				Workers/Authentication/AuthenticationProvider.swift,
 				Workers/TransactionCategoryRepo/TransactionCategoryRepo.swift,
 				Workers/TransactionLedger/TransactionLedger.swift,
 			);

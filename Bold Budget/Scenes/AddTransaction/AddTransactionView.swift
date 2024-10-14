@@ -232,6 +232,7 @@ struct AddTransactionView: View {
             }
         }
         .formRow()
+        .accessibilityIdentifier("AddTransactionView.CategoryField.SelectCategoryButton")
     }
     
     @ViewBuilder func AmountField() -> some View {
@@ -360,6 +361,7 @@ struct AddTransactionView: View {
             Text("Add")
                 .buttonLabelMedium()
         }
+        .accessibilityIdentifier("AddTransactionView.TagsField.SaveNewTagButton")
     }
     
     @ViewBuilder func TagRow(_ tag: Transaction.Tag) -> some View {

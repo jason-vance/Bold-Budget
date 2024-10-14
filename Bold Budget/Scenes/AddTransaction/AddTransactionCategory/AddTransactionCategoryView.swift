@@ -186,7 +186,7 @@ struct AddTransactionCategoryView: View {
     
     @ViewBuilder func SymbolField() -> some View {
         NavigationLink {
-            SfSymbolPickerView { symbolString = $0 }
+            SfSymbolPickerView(selectedSymbol: $symbolString)
         } label: {
             HStack {
                 Text("Symbol")
@@ -202,7 +202,7 @@ struct AddTransactionCategoryView: View {
             }
         }
         .formRow()
-        .accessibilityIdentifier("AddTransactionCategoryView.Toolbar.SymbolField.Button")
+        .accessibilityIdentifier("AddTransactionCategoryView.SymbolField.SelectSymbolButton")
     }
 }
 

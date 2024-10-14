@@ -11,6 +11,7 @@ final class PieChartTests: XCTestCase {
     
     func testShowsNetTotalWhenThereAreMultipleCategories() throws {
         let app = XCUIApplication()
+        MockAuthenticationProvider.test(using: .signedIn, in: &app.launchEnvironment)
         TransactionCategoryRepo.test(using: .categorySamples, in: &app.launchEnvironment)
         TransactionLedger.test(using: .transactionSamples, in: &app.launchEnvironment)
         app.launch()
@@ -21,6 +22,7 @@ final class PieChartTests: XCTestCase {
     
     func testShowsCategoryNameWhenSliceIsTapped() throws {
         let app = XCUIApplication()
+        MockAuthenticationProvider.test(using: .signedIn, in: &app.launchEnvironment)
         TransactionCategoryRepo.test(using: .categorySamples, in: &app.launchEnvironment)
         TransactionLedger.test(using: .transactionSamples, in: &app.launchEnvironment)
         app.launch()
@@ -33,6 +35,7 @@ final class PieChartTests: XCTestCase {
     
     func testShowsCategoryNameWhenThereIsOneCategory() throws {
         let app = XCUIApplication()
+        MockAuthenticationProvider.test(using: .signedIn, in: &app.launchEnvironment)
         TransactionCategoryRepo.test(using: .singleCategory_Groceries, in: &app.launchEnvironment)
         TransactionLedger.test(using: .onlyGroceryTransactions, in: &app.launchEnvironment)
         app.launch()
