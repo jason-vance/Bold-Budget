@@ -7,10 +7,9 @@
 
 import Combine
 import Foundation
-import SwiftData
 
 protocol TransactionCategorySaver {
-    func insert(category: Transaction.Category)
+    func save(category: Transaction.Category)
 }
 
 class TransactionCategoryRepo {
@@ -29,29 +28,28 @@ class TransactionCategoryRepo {
     }
     
     private static func getDefaultInstance() -> TransactionCategoryRepo {
-        let context: ModelContext = {
-            let context = ModelContext(sharedModelContainer)
-            context.autosaveEnabled = true
-            return context
-        }()
-        
-        guard let initial = try? context.fetch(FetchDescriptor<Transaction.Category>()) else { fatalError("Could not fetch initial categories") }
+        //TODO: Get real categories from cache and from Firebase
+        var initial = Transaction.Category.samples
         
         return .init(
             initialCategories: initial,
-            insertCategory: { context.insert($0) }
+            insertCategory: { newTransaction in initial = initial + [newTransaction] },
+            updateCategory: { updatedTransaction in initial = initial.filter { $0.id != updatedTransaction.id } + [updatedTransaction] }
         )
     }
     
     private let insertCategory: (Transaction.Category) -> ()
+    private let updateCategory: (Transaction.Category) -> ()
     private let categoriesSubject: CurrentValueSubject<[Transaction.Category],Never> = .init([])
 
     init(
         initialCategories: [Transaction.Category],
-        insertCategory: @escaping (Transaction.Category) -> ()
+        insertCategory: @escaping (Transaction.Category) -> (),
+        updateCategory: @escaping (Transaction.Category) -> ()
     ) {
         self.insertCategory = insertCategory
-        Task { categoriesSubject.send(initialCategories) }
+        self.updateCategory = updateCategory
+        categoriesSubject.send(initialCategories)
     }
     
     public var categoriesPublisher: AnyPublisher<[Transaction.Category],Never> {
@@ -60,7 +58,26 @@ class TransactionCategoryRepo {
     
     public var categories: [Transaction.Category] { categoriesSubject.value }
     
-    func insert(category: Transaction.Category) {
+    func save(category: Transaction.Category) {
+        if alreadyExists(category) {
+            update(category: category)
+        } else {
+            insert(category: category)
+        }
+    }
+    
+    private func alreadyExists(_ category: Transaction.Category) -> Bool {
+        categories.first { $0.id == category.id } != nil
+    }
+    
+    private func update(category: Transaction.Category) {
+        updateCategory(category)
+        let categories = categories.filter { $0.id != category.id }
+        categoriesSubject.send(categories) // Ensures updates if receivers depend on a change of Category.id
+        categoriesSubject.send(categories + [category])
+    }
+    
+    private func insert(category: Transaction.Category) {
         insertCategory(category)
         categoriesSubject.send(categoriesSubject.value + [category])
     }
@@ -99,7 +116,8 @@ extension TransactionCategoryRepo {
         if var testCategories = Self.getTestCategories() {
             return .init(
                 initialCategories: testCategories,
-                insertCategory: { testCategories = testCategories + [$0] }
+                insertCategory: { testCategories = testCategories + [$0] },
+                updateCategory: { updatedTransaction in testCategories = testCategories.filter { $0.id != updatedTransaction.id } + [updatedTransaction] }
             )
         }
         return nil

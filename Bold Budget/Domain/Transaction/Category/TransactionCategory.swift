@@ -6,11 +6,9 @@
 //
 
 import Foundation
-import SwiftData
 
 extension Transaction {
-    @Model
-    class Category {
+    struct Category {
         
         enum Kind: Codable {
             case expense
@@ -26,18 +24,12 @@ extension Transaction {
             }
         }
         
-        @Attribute(.unique)
-        var id: UUID
+        let id: String
+        let kind: Kind
+        let name: Name
+        let sfSymbol: SfSymbol
         
-        var kind: Kind
-        
-        @Attribute(.transformable(by: TransactionCategoryNameValueTransformer.self))
-        var name: Name
-        
-        @Attribute(.transformable(by: TransactionCategorySfSymbolValueTransformer.self))
-        var sfSymbol: SfSymbol
-        
-        init(id: UUID, kind: Kind, name: Name, sfSymbol: SfSymbol) {
+        init(id: String, kind: Kind, name: Name, sfSymbol: SfSymbol) {
             self.id = id
             self.kind = kind
             self.name = name
@@ -63,37 +55,37 @@ extension Transaction.Category: Hashable {
 extension Transaction.Category {
     
     static let sampleEntertainment = Transaction.Category(
-        id: UUID(),
+        id: UUID().uuidString,
         kind: .expense,
         name: .init("Entertainment")!,
         sfSymbol: .init("ticket.fill")!
     )
     static let sampleGroceries = Transaction.Category(
-        id: UUID(),
+        id: UUID().uuidString,
         kind: .expense,
         name: .init("Groceries")!,
         sfSymbol: .init("bag.fill")!
     )
     static let sampleHousing = Transaction.Category(
-        id: UUID(),
+        id: UUID().uuidString,
         kind: .expense,
         name: .init("Housing")!,
         sfSymbol: .init("house.fill")!
     )
     static let samplePaycheck = Transaction.Category(
-        id: UUID(),
+        id: UUID().uuidString,
         kind: .income,
         name: .init("Paycheck")!,
         sfSymbol: .init("banknote.fill")!
     )
     static let sampleTravel = Transaction.Category(
-        id: UUID(),
+        id: UUID().uuidString,
         kind: .expense,
         name: .init("Travel")!,
         sfSymbol: .init("airplane")!
     )
     static let sampleVehicle = Transaction.Category(
-        id: UUID(),
+        id: UUID().uuidString,
         kind: .expense,
         name: .init("Vehicle")!,
         sfSymbol: .init("car.side.fill")!

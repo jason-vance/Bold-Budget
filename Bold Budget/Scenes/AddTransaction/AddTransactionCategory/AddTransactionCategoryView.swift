@@ -36,7 +36,7 @@ struct AddTransactionCategoryView: View {
         guard let sfSymbol = Transaction.Category.SfSymbol(symbolString) else { return nil }
 
         return .init(
-            id: UUID(),
+            id: categoryToEdit.category?.id ?? UUID().uuidString,
             kind: kind,
             name: name,
             sfSymbol: sfSymbol
@@ -47,16 +47,9 @@ struct AddTransactionCategoryView: View {
     
     private func saveCategory() {
         guard let category = category else { return }
+        guard let saver = iocContainer.resolve(TransactionCategorySaver.self) else { return }
         
-        if let categoryToEdit = categoryToEdit.category {
-            categoryToEdit.kind = category.kind
-            categoryToEdit.name = category.name
-            categoryToEdit.sfSymbol = category.sfSymbol
-        } else {
-            guard let saver = iocContainer.resolve(TransactionCategorySaver.self) else { return }
-            saver.insert(category: category)
-        }
-        
+        saver.save(category: category)
         dismiss()
     }
     
@@ -217,7 +210,7 @@ struct AddTransactionCategoryView: View {
     NavigationStack {
         AddTransactionCategoryView()
             .editing(.init(
-                id: UUID(),
+                id: UUID().uuidString,
                 kind: .income,
                 name: .init("Category To Edit")!,
                 sfSymbol: .init("pencil.and.outline")!

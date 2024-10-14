@@ -35,30 +35,3 @@ extension Transaction.Category {
         static let sample: Transaction.Category.Name = .init("Groceries")!
     }
 }
-
-@objc(TransactionCategoryNameValueTransformer)
-class TransactionCategoryNameValueTransformer: ValueTransformer {
-    
-    static let name = NSValueTransformerName(rawValue: String(describing: TransactionCategoryNameValueTransformer.self))
-
-    override class func transformedValueClass() -> AnyClass {
-        return Transaction.Category.Name.self
-    }
-    
-    override class func allowsReverseTransformation() -> Bool {
-        return true
-    }
-    
-    override func transformedValue(_ value: Any?) -> Any? {
-        guard let name = value as? Transaction.Category.Name else { return nil }
-        let root = NSString(string: name.value)
-        let data = try? NSKeyedArchiver.archivedData(withRootObject: root, requiringSecureCoding: true)
-        return data
-    }
-    
-    override func reverseTransformedValue(_ value: Any?) -> Any? {
-        guard let data = value as? Data else { return nil }
-        guard let nameValue = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSString.self, from: data) else { return nil }
-        return Transaction.Category.Name(String(nameValue))
-    }
-}

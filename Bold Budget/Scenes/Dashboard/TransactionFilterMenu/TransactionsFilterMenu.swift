@@ -39,8 +39,7 @@ struct TransactionsFilter {
             return false
         }
         
-        let transactionTags = transaction.tags ?? []
-        if !tags.isEmpty && transactionTags.intersection(tags).isEmpty {
+        if !tags.isEmpty && transaction.tags.intersection(tags).isEmpty {
             return false
         }
         

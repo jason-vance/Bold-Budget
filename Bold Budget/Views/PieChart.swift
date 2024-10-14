@@ -19,10 +19,10 @@ struct PieChart: View {
             .init(value: 1500, category: Transaction.Category.samples[4]),
             .init(value: 250, category: Transaction.Category.samples[3]),
             .init(value: 125, category: Transaction.Category.samples[2]),
-            .init(value: 7, category: .init(id: UUID(), kind: .expense, name: .init("Candy Bar")!, sfSymbol: .init("ellipsis.rectangle.fill")!)),
-            .init(value: 5, category: .init(id: UUID(), kind: .income, name: .init("Candy Bar")!, sfSymbol: .init("ellipsis.rectangle.fill")!)),
-            .init(value: 1700, category: .init(id: UUID(), kind: .income, name: .init("Stocks")!, sfSymbol: .init("chart.bar.xaxis.ascending")!)),
-            .init(value: 2700, category: .init(id: UUID(), kind: .income, name: .init("Paycheck")!, sfSymbol: .init("banknote.fill")!))
+            .init(value: 7, category: .init(id: UUID().uuidString, kind: .expense, name: .init("Candy Bar")!, sfSymbol: .init("ellipsis.rectangle.fill")!)),
+            .init(value: 5, category: .init(id: UUID().uuidString, kind: .income, name: .init("Candy Bar")!, sfSymbol: .init("ellipsis.rectangle.fill")!)),
+            .init(value: 1700, category: .init(id: UUID().uuidString, kind: .income, name: .init("Stocks")!, sfSymbol: .init("chart.bar.xaxis.ascending")!)),
+            .init(value: 2700, category: .init(id: UUID().uuidString, kind: .income, name: .init("Paycheck")!, sfSymbol: .init("banknote.fill")!))
         ]
     }
     

@@ -7,7 +7,6 @@
 
 import Combine
 import Foundation
-import SwiftData
 
 protocol TransactionSaver {
     func insert(transaction: Transaction)
@@ -37,18 +36,13 @@ class TransactionLedger {
     }
     
     private static func getDefaultInstance() -> TransactionLedger {
-        let context: ModelContext = {
-            let context = ModelContext(sharedModelContainer)
-            context.autosaveEnabled = true
-            return context
-        }()
-        
-        guard let initial = try? context.fetch(FetchDescriptor<Transaction>()) else { fatalError("Could not fetch initial transactions") }
+        //TODO: Get real transactions from cache and from Firebase
+        var initial = Transaction.samples
         
         return .init(
             initialTransactions: initial,
-            insertTransaction: { context.insert($0) },
-            deleteTransaction: { context.delete($0) }
+            insertTransaction: { initial = initial + [$0] },
+            deleteTransaction: { transactionToDelete in initial = initial.filter { transaction in transaction.id != transactionToDelete.id } }
         )
     }
     
@@ -92,7 +86,7 @@ extension TransactionLedger: TransactionDeleter {}
 extension TransactionLedger: TransactionTagProvider {
     var tagsPublisher: AnyPublisher<Set<Transaction.Tag>, Never> {
         transactionPublisher
-            .map { $0.reduce(Set<Transaction.Tag>()) { tags, transaction in tags.union(transaction.tags ?? []) } }
+            .map { $0.reduce(Set<Transaction.Tag>()) { tags, transaction in tags.union(transaction.tags) } }
             .eraseToAnyPublisher()
     }
 }

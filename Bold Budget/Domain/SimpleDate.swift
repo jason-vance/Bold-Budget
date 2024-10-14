@@ -121,30 +121,3 @@ extension SimpleDate: Hashable {
         hasher.combine(rawValue)
     }
 }
-
-@objc(SimpleDateValueTransformer)
-class SimpleDateValueTransformer: ValueTransformer {
-    
-    static let name = NSValueTransformerName(rawValue: String(describing: SimpleDateValueTransformer.self))
-    
-    override class func transformedValueClass() -> AnyClass {
-        return SimpleDate.self
-    }
-    
-    override class func allowsReverseTransformation() -> Bool {
-        return true
-    }
-    
-    override func transformedValue(_ value: Any?) -> Any? {
-        guard let value = value as? SimpleDate else { return nil }
-        let root = NSNumber(value: value.rawValue)
-        let data = try? NSKeyedArchiver.archivedData(withRootObject: root, requiringSecureCoding: true)
-        return data
-    }
-    
-    override func reverseTransformedValue(_ value: Any?) -> Any? {
-        guard let data = value as? Data else { return nil }
-        guard let value = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSNumber.self, from: data) else { return nil }
-        return SimpleDate(rawValue: SimpleDate.RawValue(truncating: value))
-    }
-}

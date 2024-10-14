@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import SwiftData
 import FirebaseCore
 
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
@@ -77,7 +76,6 @@ struct Bold_BudgetApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .modelContainer(sharedModelContainer)
         }
     }
 }

@@ -41,30 +41,3 @@ extension Money {
         .init(.random(in: 1...250))!
     }
 }
-
-@objc(MoneyValueTransformer)
-class MoneyValueTransformer: ValueTransformer {
-    
-    static let name = NSValueTransformerName(rawValue: String(describing: MoneyValueTransformer.self))
-    
-    override class func transformedValueClass() -> AnyClass {
-        return Money.self
-    }
-    
-    override class func allowsReverseTransformation() -> Bool {
-        return true
-    }
-    
-    override func transformedValue(_ value: Any?) -> Any? {
-        guard let value = value as? Money else { return nil }
-        let root = NSNumber(value: value.amount)
-        let data = try? NSKeyedArchiver.archivedData(withRootObject: root, requiringSecureCoding: true)
-        return data
-    }
-    
-    override func reverseTransformedValue(_ value: Any?) -> Any? {
-        guard let data = value as? Data else { return nil }
-        guard let value = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSNumber.self, from: data) else { return nil }
-        return Money(Money.Amount(truncating: value))
-    }
-}

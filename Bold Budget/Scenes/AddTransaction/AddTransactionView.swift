@@ -46,7 +46,7 @@ struct AddTransactionView: View {
         }
         
         return .init(
-            id: UUID(),
+            id: UUID().uuidString,
             title: title,
             amount: amount,
             date: date,
