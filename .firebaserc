@@ -1,0 +1,8 @@
+{
+  "projects": {
+    "default": "bold-budget-dev",
+    "prod": "bold-budget-aaff3"
+  },
+  "targets": {},
+  "etags": {}
+}
