@@ -8,14 +8,14 @@
 import Foundation
 
 protocol UsernameAvailabilityChecker {
-    func isAvailable(username: Username, forUser userId: String) async throws -> Bool
+    func isAvailable(username: Username, forUser userId: UserId) async throws -> Bool
 }
 
 class MockUsernameAvailabilityChecker: UsernameAvailabilityChecker {
     
     var isAvailable: Bool = true
     
-    func isAvailable(username: Username, forUser userId: String) async throws -> Bool {
+    func isAvailable(username: Username, forUser userId: UserId) async throws -> Bool {
         try await Task.sleep(for: .seconds(1))
         return isAvailable
     }

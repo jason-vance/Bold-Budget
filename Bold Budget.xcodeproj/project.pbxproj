@@ -14,6 +14,8 @@
 		5690884B2CBA38AB00BFADCF /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 5690884A2CBA38AB00BFADCF /* FirebaseStorage */; };
 		5690884D2CBA3B3000BFADCF /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 5690884C2CBA3B3000BFADCF /* FirebaseCore */; };
 		569088832CBBC70000BFADCF /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 569088822CBBC70000BFADCF /* Kingfisher */; };
+		569088C02CBF9A3E00BFADCF /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 569088BF2CBF9A3E00BFADCF /* MarkdownUI */; };
+		569088C32CBF9B5800BFADCF /* YPImagePicker in Frameworks */ = {isa = PBXBuildFile; productRef = 569088C22CBF9B5800BFADCF /* YPImagePicker */; };
 		5690C4982CAE0F8700A389F4 /* SwiftUIFlowLayout in Frameworks */ = {isa = PBXBuildFile; productRef = 5690C4972CAE0F8700A389F4 /* SwiftUIFlowLayout */; };
 		5690C6F52CB3C60200A389F4 /* Screenshots.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 5690C6F42CB3C60200A389F4 /* Screenshots.xctestplan */; };
 		5690C6F72CB3C83000A389F4 /* Comprehensive.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 5690C6F62CB3C83000A389F4 /* Comprehensive.xctestplan */; };
@@ -68,6 +70,7 @@
 				Extensions/DoubleExtensions.swift,
 				Scenes/Dashboard/TimeFrame.swift,
 				Scenes/Dashboard/Workers/TransactionProvider.swift,
+				Scenes/UserProfile/Workers/ProfileImageUploader.swift,
 				Utils/Cache.swift,
 				Utils/GeometryUtils.swift,
 				Utils/TextError.swift,
@@ -78,6 +81,7 @@
 				Workers/TransactionCategoryRepo/TransactionCategoryRepo.swift,
 				Workers/TransactionLedger/TransactionLedger.swift,
 				Workers/Users/CurrentUserIdProvider.swift,
+				Workers/Users/UserDataFetcher.swift,
 				Workers/Users/UserDataProvider.swift,
 				Workers/Users/UserDataSaver.swift,
 				Workers/Users/UsernameAvailabilityChecker.swift,
@@ -98,7 +102,6 @@
 				Domain/Transaction/TransactionTag.swift,
 				Domain/Transaction/TransactionTitle.swift,
 				Domain/Users/UserAuthState.swift,
-				Domain/Users/UserData.swift,
 				Domain/Users/Username.swift,
 				Domain/Users/UserOnboardingState.swift,
 				Extensions/CGFloatExtensions.swift,
@@ -145,8 +148,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				5690C4982CAE0F8700A389F4 /* SwiftUIFlowLayout in Frameworks */,
+				569088C32CBF9B5800BFADCF /* YPImagePicker in Frameworks */,
 				565082842CA8179A009D9417 /* SwinjectAutoregistration in Frameworks */,
 				569088452CBA38AB00BFADCF /* FirebaseAnalytics in Frameworks */,
+				569088C02CBF9A3E00BFADCF /* MarkdownUI in Frameworks */,
 				569088492CBA38AB00BFADCF /* FirebaseFirestore in Frameworks */,
 				569088832CBBC70000BFADCF /* Kingfisher in Frameworks */,
 				5690884D2CBA3B3000BFADCF /* FirebaseCore in Frameworks */,
@@ -230,6 +235,8 @@
 				5690884A2CBA38AB00BFADCF /* FirebaseStorage */,
 				5690884C2CBA3B3000BFADCF /* FirebaseCore */,
 				569088822CBBC70000BFADCF /* Kingfisher */,
+				569088BF2CBF9A3E00BFADCF /* MarkdownUI */,
+				569088C22CBF9B5800BFADCF /* YPImagePicker */,
 			);
 			productName = "Bold Budget";
 			productReference = 5673DA0F2CA7FA58007833E0 /* Bold Budget.app */;
@@ -318,6 +325,8 @@
 				5690C4962CAE0F8700A389F4 /* XCRemoteSwiftPackageReference "swiftui-flow-layout" */,
 				569088432CBA38AB00BFADCF /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				569088812CBBC70000BFADCF /* XCRemoteSwiftPackageReference "Kingfisher" */,
+				569088BE2CBF9A3E00BFADCF /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
+				569088C12CBF9B5800BFADCF /* XCRemoteSwiftPackageReference "YPImagePicker" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 5673DA102CA7FA58007833E0 /* Products */;
@@ -530,6 +539,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Bold-Budget-Info.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Used for capturing a profile pic";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Used for selecting a profile pic";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -567,6 +578,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Bold-Budget-Info.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Used for capturing a profile pic";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Used for selecting a profile pic";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -746,6 +759,22 @@
 				minimumVersion = 8.0.3;
 			};
 		};
+		569088BE2CBF9A3E00BFADCF /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/gonzalezreal/swift-markdown-ui";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.4.1;
+			};
+		};
+		569088C12CBF9B5800BFADCF /* XCRemoteSwiftPackageReference "YPImagePicker" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/LawrenceNorman/YPImagePicker.git";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
 		5690C4962CAE0F8700A389F4 /* XCRemoteSwiftPackageReference "swiftui-flow-layout" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/globulus/swiftui-flow-layout.git";
@@ -791,6 +820,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 569088812CBBC70000BFADCF /* XCRemoteSwiftPackageReference "Kingfisher" */;
 			productName = Kingfisher;
+		};
+		569088BF2CBF9A3E00BFADCF /* MarkdownUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 569088BE2CBF9A3E00BFADCF /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
+			productName = MarkdownUI;
+		};
+		569088C22CBF9B5800BFADCF /* YPImagePicker */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 569088C12CBF9B5800BFADCF /* XCRemoteSwiftPackageReference "YPImagePicker" */;
+			productName = YPImagePicker;
 		};
 		5690C4972CAE0F8700A389F4 /* SwiftUIFlowLayout */ = {
 			isa = XCSwiftPackageProductDependency;

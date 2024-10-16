@@ -2,8 +2,41 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+
     match /{document=**} {
       allow read, write: if false;
     }
+    
+    // Users
+    
+    match /Users/{userId} {
+      allow read: if loggedIn();
+      allow write: if belongsToRequester(userId);
+    }   
+    
+    // Misc
+
+    function loggedIn() {
+      return request.auth.uid != null
+    }
+
+    function requesterUserId() {
+      return request.auth.uid
+    }
+
+    function belongsToRequester(userId) {
+      return request.auth.uid == userId
+    }
+
+    // [READ] Data that exists on the Firestore document
+    function existingData() {
+      return resource.data;
+    }
+
+    // [WRITE] Data that is sent to a Firestore document
+    function incomingData() {
+      return request.resource.data;
+    }
+
   }
 }

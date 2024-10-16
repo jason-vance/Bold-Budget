@@ -78,13 +78,32 @@ extension FirebaseUserRepository: UserDataSaver {
 }
 
 extension FirebaseUserRepository: UsernameAvailabilityChecker {
-    func isAvailable(username: Username, forUser userId: String) async throws -> Bool {
+    func isAvailable(username: Username, forUser userId: UserId) async throws -> Bool {
         try await usersCollection
             .whereField(usernameField, isEqualTo: username.value)
             .getDocuments()
             .documents
             .compactMap { try? $0.data(as: FirestoreUserDoc.self) }
-            .filter { $0.id != userId }
+            .filter { $0.id != userId.value }
             .count == 0
+    }
+}
+
+extension FirebaseUserRepository: UserDataFetcher {
+    func fetchUserData(withId userId: UserId) async throws -> UserData {
+        let document = try await usersCollection
+            .document(userId.value)
+            .getDocument()
+        
+        guard document.exists else { throw TextError("") }
+        
+        guard let userData = try document
+            .data(as: FirestoreUserDoc.self)
+            .toUserData()
+        else {
+            throw TextError("Unable to fetch UserData with id '\(userId.value)'")
+        }
+        
+        return userData
     }
 }

@@ -12,23 +12,34 @@ import Combine
 struct ContentView: View {
     
     @State var userAuthState: UserAuthState = .working
-    
+    @State var onboardingState: UserOnboardingState = .unknown
+
     private let userAuthStatePublisher: AnyPublisher<UserAuthState,Never>
-    
+    private let userOnboardingStatePublisher: AnyPublisher<UserOnboardingState,Never>
+
     init(
-         userAuthStatePublisher: AnyPublisher<UserAuthState, Never>
+         userAuthStatePublisher: AnyPublisher<UserAuthState, Never>,
+         userOnboardingStatePublisher: AnyPublisher<UserOnboardingState,Never>
     ) {
         self.userAuthStatePublisher = userAuthStatePublisher
+        self.userOnboardingStatePublisher = userOnboardingStatePublisher
     }
     
     init() {
-        let authProvider = iocContainer~>AuthenticationProvider.self
-        let publisher = authProvider
+        let authStatePublisher = (iocContainer~>AuthenticationProvider.self)
             .userAuthStatePublisher
             .receive(on: RunLoop.main)
             .eraseToAnyPublisher()
         
-        self.init(userAuthStatePublisher: publisher)
+        let onboardingStatePublisher = (iocContainer~>UserOnboardingStateProvider.self)
+            .userOnboardingStatePublisher
+            .receive(on: RunLoop.main)
+            .eraseToAnyPublisher()
+        
+        self.init(
+            userAuthStatePublisher: authStatePublisher,
+            userOnboardingStatePublisher: onboardingStatePublisher
+        )
     }
     
     var body: some View {
@@ -36,11 +47,14 @@ struct ContentView: View {
             .onReceive(userAuthStatePublisher) { userAuthState in
                 withAnimation(.snappy) { self.userAuthState = userAuthState }
             }
+            .onReceive(userOnboardingStatePublisher) { onboardingState in
+                withAnimation(.snappy) { self.onboardingState = onboardingState }
+            }
     }
     
     @ViewBuilder private func AuthenticationStateRouter() -> some View {
         if userAuthState == .loggedIn {
-            SignedInView()
+            OnboardingStateRouter()
                 .transition(.asymmetric(insertion: .push(from: .trailing), removal: .push(from: .leading)))
         } else {
             AuthenticationView()
@@ -48,13 +62,55 @@ struct ContentView: View {
         }
     }
     
-    @ViewBuilder private func SignedInView() -> some View {
+    @ViewBuilder private func OnboardingStateRouter() -> some View {
+        if onboardingState == .fullyOnboarded {
+            OnboardedView()
+        } else if onboardingState == .notOnboarded {
+            NotOnboardedView()
+        } else {
+            BlockingSpinnerView()
+        }
+    }
+    
+    @ViewBuilder private func OnboardedView() -> some View {
         NavigationStack {
             DashboardView()
         }
     }
+    
+    @ViewBuilder private func NotOnboardedView() -> some View {
+        NavigationStack {
+            EditUserProfileView(mode: .createProfile)
+        }
+    }
 }
 
-#Preview {
-    ContentView()
+#Preview("Signed Out") {
+    let authStateSub = CurrentValueSubject<UserAuthState,Never>(.loggedOut)
+    let onboardingStateSub = CurrentValueSubject<UserOnboardingState,Never>(.unknown)
+
+    ContentView(
+        userAuthStatePublisher: authStateSub.eraseToAnyPublisher(),
+        userOnboardingStatePublisher: onboardingStateSub.eraseToAnyPublisher()
+    )
+}
+
+#Preview("Not Onboarded") {
+    let authStateSub = CurrentValueSubject<UserAuthState,Never>(.loggedIn)
+    let onboardingStateSub = CurrentValueSubject<UserOnboardingState,Never>(.notOnboarded)
+
+    ContentView(
+        userAuthStatePublisher: authStateSub.eraseToAnyPublisher(),
+        userOnboardingStatePublisher: onboardingStateSub.eraseToAnyPublisher()
+    )
+}
+
+#Preview("Signed In") {
+    let authStateSub = CurrentValueSubject<UserAuthState,Never>(.loggedIn)
+    let onboardingStateSub = CurrentValueSubject<UserOnboardingState,Never>(.fullyOnboarded)
+
+    ContentView(
+        userAuthStatePublisher: authStateSub.eraseToAnyPublisher(),
+        userOnboardingStatePublisher: onboardingStateSub.eraseToAnyPublisher()
+    )
 }

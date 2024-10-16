@@ -15,16 +15,15 @@ func setup(iocContainer: Container) {
     iocContainer.autoregister(TransactionLedger.self, initializer: TransactionLedger.getInstance)
     iocContainer.autoregister(CurrentUserIdProvider.self, initializer: getCurrentUserIdProvider)
     iocContainer.autoregister(UserDataProvider.self, initializer: getUserDataProvider)
-    
+    iocContainer.autoregister(UserDataFetcher.self, initializer: getUserDataFetcher)
+
     // Authentication
     iocContainer.autoregister(AuthenticationProvider.self, initializer: getAuthenticationProvider)
     iocContainer.autoregister(UserSignOutService.self, initializer: getUserSignOutService)
     iocContainer.autoregister(UserAccountDeleter.self, initializer: getUserAccountDeleter)
-    
+
     // Onboarding
     iocContainer.autoregister(UserOnboardingStateProvider.self, initializer: UserOnboardingStateProvider.init)
-    iocContainer.autoregister(UsernameAvailabilityChecker.self, initializer: getUsernameAvailabilityChecker)
-    iocContainer.autoregister(UserDataSaver.self, initializer: getUserDataSaver)
 
     // Dashboard
     iocContainer.autoregister(TransactionProvider.self, initializer: TransactionLedger.getInstance)
@@ -35,7 +34,14 @@ func setup(iocContainer: Container) {
     
     // TransactionDetail
     iocContainer.autoregister(TransactionDeleter.self, initializer: TransactionLedger.getInstance)
+    
+    // UserProfile
+    iocContainer.autoregister(UsernameAvailabilityChecker.self, initializer: getUsernameAvailabilityChecker)
+    iocContainer.autoregister(UserDataSaver.self, initializer: getUserDataSaver)
+    iocContainer.autoregister(ProfileImageUploader.self, initializer: getProfileImageUploader)
 }
+
+//MARK: Misc
 
 fileprivate func getCurrentUserIdProvider() -> CurrentUserIdProvider {
     if let mock = MockCurrentUserIdProvider.getTestInstance() {
@@ -51,19 +57,14 @@ fileprivate func getUserDataProvider() -> UserDataProvider {
     return FirebaseUserDataProvider()
 }
 
-fileprivate func getUsernameAvailabilityChecker() -> UsernameAvailabilityChecker {
-    if let mock = MockUsernameAvailabilityChecker.getTestInstance() {
+fileprivate func getUserDataFetcher() -> UserDataFetcher {
+    if let mock = MockUserDataFetcher.getTestInstance() {
         return mock
     }
     return FirebaseUserRepository()
 }
 
-fileprivate func getUserDataSaver() -> UserDataSaver {
-    if let mock = MockUserDataSaver.getTestInstance() {
-        return mock
-    }
-    return FirebaseUserRepository()
-}
+//MARK: Authentication
 
 fileprivate func getAuthenticationProvider() -> AuthenticationProvider {
     if let mock = MockAuthenticationProvider.getTestInstance() {
@@ -78,4 +79,27 @@ fileprivate func getUserSignOutService() -> UserSignOutService {
 
 fileprivate func getUserAccountDeleter() -> UserAccountDeleter {
     return FirebaseAuthentication.instance
+}
+
+//MARK: UserProfile
+
+fileprivate func getUsernameAvailabilityChecker() -> UsernameAvailabilityChecker {
+    if let mock = MockUsernameAvailabilityChecker.getTestInstance() {
+        return mock
+    }
+    return FirebaseUserRepository()
+}
+
+fileprivate func getUserDataSaver() -> UserDataSaver {
+    if let mock = MockUserDataSaver.getTestInstance() {
+        return mock
+    }
+    return FirebaseUserRepository()
+}
+
+fileprivate func getProfileImageUploader() -> ProfileImageUploader {
+    if let mock = MockProfileImageUploader.getTestInstance() {
+        return mock
+    }
+    return FirebaseProfileImageStorage()
 }

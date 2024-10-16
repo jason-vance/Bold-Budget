@@ -29,3 +29,9 @@ struct UserId {
 }
 
 extension UserId: Equatable { }
+
+extension String.StringInterpolation {
+    mutating func appendInterpolation(_ value: UserId) {
+        appendInterpolation(value.value)
+    }
+}
