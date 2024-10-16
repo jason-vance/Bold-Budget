@@ -1,0 +1,90 @@
+//
+//  FirebaseUserRepository.swift
+//  Bold Budget
+//
+//  Created by Jason Vance on 10/15/24.
+//
+
+import Foundation
+import FirebaseFirestore
+import Combine
+
+class FirebaseUserRepository {
+    
+    static let USERS = "Users"
+    
+    let usersCollection = Firestore.firestore().collection(USERS)
+    
+    let usernameField = FirestoreUserDoc.CodingKeys.username.rawValue
+    
+    func createOrUpdateUserDocument(with userData: UserData) async throws {
+        if try await usersCollection.document(userData.id.value).getDocument().exists {
+            try await updateUserDocument(with: userData)
+        } else {
+            try await createUserDocument(with: userData)
+        }
+    }
+    
+    private func createUserDocument(with userData: UserData) async throws {
+        let userDoc = FirestoreUserDoc.from(userData)
+        try await usersCollection.document(userData.id.value).setData(from: userDoc)
+    }
+    
+    private func updateUserDocument(with userData: UserData) async throws {
+        var dict: [AnyHashable : Any] = [:]
+        dict[FirestoreUserDoc.CodingKeys.username.rawValue] = userData.username?.value
+        dict[FirestoreUserDoc.CodingKeys.profileImageUrl.rawValue] = userData.profileImageUrl?.absoluteString
+        if let termsOfServiceAcceptance = userData.termsOfServiceAcceptance {
+            dict[FirestoreUserDoc.CodingKeys.termsOfServiceAcceptance.rawValue] = termsOfServiceAcceptance
+        }
+        if let privacyPolicyAcceptance = userData.privacyPolicyAcceptance {
+            dict[FirestoreUserDoc.CodingKeys.privacyPolicyAcceptance.rawValue] = privacyPolicyAcceptance
+        }
+
+        try await usersCollection.document(userData.id.value).updateData(dict)
+    }
+    
+    func listenToUserDocument(
+        withId id: UserId,
+        onUpdate: @escaping (FirestoreUserDoc?)->(),
+        onError: ((Error)->())? = nil
+    ) -> ListenerRegistration {
+        usersCollection.document(id.value).addSnapshotListener { snapshot, error in
+            if let snapshot = snapshot {
+                let userDoc = try? snapshot.data(as: FirestoreUserDoc.self)
+                onUpdate(userDoc)
+            } else if let error = error {
+                onError?(error)
+            } else {
+                onError?(TextError("¯\\_(ツ)_/¯ While listening to user doc changes"))
+            }
+        }
+    }
+    
+    func fetchUserDocument(withId id: String) async throws -> FirestoreUserDoc? {
+        let snapshot = try await usersCollection.document(id).getDocument()
+        return try? snapshot.data(as: FirestoreUserDoc.self)
+    }
+    
+    func deleteUserDoc(withId userId: String) async throws {
+        try await usersCollection.document(userId).delete()
+    }
+}
+
+extension FirebaseUserRepository: UserDataSaver {
+    func saveOnboarding(userData: UserData) async throws {
+        try await createOrUpdateUserDocument(with: userData)
+    }
+}
+
+extension FirebaseUserRepository: UsernameAvailabilityChecker {
+    func isAvailable(username: Username, forUser userId: String) async throws -> Bool {
+        try await usersCollection
+            .whereField(usernameField, isEqualTo: username.value)
+            .getDocuments()
+            .documents
+            .compactMap { try? $0.data(as: FirestoreUserDoc.self) }
+            .filter { $0.id != userId }
+            .count == 0
+    }
+}

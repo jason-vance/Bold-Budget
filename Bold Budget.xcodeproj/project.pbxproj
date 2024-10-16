@@ -59,7 +59,10 @@
 				Domain/Transaction/TransactionTag.swift,
 				Domain/Transaction/TransactionTitle.swift,
 				Domain/Users/UserAuthState.swift,
+				Domain/Users/UserData.swift,
 				Domain/Users/UserId.swift,
+				Domain/Users/Username.swift,
+				Domain/Users/UserOnboardingState.swift,
 				Extensions/CGFloatExtensions.swift,
 				Extensions/DateExtensions.swift,
 				Extensions/DoubleExtensions.swift,
@@ -75,6 +78,10 @@
 				Workers/TransactionCategoryRepo/TransactionCategoryRepo.swift,
 				Workers/TransactionLedger/TransactionLedger.swift,
 				Workers/Users/CurrentUserIdProvider.swift,
+				Workers/Users/UserDataProvider.swift,
+				Workers/Users/UserDataSaver.swift,
+				Workers/Users/UsernameAvailabilityChecker.swift,
+				Workers/Users/UserOnboardingStateProvider.swift,
 			);
 			target = 5673DA1E2CA7FA5A007833E0 /* Bold BudgetTests */;
 		};
@@ -91,6 +98,9 @@
 				Domain/Transaction/TransactionTag.swift,
 				Domain/Transaction/TransactionTitle.swift,
 				Domain/Users/UserAuthState.swift,
+				Domain/Users/UserData.swift,
+				Domain/Users/Username.swift,
+				Domain/Users/UserOnboardingState.swift,
 				Extensions/CGFloatExtensions.swift,
 				Extensions/DateExtensions.swift,
 				Extensions/DoubleExtensions.swift,
