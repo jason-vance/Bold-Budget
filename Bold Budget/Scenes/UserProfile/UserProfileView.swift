@@ -13,7 +13,8 @@ struct UserProfileView: View {
     
     @Environment(\.dismiss) private var dismiss
     
-    @State private var userIdState: UserId?
+    @State private var userId: UserId?
+    @State private var userData: UserData?
     
     @State private var showSignOutDialog: Bool = false
     @State private var showDeleteAccountDialog: Bool = false
@@ -22,8 +23,9 @@ struct UserProfileView: View {
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
     
-    public let userId: UserId
+    private let __userId: UserId
     
+    private let userDataProvider: UserDataProvider
     private let signOutService: UserSignOutService
     private let accountDeleter: UserAccountDeleter
 
@@ -32,6 +34,7 @@ struct UserProfileView: View {
     ) {
         self.init(
             userId: userId,
+            userDataProvider: iocContainer~>UserDataProvider.self,
             signOutService: iocContainer~>UserSignOutService.self,
             accountDeleter: iocContainer~>UserAccountDeleter.self
         )
@@ -39,10 +42,12 @@ struct UserProfileView: View {
     
     init(
         userId: UserId,
+        userDataProvider: UserDataProvider,
         signOutService: UserSignOutService,
         accountDeleter: UserAccountDeleter
     ) {
-        self.userId = userId
+        self.__userId = userId
+        self.userDataProvider = userDataProvider
         self.signOutService = signOutService
         self.accountDeleter = accountDeleter
     }
@@ -94,11 +99,13 @@ struct UserProfileView: View {
         .padding(.vertical)
         .toolbar { Toolbar() }
         .navigationBarTitleDisplayMode(.inline)
-        .navigationTitle(userId.value)
+        .navigationTitle(userData?.username?.value ?? "User Profile")
         .navigationBarBackButtonHidden()
         .foregroundStyle(Color.text)
         .background(Color.background)
-        .onChange(of: userId, initial: true) { _, userId in userIdState = userId }
+        .onChange(of: __userId, initial: true) { _, userId in self.userId = userId }
+        .onChange(of: __userId, initial: true) { _, userId in userDataProvider.startListeningToUser(withId: userId) }
+        .onReceive(userDataProvider.userDataPublisher) { userData = $0 }
         .alert(alertMessage, isPresented: $showAlert) {}
     }
     
@@ -114,8 +121,7 @@ struct UserProfileView: View {
     }
     
     @ViewBuilder private func ProfileImage() -> some View {
-        //TODO: Get profile image url
-        ProfileImageView(nil)
+        ProfileImageView(userData?.profileImageUrl)
     }
     
     @ViewBuilder private func SignOutButton() -> some View {
@@ -236,6 +242,7 @@ struct UserProfileView: View {
     NavigationStack {
         UserProfileView(
             userId: .sample,
+            userDataProvider: MockUserDataProvider(),
             signOutService: MockUserSignOutService(),
             accountDeleter: MockUserAccountDeleter()
         )
