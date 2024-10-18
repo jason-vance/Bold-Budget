@@ -15,7 +15,7 @@ class FirebaseUserRepository {
     
     let usersCollection = Firestore.firestore().collection(USERS)
     
-    let usernameField = FirestoreUserDoc.CodingKeys.username.rawValue
+    let usernameField = FirebaseUserDoc.CodingKeys.username.rawValue
     
     func createOrUpdateUserDocument(with userData: UserData) async throws {
         if try await usersCollection.document(userData.id.value).getDocument().exists {
@@ -26,19 +26,19 @@ class FirebaseUserRepository {
     }
     
     private func createUserDocument(with userData: UserData) async throws {
-        let userDoc = FirestoreUserDoc.from(userData)
+        let userDoc = FirebaseUserDoc.from(userData)
         try await usersCollection.document(userData.id.value).setData(from: userDoc)
     }
     
     private func updateUserDocument(with userData: UserData) async throws {
         var dict: [AnyHashable : Any] = [:]
-        dict[FirestoreUserDoc.CodingKeys.username.rawValue] = userData.username?.value
-        dict[FirestoreUserDoc.CodingKeys.profileImageUrl.rawValue] = userData.profileImageUrl?.absoluteString
+        dict[FirebaseUserDoc.CodingKeys.username.rawValue] = userData.username?.value
+        dict[FirebaseUserDoc.CodingKeys.profileImageUrl.rawValue] = userData.profileImageUrl?.absoluteString
         if let termsOfServiceAcceptance = userData.termsOfServiceAcceptance {
-            dict[FirestoreUserDoc.CodingKeys.termsOfServiceAcceptance.rawValue] = termsOfServiceAcceptance
+            dict[FirebaseUserDoc.CodingKeys.termsOfServiceAcceptance.rawValue] = termsOfServiceAcceptance
         }
         if let privacyPolicyAcceptance = userData.privacyPolicyAcceptance {
-            dict[FirestoreUserDoc.CodingKeys.privacyPolicyAcceptance.rawValue] = privacyPolicyAcceptance
+            dict[FirebaseUserDoc.CodingKeys.privacyPolicyAcceptance.rawValue] = privacyPolicyAcceptance
         }
 
         try await usersCollection.document(userData.id.value).updateData(dict)
@@ -46,12 +46,12 @@ class FirebaseUserRepository {
     
     func listenToUserDocument(
         withId id: UserId,
-        onUpdate: @escaping (FirestoreUserDoc?)->(),
+        onUpdate: @escaping (FirebaseUserDoc?)->(),
         onError: ((Error)->())? = nil
     ) -> ListenerRegistration {
         usersCollection.document(id.value).addSnapshotListener { snapshot, error in
             if let snapshot = snapshot {
-                let userDoc = try? snapshot.data(as: FirestoreUserDoc.self)
+                let userDoc = try? snapshot.data(as: FirebaseUserDoc.self)
                 onUpdate(userDoc)
             } else if let error = error {
                 onError?(error)
@@ -61,9 +61,9 @@ class FirebaseUserRepository {
         }
     }
     
-    func fetchUserDocument(withId id: String) async throws -> FirestoreUserDoc? {
+    func fetchUserDocument(withId id: String) async throws -> FirebaseUserDoc? {
         let snapshot = try await usersCollection.document(id).getDocument()
-        return try? snapshot.data(as: FirestoreUserDoc.self)
+        return try? snapshot.data(as: FirebaseUserDoc.self)
     }
     
     func deleteUserDoc(withId userId: String) async throws {
@@ -83,7 +83,7 @@ extension FirebaseUserRepository: UsernameAvailabilityChecker {
             .whereField(usernameField, isEqualTo: username.value)
             .getDocuments()
             .documents
-            .compactMap { try? $0.data(as: FirestoreUserDoc.self) }
+            .compactMap { try? $0.data(as: FirebaseUserDoc.self) }
             .filter { $0.id != userId.value }
             .count == 0
     }
@@ -98,7 +98,7 @@ extension FirebaseUserRepository: UserDataFetcher {
         guard document.exists else { throw TextError("") }
         
         guard let userData = try document
-            .data(as: FirestoreUserDoc.self)
+            .data(as: FirebaseUserDoc.self)
             .toUserData()
         else {
             throw TextError("Unable to fetch UserData with id '\(userId.value)'")

@@ -30,6 +30,7 @@ struct DashboardView: View {
             .eraseToAnyPublisher()
     }
     
+    @State private var currentUserData: UserData? = nil
     @State private var transactions: [Transaction] = []
     @State private var timeFrame: TimeFrame = .init(period: .month, containing: .now)
     @State private var transactionsFilter: TransactionsFilter = .none
@@ -38,17 +39,21 @@ struct DashboardView: View {
     @State private var showFilterTransactionsOptions: Bool = false
     
     private let currentUserIdProvider: CurrentUserIdProvider
+    private let currentUserDataProvider: CurrentUserDataProvider
     
     init() {
         self.init(
-            currentUserIdProvider: iocContainer~>CurrentUserIdProvider.self
+            currentUserIdProvider: iocContainer~>CurrentUserIdProvider.self,
+            currentUserDataProvider: iocContainer~>CurrentUserDataProvider.self
         )
     }
     
     init(
-        currentUserIdProvider: CurrentUserIdProvider
+        currentUserIdProvider: CurrentUserIdProvider,
+        currentUserDataProvider: CurrentUserDataProvider
     ) {
         self.currentUserIdProvider = currentUserIdProvider
+        self.currentUserDataProvider = currentUserDataProvider
     }
     
     private var currentUserId: UserId? { currentUserIdProvider.currentUserId }
@@ -139,12 +144,12 @@ struct DashboardView: View {
         .foregroundStyle(Color.text)
         .background(Color.background)
         .onReceive(transactionsPublisher) { transactions = $0 }
+        .onReceive(currentUserDataProvider.currentUserDataPublisher) { currentUserData = $0 }
     }
     
     @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
         ToolbarItemGroup(placement: .topBarLeading) {
-            //TODO: Change this to the user's name
-            Text("\(currentUserId?.value ?? "User")'s Budget")
+            Text("\(currentUserData?.username?.value ?? "User")'s Budget")
                 .font(.body.bold())
         }
         ToolbarItemGroup(placement: .topBarTrailing) {
@@ -158,9 +163,8 @@ struct DashboardView: View {
                 UserProfileView(userId: userId)
             }
         } label: {
-            //TODO: Get the user's profile image url
             ProfileImageView(
-                nil,
+                currentUserData?.profileImageUrl,
                 size: 22,
                 padding: .borderWidthThin
             )
@@ -352,7 +356,8 @@ struct DashboardView: View {
 #Preview {
     NavigationStack {
         DashboardView(
-            currentUserIdProvider: MockCurrentUserIdProvider(currentUserId: .init("previewUserId")!)
+            currentUserIdProvider: MockCurrentUserIdProvider(currentUserId: .init("previewUserId")!),
+            currentUserDataProvider: MockCurrentUserDataProvider()
         )
     }
 }

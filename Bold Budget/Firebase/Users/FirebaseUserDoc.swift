@@ -8,7 +8,7 @@
 import Foundation
 import FirebaseFirestore
 
-struct FirestoreUserDoc: Codable {
+struct FirebaseUserDoc: Codable {
     
     @DocumentID var id: String?
     var username: String?
@@ -24,8 +24,8 @@ struct FirestoreUserDoc: Codable {
         case privacyPolicyAcceptance
     }
     
-    static func from(_ userData: UserData) -> FirestoreUserDoc {
-        FirestoreUserDoc(
+    static func from(_ userData: UserData) -> FirebaseUserDoc {
+        FirebaseUserDoc(
             id: userData.id.value,
             username: userData.username?.value,
             profileImageUrl: userData.profileImageUrl,
