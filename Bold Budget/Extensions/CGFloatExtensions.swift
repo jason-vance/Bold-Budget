@@ -19,6 +19,7 @@ extension CGFloat {
     static let padding: CGFloat = 8
     
     static let paddingCircleButtonSmall: CGFloat = 4
+    static let paddingCircleButtonMedium: CGFloat = 8
 
     static let paddingHorizontalButtonXSmall: CGFloat = 8
     static let paddingHorizontalButtonSmall: CGFloat = 12

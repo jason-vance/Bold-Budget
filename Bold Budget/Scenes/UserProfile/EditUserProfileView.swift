@@ -159,7 +159,6 @@ struct EditUserProfileView: View {
                     username: $username,
                     userId: userId
                 )
-                Text(username?.value ?? "<Empty>")
                 if mode == .createProfile {
                     VStack(spacing: 0) {
                         TermsOfServiceField()

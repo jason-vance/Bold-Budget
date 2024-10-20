@@ -16,6 +16,7 @@ struct UserProfileView: View {
     @State private var userId: UserId?
     @State private var userData: UserData?
     
+    @State private var showEditUserProfile: Bool = false
     @State private var showSignOutDialog: Bool = false
     @State private var showDeleteAccountDialog: Bool = false
     @State private var showConfirmDeleteAccountSheet: Bool = false
@@ -25,6 +26,7 @@ struct UserProfileView: View {
     
     private let __userId: UserId
     
+    private let currentUserIdProvider: CurrentUserIdProvider
     private let userDataProvider: UserDataProvider
     private let signOutService: UserSignOutService
     private let accountDeleter: UserAccountDeleter
@@ -34,6 +36,7 @@ struct UserProfileView: View {
     ) {
         self.init(
             userId: userId,
+            currentUserIdProvider: iocContainer~>CurrentUserIdProvider.self,
             userDataProvider: iocContainer~>UserDataProvider.self,
             signOutService: iocContainer~>UserSignOutService.self,
             accountDeleter: iocContainer~>UserAccountDeleter.self
@@ -42,15 +45,19 @@ struct UserProfileView: View {
     
     init(
         userId: UserId,
+        currentUserIdProvider: CurrentUserIdProvider,
         userDataProvider: UserDataProvider,
         signOutService: UserSignOutService,
         accountDeleter: UserAccountDeleter
     ) {
         self.__userId = userId
+        self.currentUserIdProvider = currentUserIdProvider
         self.userDataProvider = userDataProvider
         self.signOutService = signOutService
         self.accountDeleter = accountDeleter
     }
+    
+    private var isMe: Bool { currentUserIdProvider.currentUserId == userId }
     
     private func confirmedSignOut() {
         do {
@@ -88,15 +95,25 @@ struct UserProfileView: View {
     }
     
     var body: some View {
-        VStack {
-            ProfileImage()
-            Spacer(minLength: 0)
-            SignOutButton()
-                .padding(.horizontal)
-            DeleteAccountButton()
-                .padding(.horizontal)
+        List {
+            Section {
+                ProfileImage()
+            }
+            Section {
+                if isMe {
+                    EditUserProfileButton()
+                }
+            }
+            Section {
+                if isMe {
+                    SignOutButton()
+                    DeleteAccountButton()
+                }
+            }
         }
-        .padding(.vertical)
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .scrollIndicators(.hidden)
         .toolbar { Toolbar() }
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle(userData?.username?.value ?? "User Profile")
@@ -121,17 +138,46 @@ struct UserProfileView: View {
     }
     
     @ViewBuilder private func ProfileImage() -> some View {
-        ProfileImageView(userData?.profileImageUrl)
+        HStack {
+            Spacer(minLength: 0)
+            ProfileImageView(userData?.profileImageUrl)
+            Spacer(minLength: 0)
+        }
+        .listRowBackground(Color.background)
+        .listRowSeparator(.hidden)
+    }
+    
+    @ViewBuilder private func EditUserProfileButton() -> some View {
+        Button {
+            showEditUserProfile = true
+        } label: {
+            HStack {
+                Image(systemName: "person")
+                    .listRowIcon()
+                Text("Edit User Profile")
+                Spacer(minLength: 0)
+            }
+        }
+        .listRow()
+        .fullScreenCover(isPresented: $showEditUserProfile) {
+            NavigationStack {
+                EditUserProfileView(mode: .editProfile)
+            }
+        }
     }
     
     @ViewBuilder private func SignOutButton() -> some View {
         Button {
             showSignOutDialog = true
         } label: {
-            Text("Logout")
-                .frame(maxWidth: .infinity)
-                .buttonLabelMedium(isProminent: true)
+            HStack {
+                Image(systemName: "iphone.and.arrow.forward")
+                    .listRowIcon()
+                Text("Sign Out")
+                Spacer(minLength: 0)
+            }
         }
+        .listRow()
         .accessibilityIdentifier("UserProfileView.SignOutButton")
         .confirmationDialog(
             "Are you sure you want to sign out?",
@@ -164,10 +210,14 @@ struct UserProfileView: View {
         Button {
             showDeleteAccountDialog = true
         } label: {
-            Text("Delete Account")
-                .frame(maxWidth: .infinity)
-                .buttonLabelMedium()
+            HStack {
+                Image(systemName: "trash")
+                    .listRowIcon()
+                Text("Delete Account")
+                Spacer(minLength: 0)
+            }
         }
+        .listRow()
         .accessibilityIdentifier("UserProfileView.DeleteAccountButton")
         .listRowBackground(Color.background)
         .confirmationDialog(
@@ -238,10 +288,23 @@ struct UserProfileView: View {
     }
 }
 
-#Preview {
+#Preview("Mine") {
     NavigationStack {
         UserProfileView(
             userId: .sample,
+            currentUserIdProvider: MockCurrentUserIdProvider(),
+            userDataProvider: MockUserDataProvider(),
+            signOutService: MockUserSignOutService(),
+            accountDeleter: MockUserAccountDeleter()
+        )
+    }
+}
+
+#Preview("Other's") {
+    NavigationStack {
+        UserProfileView(
+            userId: .init(UUID().uuidString)!,
+            currentUserIdProvider: MockCurrentUserIdProvider(),
             userDataProvider: MockUserDataProvider(),
             signOutService: MockUserSignOutService(),
             accountDeleter: MockUserAccountDeleter()

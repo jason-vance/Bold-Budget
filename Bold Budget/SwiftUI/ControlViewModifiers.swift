@@ -74,9 +74,31 @@ extension View {
             .listRowBackground(Color.text.opacity(.opacityButtonBackground))
             .listRowSeparatorTint(Color.text.opacity(.opacityButtonBackground))
             .listRowInsets(.init(top: .paddingVerticalButtonXSmall,
-                                 leading: 16,
+                                 leading: .paddingHorizontalButtonMedium,
                                  bottom: .paddingVerticalButtonXSmall,
                                  trailing: .paddingHorizontalButtonXSmall))
+    }
+    
+    func listRow() -> some View {
+        self
+            .listRowBackground(Color.text.opacity(.opacityButtonBackground))
+            .listRowSeparatorTint(Color.text.opacity(.opacityButtonBackground))
+            .listRowInsets(.init(top: .paddingVerticalButtonXSmall,
+                                 leading: .paddingHorizontalButtonXSmall,
+                                 bottom: .paddingVerticalButtonXSmall,
+                                 trailing: .paddingHorizontalButtonXSmall))
+    }
+    
+    func listRowIcon() -> some View {
+        self
+            .font(.footnote.bold())
+            .foregroundStyle(Color.text)
+            .padding(.paddingCircleButtonMedium)
+            .background {
+                Circle()
+                    .foregroundStyle(Color.text)
+                    .opacity(.opacityButtonBackground)
+            }
     }
     
     func listRowNoChrome() -> some View {

@@ -100,6 +100,9 @@
     "Edit Profile" : {
 
     },
+    "Edit User Profile" : {
+
+    },
     "Expense" : {
 
     },
@@ -122,9 +125,6 @@
       "comment" : "Photo Library"
     },
     "Location" : {
-
-    },
-    "Logout" : {
 
     },
     "Milk Tea, Movie Tickets, etc..." : {
