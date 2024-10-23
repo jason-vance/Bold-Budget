@@ -51,6 +51,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				DependenceyInjection/IocContainer.swift,
+				Domain/Budget/Budget.swift,
 				Domain/Money.swift,
 				Domain/SimpleDate.swift,
 				Domain/Transaction/Category/TransactionCategory.swift,
@@ -69,6 +70,8 @@
 				Extensions/DateExtensions.swift,
 				Extensions/DoubleExtensions.swift,
 				Firebase/Authentication/FirebaseAuthentication.swift,
+				Firebase/Budgets/FirebaseBudgetDoc.swift,
+				Firebase/Budgets/FirebaseBudgetsRepository.swift,
 				Firebase/Users/FirebaseCurrentUserDataProvider.swift,
 				Firebase/Users/FirebaseUserDoc.swift,
 				Firebase/Users/FirebaseUserRepository.swift,
@@ -82,6 +85,8 @@
 				Workers/Authentication/AuthenticationProvider.swift,
 				Workers/Authentication/UserAccountDeleter.swift,
 				Workers/Authentication/UserSignOutService.swift,
+				Workers/BudgetProvider/BudgetProvider.swift,
+				Workers/BudgetProvider/FirebaseBudgetProvider.swift,
 				Workers/TransactionCategoryRepo/TransactionCategoryRepo.swift,
 				Workers/TransactionLedger/TransactionLedger.swift,
 				Workers/Users/CurrentUserDataProvider.swift,

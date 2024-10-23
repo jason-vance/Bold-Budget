@@ -143,7 +143,7 @@ struct AddTransactionView: View {
         .scrollDismissesKeyboard(.immediately)
         .formStyle(.grouped)
         .scrollContentBackground(.hidden)
-        .safeAreaInset(edge: .bottom) { //this will push the view farther when the keyboad is shown
+        .safeAreaInset(edge: .bottom) { //this will push the view farther when the keyboard is shown
             Color.clear.frame(height: 100)
         }
         .toolbar { Toolbar() }

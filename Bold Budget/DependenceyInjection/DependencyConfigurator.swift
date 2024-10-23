@@ -27,8 +27,9 @@ func setup(iocContainer: Container) {
     iocContainer.autoregister(UserOnboardingStateProvider.self, initializer: UserOnboardingStateProvider.init)
 
     // Dashboard
+    iocContainer.autoregister(BudgetProvider.self, initializer: getBudgetProvider)
     iocContainer.autoregister(TransactionProvider.self, initializer: TransactionLedger.getInstance)
-    
+
     // AddTransactions
     iocContainer.autoregister(TransactionCategorySaver.self, initializer: TransactionCategoryRepo.getInstance)
     iocContainer.autoregister(TransactionSaver.self, initializer: TransactionLedger.getInstance)
@@ -87,6 +88,15 @@ fileprivate func getUserSignOutService() -> UserSignOutService {
 
 fileprivate func getUserAccountDeleter() -> UserAccountDeleter {
     return FirebaseAuthentication.instance
+}
+
+//MARK: Dashboard
+
+fileprivate func getBudgetProvider() -> BudgetProvider {
+    if let mock = MockBudgetProvider.getTestInstance() {
+        return mock
+    }
+    return FirebaseBudgetProvider()
 }
 
 //MARK: UserProfile
