@@ -15,18 +15,25 @@ struct AddBudgetView: View {
     @State private var nameString: String = ""
     @State private var nameInstructions: String = ""
     
+    @State private var showAlert: Bool = false
+    @State private var alertMessage: String = ""
+    
     private let currentUserIdProvider: CurrentUserIdProvider
+    private let budgetSaver: BudgetSaver
     
     init() {
         self.init(
-            currentUserIdProvider: iocContainer~>CurrentUserIdProvider.self
+            currentUserIdProvider: iocContainer~>CurrentUserIdProvider.self,
+            budgetSaver: iocContainer~>BudgetSaver.self
         )
     }
     
     init(
-        currentUserIdProvider: CurrentUserIdProvider
+        currentUserIdProvider: CurrentUserIdProvider,
+        budgetSaver: BudgetSaver
     ) {
         self.currentUserIdProvider = currentUserIdProvider
+        self.budgetSaver = budgetSaver
     }
     
     private var currentUserId: UserId? { currentUserIdProvider.currentUserId }
@@ -45,7 +52,21 @@ struct AddBudgetView: View {
     }
     
     private func saveBudget() {
-        //TODO: Implement saveBudget
+        Task {
+            do {
+                guard let budget = budget else { throw TextError("Invalid Budget") }
+                try await budgetSaver.save(budget: budget)
+            } catch {
+                let errorMsg = "Error saving budget. \(error.localizedDescription)"
+                print(errorMsg)
+                show(alert: errorMsg)
+            }
+        }
+    }
+    
+    private func show(alert: String) {
+        showAlert = true
+        alertMessage = alert
     }
     
     var body: some View {
@@ -67,6 +88,7 @@ struct AddBudgetView: View {
             .navigationBarBackButtonHidden()
             .foregroundStyle(Color.text)
             .background(Color.background)
+            .alert(alertMessage, isPresented: $showAlert) {}
         }
     }
     

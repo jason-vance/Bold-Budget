@@ -199,7 +199,7 @@ struct DashboardView: View {
         AddBudgetView()
             .presentationBackground(Color.background)
             .presentationDragIndicator(.visible)
-            .presentationDetents([.medium])
+            .presentationDetents([.large])
     }
     
     @ViewBuilder func UserProfileButton() -> some View {

@@ -29,6 +29,9 @@ func setup(iocContainer: Container) {
     // Dashboard
     iocContainer.autoregister(BudgetProvider.self, initializer: getBudgetProvider)
     iocContainer.autoregister(TransactionProvider.self, initializer: TransactionLedger.getInstance)
+    
+    // AddBudget
+    iocContainer.autoregister(BudgetSaver.self, initializer: getBudgetSaver)
 
     // AddTransactions
     iocContainer.autoregister(TransactionCategorySaver.self, initializer: TransactionCategoryRepo.getInstance)
@@ -97,6 +100,15 @@ fileprivate func getBudgetProvider() -> BudgetProvider {
         return mock
     }
     return FirebaseBudgetProvider()
+}
+
+//MARK: AddBudget
+
+fileprivate func getBudgetSaver() -> BudgetSaver {
+    if let mock = MockBudgetSaver.getTestInstance() {
+        return mock
+    }
+    return FirebaseBudgetsRepository()
 }
 
 //MARK: UserProfile

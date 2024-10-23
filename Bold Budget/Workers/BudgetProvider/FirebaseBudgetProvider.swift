@@ -12,24 +12,35 @@ class FirebaseBudgetProvider: BudgetProvider {
     
     private let budgetRepo = FirebaseBudgetsRepository()
     
-    private var budgetsSubject: CurrentValueSubject<[Budget]?,Never>? = nil
-    
+    private let budgetsSubject: CurrentValueSubject<[Budget]?,Never>
+    private let budgetsPublisher: AnyPublisher<[Budget]?,Never>
+
+    private var userId: UserId? = nil
     private var listener: AnyCancellable? = nil
     
+    init() {
+        budgetsSubject = CurrentValueSubject<[Budget]?,Never>(nil)
+        budgetsPublisher = budgetsSubject.eraseToAnyPublisher()
+    }
+    
     func getBudgetsPublisher(for userId: UserId) -> AnyPublisher<[Budget]?, Never> {
-        budgetsSubject = CurrentValueSubject<[Budget]?, Never>(nil)
+        if userId != self.userId {
+            self.userId = userId
+            
+            budgetsSubject.send(nil)
+            
+            listener = budgetRepo.getBudgetsPublisher(
+                for: userId,
+                onUpdate: onUpdate(budgets:),
+                onError: onError
+            )
+        }
         
-        listener = budgetRepo.getBudgetsPublisher(
-            for: userId,
-            onUpdate: onUpdate(budgets:),
-            onError: onError
-        )
-        
-        return budgetsSubject!.eraseToAnyPublisher()
+        return budgetsPublisher
     }
     
     private func onUpdate(budgets: [Budget]) {
-        budgetsSubject?.send(budgets)
+        budgetsSubject.send(budgets)
     }
     
     private func onError(_ error: Error) {

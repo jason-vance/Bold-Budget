@@ -75,6 +75,7 @@
 				Firebase/Users/FirebaseCurrentUserDataProvider.swift,
 				Firebase/Users/FirebaseUserDoc.swift,
 				Firebase/Users/FirebaseUserRepository.swift,
+				Scenes/AddBudget/Workers/BudgetSaver.swift,
 				Scenes/Dashboard/TimeFrame.swift,
 				Scenes/Dashboard/Workers/TransactionProvider.swift,
 				Scenes/UserProfile/Workers/ProfileImageUploader.swift,

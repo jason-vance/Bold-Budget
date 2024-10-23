@@ -7,13 +7,13 @@
     "%@" : {
 
     },
-    "%@'s Budget" : {
-
-    },
     "3-32 characters. No spaces. At least 1 letter." : {
 
     },
     "Add" : {
+
+    },
+    "Add a Budget" : {
 
     },
     "Add Category" : {
@@ -104,6 +104,9 @@
 
     },
     "Expense" : {
+
+    },
+    "Family Budget, etc..." : {
 
     },
     "Filter Transactions" : {

@@ -23,7 +23,7 @@ class FirebaseBudgetsRepository {
         onError: @escaping (Error) -> ()
     ) -> AnyCancellable {
         let listener = budgetsCollection
-            .whereField(ownerField, isEqualTo: userId)
+            .whereField(ownerField, isEqualTo: userId.value)
             .addSnapshotListener { snapshot, error in
                 guard let snapshot = snapshot else {
                     onError(error ?? TextError("Unknown Error listening to budgets"))
@@ -38,5 +38,12 @@ class FirebaseBudgetsRepository {
             }
         
         return .init({ listener.remove() })
+    }
+}
+
+extension FirebaseBudgetsRepository: BudgetSaver {
+    func save(budget: Budget) async throws {
+        let doc = FirebaseBudgetDoc.from(budget)
+        try await budgetsCollection.document(budget.id).setData(from: doc)
     }
 }
