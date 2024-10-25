@@ -52,6 +52,9 @@
     "Bold Budget" : {
 
     },
+    "Budgets" : {
+
+    },
     "Camera" : {
 
     },
@@ -148,6 +151,9 @@
     "Next" : {
 
     },
+    "No Budgets" : {
+
+    },
     "No Categories" : {
 
     },
@@ -231,6 +237,9 @@
 
     },
     "Year" : {
+
+    },
+    "You currently don't have any budgets. Any budgets that you create, or are invited to, will show up here." : {
 
     }
   },

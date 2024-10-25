@@ -9,6 +9,7 @@ import Foundation
 
 struct Budget {
     let id: String
+    //TODO: Add Budget.Name struct
     let name: Name
     let owner: UserId
     

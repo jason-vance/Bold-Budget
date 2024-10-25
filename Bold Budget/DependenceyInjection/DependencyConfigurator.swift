@@ -25,6 +25,9 @@ func setup(iocContainer: Container) {
 
     // Onboarding
     iocContainer.autoregister(UserOnboardingStateProvider.self, initializer: UserOnboardingStateProvider.init)
+    
+    // Budgets
+    iocContainer.autoregister(BudgetsListBudgetsProvider.self, initializer: BudgetsListBudgetsProvider.init)
 
     // Dashboard
     iocContainer.autoregister(BudgetsProvider.self, initializer: getBudgetsProvider)
