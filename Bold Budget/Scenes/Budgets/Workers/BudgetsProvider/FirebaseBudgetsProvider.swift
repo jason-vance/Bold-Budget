@@ -1,5 +1,5 @@
 //
-//  FirebaseBudgetProvider.swift
+//  FirebaseBudgetsProvider.swift
 //  Bold Budget
 //
 //  Created by Jason Vance on 10/22/24.
@@ -8,7 +8,7 @@
 import Foundation
 import Combine
 
-class FirebaseBudgetProvider: BudgetProvider {
+class FirebaseBudgetsProvider: BudgetsProvider {
     
     private let budgetRepo = FirebaseBudgetsRepository()
     

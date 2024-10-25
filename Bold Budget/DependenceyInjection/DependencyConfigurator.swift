@@ -27,7 +27,7 @@ func setup(iocContainer: Container) {
     iocContainer.autoregister(UserOnboardingStateProvider.self, initializer: UserOnboardingStateProvider.init)
 
     // Dashboard
-    iocContainer.autoregister(BudgetProvider.self, initializer: getBudgetProvider)
+    iocContainer.autoregister(BudgetsProvider.self, initializer: getBudgetsProvider)
     iocContainer.autoregister(TransactionProvider.self, initializer: TransactionLedger.getInstance)
     
     // AddBudget
@@ -95,11 +95,11 @@ fileprivate func getUserAccountDeleter() -> UserAccountDeleter {
 
 //MARK: Dashboard
 
-fileprivate func getBudgetProvider() -> BudgetProvider {
-    if let mock = MockBudgetProvider.getTestInstance() {
+fileprivate func getBudgetsProvider() -> BudgetsProvider {
+    if let mock = MockBudgetsProvider.getTestInstance() {
         return mock
     }
-    return FirebaseBudgetProvider()
+    return FirebaseBudgetsProvider()
 }
 
 //MARK: AddBudget

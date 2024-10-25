@@ -74,7 +74,7 @@ struct ContentView: View {
     
     @ViewBuilder private func OnboardedView() -> some View {
         NavigationStack {
-            DashboardView()
+            BudgetsListView()
         }
     }
     

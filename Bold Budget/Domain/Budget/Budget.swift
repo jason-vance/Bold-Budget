@@ -19,6 +19,7 @@ struct Budget {
     )
 }
 
+extension Budget: Identifiable {}
 extension Budget: Equatable {}
 
 extension Budget {

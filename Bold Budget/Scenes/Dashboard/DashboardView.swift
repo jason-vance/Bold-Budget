@@ -31,9 +31,10 @@ struct DashboardView: View {
             .eraseToAnyPublisher()
     }
     
+    private let __budget: Budget
+    
     @State private var currentUserData: UserData? = nil
-    @State private var budgets: [Budget]? = nil
-    @State private var selectedBudget: Budget? = nil
+    @State private var budget: Budget? = nil
     @State private var transactions: [Transaction] = []
     @State private var timeFrame: TimeFrame = .init(period: .month, containing: .now)
     @State private var transactionsFilter: TransactionsFilter = .none
@@ -43,39 +44,26 @@ struct DashboardView: View {
     
     private let currentUserIdProvider: CurrentUserIdProvider
     private let currentUserDataProvider: CurrentUserDataProvider
-    private let budgetProvider: BudgetProvider
     
-    init() {
+    init(budget: Budget) {
         self.init(
+            budget: budget,
             currentUserIdProvider: iocContainer~>CurrentUserIdProvider.self,
-            currentUserDataProvider: iocContainer~>CurrentUserDataProvider.self,
-            budgetProvider: iocContainer~>BudgetProvider.self
+            currentUserDataProvider: iocContainer~>CurrentUserDataProvider.self
         )
     }
     
     init(
+        budget: Budget,
         currentUserIdProvider: CurrentUserIdProvider,
-        currentUserDataProvider: CurrentUserDataProvider,
-        budgetProvider: BudgetProvider
+        currentUserDataProvider: CurrentUserDataProvider
     ) {
+        self.__budget = budget
         self.currentUserIdProvider = currentUserIdProvider
         self.currentUserDataProvider = currentUserDataProvider
-        self.budgetProvider = budgetProvider
-    }
-    
-    private var isLoading: Bool {
-        budgets == nil
     }
     
     private var currentUserId: UserId? { currentUserIdProvider.currentUserId }
-    
-    private var budgetsPublisher: AnyPublisher<[Budget]?, Never> {
-        guard let userId = currentUserId else {
-            return CurrentValueSubject<[Budget]?,Never>(nil).eraseToAnyPublisher()
-        }
-        
-        return budgetProvider.getBudgetsPublisher(for: userId)
-    }
 
     private var filteredTransactions: [Transaction] {
         transactions
@@ -141,58 +129,31 @@ struct DashboardView: View {
         }
     }
     
-    private func selectCurrentBudget(_ budgets: [Budget]) {
-        guard !budgets.isEmpty else {
-            selectedBudget = nil
-            return
-        }
-        
-        selectedBudget = budgets.first
-    }
-    
     var body: some View {
         VStack(spacing: 0) {
-            if isLoading {
-                BlockingSpinnerView()
-            } else {
-                TopBar()
-                List {
-                    Chart()
-                    TransactionList()
-                }
-                .listStyle(.insetGrouped)
-                .scrollContentBackground(.hidden)
-                .scrollIndicators(.hidden)
-                .safeAreaInset(edge: .bottom, alignment: .trailing) { AddTransactionButton() }
-                .overlay(alignment: .top) {
-                    Rectangle()
-                        .opacity(0)
-                        .overlay(alignment: .top) { ExtraOptionsMenuOverlay() }
-                        .clipped()
-                }
+            TopBar()
+            List {
+                Chart()
+                TransactionList()
+            }
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .scrollIndicators(.hidden)
+            .safeAreaInset(edge: .bottom, alignment: .trailing) { AddTransactionButton() }
+            .overlay(alignment: .top) {
+                Rectangle()
+                    .opacity(0)
+                    .overlay(alignment: .top) { ExtraOptionsMenuOverlay() }
+                    .clipped()
             }
         }
-        .toolbar { Toolbar() }
+        .navigationTitle(budget?.name.value ?? "")
+        .navigationBarTitleDisplayMode(.inline)
         .foregroundStyle(Color.text)
         .background(Color.background)
+        .onChange(of: __budget, initial: true) { _, budget in self.budget = budget }
         .onReceive(transactionsPublisher) { transactions = $0 }
         .onReceive(currentUserDataProvider.currentUserDataPublisher) { currentUserData = $0 }
-        .onReceive(budgetsPublisher) { budgets = $0 }
-        .onChange(of: budgets ?? [], initial: true) { _, budgets in selectCurrentBudget(budgets) }
-    }
-    
-    @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
-        ToolbarItemGroup(placement: .topBarLeading) {
-            //TODO: Name this different based on budget count, etc.
-            Text(selectedBudget?.name.value ?? "")
-                .font(.body.bold())
-                .sheet(isPresented: .init(get: { budgets != nil && budgets!.isEmpty }, set: {_ in})) {
-                    NewBudgetDialogSheet()
-                }
-        }
-        ToolbarItemGroup(placement: .topBarTrailing) {
-            UserProfileButton()
-        }
     }
     
     @ViewBuilder private func NewBudgetDialogSheet() -> some View {
@@ -200,20 +161,6 @@ struct DashboardView: View {
             .presentationBackground(Color.background)
             .presentationDragIndicator(.visible)
             .presentationDetents([.large])
-    }
-    
-    @ViewBuilder func UserProfileButton() -> some View {
-        NavigationLink {
-            if let userId = currentUserId {
-                UserProfileView(userId: userId)
-            }
-        } label: {
-            ProfileImageView(
-                currentUserData?.profileImageUrl,
-                size: 22,
-                padding: .borderWidthThin
-            )
-        }
     }
     
     @ViewBuilder private func ExtraOptionsMenuOverlay() -> some View {
@@ -403,19 +350,9 @@ struct DashboardView: View {
 #Preview {
     NavigationStack {
         DashboardView(
-            currentUserIdProvider: MockCurrentUserIdProvider(currentUserId: .init("previewUserId")!),
-            currentUserDataProvider: MockCurrentUserDataProvider(),
-            budgetProvider: MockBudgetProvider(budgets: [.sample])
-        )
-    }
-}
-
-#Preview("No Budgets") {
-    NavigationStack {
-        DashboardView(
-            currentUserIdProvider: MockCurrentUserIdProvider(currentUserId: .init("previewUserId")!),
-            currentUserDataProvider: MockCurrentUserDataProvider(),
-            budgetProvider: MockBudgetProvider(budgets: [])
+            budget: .sample,
+            currentUserIdProvider: MockCurrentUserIdProvider(currentUserId: .sample),
+            currentUserDataProvider: MockCurrentUserDataProvider()
         )
     }
 }

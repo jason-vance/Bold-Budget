@@ -8,11 +8,11 @@
 import Foundation
 import Combine
 
-protocol BudgetProvider {
+protocol BudgetsProvider {
     func getBudgetsPublisher(for: UserId) -> AnyPublisher<[Budget]?,Never>
 }
 
-class MockBudgetProvider: BudgetProvider {
+class MockBudgetsProvider: BudgetsProvider {
     
     let budgets: [Budget]
     var userId: UserId? = nil
@@ -38,7 +38,7 @@ class MockBudgetProvider: BudgetProvider {
     }
 }
 
-extension MockBudgetProvider {
+extension MockBudgetsProvider {
 
     private static let envKey_TestUsingSample: String = "MockBudgetProvider.envKey_TestUsingSample"
     
@@ -46,7 +46,7 @@ extension MockBudgetProvider {
         environment[envKey_TestUsingSample] = String(usingSample)
     }
     
-    static func getTestInstance() -> MockBudgetProvider? {
+    static func getTestInstance() -> MockBudgetsProvider? {
         guard let useSampleStr = ProcessInfo.processInfo.environment[envKey_TestUsingSample] else { return nil }
         guard let useSample = Bool(useSampleStr) else { return nil }
         return .init(budgets: useSample ? [.sample] : [])
