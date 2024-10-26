@@ -10,7 +10,7 @@ import Foundation
 extension Transaction {
     struct Category {
         
-        enum Kind: Codable {
+        enum Kind: String, Codable {
             case expense
             case income
             

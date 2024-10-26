@@ -22,7 +22,7 @@ func setup(iocContainer: Container) {
     
     // TransactionCategories
     iocContainer.autoregister(TransactionCategoryRepo.self, initializer: TransactionCategoryRepo.getInstance)
-    iocContainer.autoregister(TransactionCategorySaver.self, initializer: TransactionCategoryRepo.getInstance)
+    registerTransactionCategorySaver(in: iocContainer)
 
     // Authentication
     iocContainer.autoregister(AuthenticationProvider.self, initializer: getAuthenticationProvider)
@@ -81,6 +81,28 @@ fileprivate func getUserDataFetcher() -> UserDataFetcher {
     return FirebaseUserRepository()
 }
 
+//MARK: Budgets
+
+fileprivate func getBudgetSaver() -> BudgetSaver {
+    if let mock = MockBudgetSaver.getTestInstance() {
+        return mock
+    }
+    return FirebaseBudgetsRepository()
+}
+
+//MARK: TransactionCategories
+
+//TODO: Change all of these to single instances if appropriate, like the following
+
+fileprivate func registerTransactionCategorySaver(in: Container) {
+    var service: TransactionCategorySaver = FirebaseTransactionCategoryRepository()
+    if let mock = MockTransactionCategorySaver.getTestInstance() {
+        service = mock
+    }
+
+    iocContainer.autoregister(TransactionCategorySaver.self, initializer: { service })
+}
+
 //MARK: Authentication
 
 fileprivate func getAuthenticationProvider() -> AuthenticationProvider {
@@ -105,15 +127,6 @@ fileprivate func getBudgetsProvider() -> BudgetsProvider {
         return mock
     }
     return FirebaseBudgetsProvider()
-}
-
-//MARK: AddBudget
-
-fileprivate func getBudgetSaver() -> BudgetSaver {
-    if let mock = MockBudgetSaver.getTestInstance() {
-        return mock
-    }
-    return FirebaseBudgetsRepository()
 }
 
 //MARK: UserProfile

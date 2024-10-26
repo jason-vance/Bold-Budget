@@ -31,10 +31,9 @@ struct DashboardView: View {
             .eraseToAnyPublisher()
     }
     
-    private let __budget: Budget
+    let budget: Budget
     
     @State private var currentUserData: UserData? = nil
-    @State private var budget: Budget? = nil
     @State private var transactions: [Transaction] = []
     @State private var timeFrame: TimeFrame = .init(period: .month, containing: .now)
     @State private var transactionsFilter: TransactionsFilter = .none
@@ -58,7 +57,7 @@ struct DashboardView: View {
         currentUserIdProvider: CurrentUserIdProvider,
         currentUserDataProvider: CurrentUserDataProvider
     ) {
-        self.__budget = budget
+        self.budget = budget
         self.currentUserIdProvider = currentUserIdProvider
         self.currentUserDataProvider = currentUserDataProvider
     }
@@ -147,11 +146,10 @@ struct DashboardView: View {
                     .clipped()
             }
         }
-        .navigationTitle(budget?.name.value ?? "")
+        .navigationTitle(budget.name.value)
         .navigationBarTitleDisplayMode(.inline)
         .foregroundStyle(Color.text)
         .background(Color.background)
-        .onChange(of: __budget, initial: true) { _, budget in self.budget = budget }
         .onReceive(transactionsPublisher) { transactions = $0 }
         .onReceive(currentUserDataProvider.currentUserDataPublisher) { currentUserData = $0 }
     }
@@ -169,6 +167,7 @@ struct DashboardView: View {
                 if showFilterTransactionsOptions {
                     //TODO: Turn this into a sheet
                     TransactionsFilterMenu(
+                        budget: budget,
                         isMenuVisible: $showFilterTransactionsOptions,
                         transactionsFilter: $transactionsFilter,
                         transactionCount: .init(get: { filteredTransactions.count }, set: {_ in})
@@ -270,7 +269,7 @@ struct DashboardView: View {
     
     @ViewBuilder func AddTransactionButton() -> some View {
         NavigationLink {
-            AddTransactionView()
+            AddTransactionView(budget: budget)
         } label: {
             Image(systemName: "plus")
                 .foregroundStyle(Color.background)

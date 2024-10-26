@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwinjectAutoregistration
 
 struct AddTransactionCategoryView: View {
     
@@ -16,13 +17,34 @@ struct AddTransactionCategoryView: View {
     
     @Environment(\.dismiss) private var dismiss
     
-    private var categoryToEdit: OptionalCategory = .none
-    
     @State private var screenTitle: String = String(localized: "Add Category")
     @State private var kind: Transaction.Category.Kind = .expense
     @State private var symbolString: String? = nil
     @State private var nameString: String = ""
     @State private var nameInstructions: String = ""
+    
+    @State private var showAlert: Bool = false
+    @State private var alertMessage: String = ""
+    
+    private var categoryToEdit: OptionalCategory = .none
+    
+    private let budget: Budget
+    private let categorySaver: TransactionCategorySaver
+    
+    init(budget: Budget) {
+        self.init(
+            budget: budget,
+            categorySaver: iocContainer~>TransactionCategorySaver.self
+        )
+    }
+    
+    init(
+        budget: Budget,
+        categorySaver: TransactionCategorySaver
+    ) {
+        self.budget = budget
+        self.categorySaver = categorySaver
+    }
     
     public func editing(_ category: Transaction.Category) -> AddTransactionCategoryView {
         var view = self
@@ -46,11 +68,17 @@ struct AddTransactionCategoryView: View {
     private var isFormComplete: Bool { category != nil }
     
     private func saveCategory() {
-        guard let category = category else { return }
-        guard let saver = iocContainer.resolve(TransactionCategorySaver.self) else { return }
-        
-        saver.save(category: category)
-        dismiss()
+        Task {
+            do {
+                guard let category = category else { return }
+                try await categorySaver.save(category: category, to: budget)
+                dismiss()
+            } catch {
+                let message = "Error saving category. \(error.localizedDescription)"
+                print(message)
+                show(alert: message)
+            }
+        }
     }
     
     private func setNameInstructions(_ nameString: String) {
@@ -70,6 +98,11 @@ struct AddTransactionCategoryView: View {
         nameString = category.name.value
     }
     
+    private func show(alert: String) {
+        showAlert = true
+        alertMessage = alert
+    }
+    
     var body: some View {
         Form {
             Section {
@@ -87,29 +120,17 @@ struct AddTransactionCategoryView: View {
         .toolbar { Toolbar() }
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle(screenTitle)
-        .navigationBarBackButtonHidden()
         .foregroundStyle(Color.text)
         .background(Color.background)
+        .alert(alertMessage, isPresented: $showAlert) {}
         .onChange(of: nameString) { _, nameString in setNameInstructions(nameString) }
         .onChange(of: categoryToEdit, initial: true) { _, category in populateFields(category) }
     }
     
     @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
-        ToolbarItemGroup(placement: .topBarLeading) {
-            CloseButton()
-        }
         ToolbarItemGroup(placement: .topBarTrailing) {
             SaveButton()
         }
-    }
-    
-    @ViewBuilder func CloseButton() -> some View {
-        Button {
-            dismiss()
-        } label: {
-            Image(systemName: "xmark")
-        }
-        .accessibilityIdentifier("AddTransactionCategoryView.Toolbar.CloseButton")
     }
     
     @ViewBuilder func SaveButton() -> some View {
@@ -202,13 +223,13 @@ struct AddTransactionCategoryView: View {
 
 #Preview("New") {
     NavigationStack {
-        AddTransactionCategoryView()
+        AddTransactionCategoryView(budget: .sample)
     }
 }
 
 #Preview("Edit") {
     NavigationStack {
-        AddTransactionCategoryView()
+        AddTransactionCategoryView(budget: .sample)
             .editing(.init(
                 id: UUID().uuidString,
                 kind: .income,

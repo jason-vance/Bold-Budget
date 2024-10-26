@@ -27,6 +27,7 @@ struct TransactionCategoryPickerView: View {
     @State private var searchPresented: Bool = false
     @State private var isEditing: Bool = false
     
+    private let budget: Budget
     private let categoryProvider = iocContainer~>TransactionCategoryRepo.self
     private var __mode: Mode?
 
@@ -37,8 +38,10 @@ struct TransactionCategoryPickerView: View {
     }
     
     init(
+        budget: Budget,
         selectedCategory: Binding<Transaction.Category?>
     ) {
+        self.budget = budget
         self._selectedCategory = selectedCategory
     }
     
@@ -124,7 +127,7 @@ struct TransactionCategoryPickerView: View {
     @ViewBuilder func CategoryButton(_ category: Transaction.Category) -> some View {
         if isEditing {
             NavigationLink {
-                AddTransactionCategoryView()
+                AddTransactionCategoryView(budget: budget)
                     .editing(category)
             } label: {
                 CategoryButtonLabel(category)
@@ -206,7 +209,7 @@ struct TransactionCategoryPickerView: View {
     
     @ViewBuilder func AddCategoryButton() -> some View {
         NavigationLink {
-            AddTransactionCategoryView()
+            AddTransactionCategoryView(budget: budget)
         } label: {
             Image(systemName: "plus")
                 .foregroundStyle(Color.background)
@@ -237,14 +240,20 @@ struct TransactionCategoryPickerView: View {
 
 #Preview("Picker") {
     NavigationStack {
-        TransactionCategoryPickerView(selectedCategory: .constant(nil))
-            .pickerMode(.picker)
+        TransactionCategoryPickerView(
+            budget: .sample,
+            selectedCategory: .constant(nil)
+        )
+        .pickerMode(.picker)
     }
 }
 
 #Preview("Picker And Editor") {
     NavigationStack {
-        TransactionCategoryPickerView(selectedCategory: .constant(nil))
-            .pickerMode(.pickerAndEditor)
+        TransactionCategoryPickerView(
+            budget: .sample,
+            selectedCategory: .constant(nil)
+        )
+        .pickerMode(.pickerAndEditor)
     }
 }

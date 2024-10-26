@@ -15,7 +15,9 @@ extension Transaction.Category {
         
         let value: String
         
-        init?(_ value: String) {
+        init?(_ value: String?) {
+            guard let value = value else { return nil }
+            
             // Trim whitespace
             let trimmedText = value.trimmingCharacters(in: .whitespacesAndNewlines)
             

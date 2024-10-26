@@ -8,10 +8,6 @@
 import Combine
 import Foundation
 
-protocol TransactionCategorySaver {
-    func save(category: Transaction.Category)
-}
-
 class TransactionCategoryRepo {
     
     static var instance: TransactionCategoryRepo? = nil
@@ -82,8 +78,6 @@ class TransactionCategoryRepo {
         categoriesSubject.send(categoriesSubject.value + [category])
     }
 }
-
-extension TransactionCategoryRepo: TransactionCategorySaver { }
 
 extension TransactionCategoryRepo {
     public enum TestCategories: String, RawRepresentable {
