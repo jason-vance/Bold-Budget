@@ -11,12 +11,18 @@ import SwinjectAutoregistration
 
 func setup(iocContainer: Container) {
     iocContainer.autoregister(TransactionTagProvider.self, initializer: TransactionLedger.getInstance)
-    iocContainer.autoregister(TransactionCategoryRepo.self, initializer: TransactionCategoryRepo.getInstance)
     iocContainer.autoregister(TransactionLedger.self, initializer: TransactionLedger.getInstance)
     iocContainer.autoregister(CurrentUserIdProvider.self, initializer: getCurrentUserIdProvider)
     iocContainer.autoregister(CurrentUserDataProvider.self, initializer: getCurrentUserDataProvider)
     iocContainer.autoregister(UserDataProvider.self, initializer: getUserDataProvider)
     iocContainer.autoregister(UserDataFetcher.self, initializer: getUserDataFetcher)
+    
+    // Budgets
+    iocContainer.autoregister(BudgetsListBudgetsProvider.self, initializer: BudgetsListBudgetsProvider.init)
+    
+    // TransactionCategories
+    iocContainer.autoregister(TransactionCategoryRepo.self, initializer: TransactionCategoryRepo.getInstance)
+    iocContainer.autoregister(TransactionCategorySaver.self, initializer: TransactionCategoryRepo.getInstance)
 
     // Authentication
     iocContainer.autoregister(AuthenticationProvider.self, initializer: getAuthenticationProvider)
@@ -26,9 +32,6 @@ func setup(iocContainer: Container) {
     // Onboarding
     iocContainer.autoregister(UserOnboardingStateProvider.self, initializer: UserOnboardingStateProvider.init)
     
-    // Budgets
-    iocContainer.autoregister(BudgetsListBudgetsProvider.self, initializer: BudgetsListBudgetsProvider.init)
-
     // Dashboard
     iocContainer.autoregister(BudgetsProvider.self, initializer: getBudgetsProvider)
     iocContainer.autoregister(TransactionProvider.self, initializer: TransactionLedger.getInstance)
@@ -37,7 +40,6 @@ func setup(iocContainer: Container) {
     iocContainer.autoregister(BudgetSaver.self, initializer: getBudgetSaver)
 
     // AddTransactions
-    iocContainer.autoregister(TransactionCategorySaver.self, initializer: TransactionCategoryRepo.getInstance)
     iocContainer.autoregister(TransactionSaver.self, initializer: TransactionLedger.getInstance)
     
     // TransactionDetail
