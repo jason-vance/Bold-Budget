@@ -19,21 +19,21 @@ struct AddBudgetView: View {
     @State private var alertMessage: String = ""
     
     private let currentUserIdProvider: CurrentUserIdProvider
-    private let budgetSaver: BudgetSaver
+    private let budgetCreator: BudgetCreator
     
     init() {
         self.init(
             currentUserIdProvider: iocContainer~>CurrentUserIdProvider.self,
-            budgetSaver: iocContainer~>BudgetSaver.self
+            budgetCreator: iocContainer~>BudgetCreator.self
         )
     }
     
     init(
         currentUserIdProvider: CurrentUserIdProvider,
-        budgetSaver: BudgetSaver
+        budgetCreator: BudgetCreator
     ) {
         self.currentUserIdProvider = currentUserIdProvider
-        self.budgetSaver = budgetSaver
+        self.budgetCreator = budgetCreator
     }
     
     private var currentUserId: UserId? { currentUserIdProvider.currentUserId }
@@ -47,7 +47,7 @@ struct AddBudgetView: View {
         return Budget(
             id: UUID().uuidString,
             name: name,
-            owner: userId
+            users: [userId]
         )
     }
     
@@ -55,8 +55,10 @@ struct AddBudgetView: View {
         Task {
             do {
                 guard let budget = budget else { throw TextError("Invalid Budget") }
-                try await budgetSaver.save(budget: budget)
-                //TODO: Dismiss 
+                guard let userId = currentUserId else { throw TextError("Invalid User Id") }
+                
+                try await budgetCreator.create(budget: budget, ownedBy: userId)
+                dismiss()
             } catch {
                 let errorMsg = "Error saving budget. \(error.localizedDescription)"
                 print(errorMsg)

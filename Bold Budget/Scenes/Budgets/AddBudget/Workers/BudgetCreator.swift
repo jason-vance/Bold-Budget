@@ -1,5 +1,5 @@
 //
-//  BudgetSaver.swift
+//  BudgetCreator.swift
 //  Bold Budget
 //
 //  Created by Jason Vance on 10/23/24.
@@ -7,11 +7,11 @@
 
 import Foundation
 
-protocol BudgetSaver {
-    func save(budget: Budget) async throws
+protocol BudgetCreator {
+    func create(budget: Budget, ownedBy userId: UserId) async throws
 }
 
-class MockBudgetSaver: BudgetSaver {
+class MockBudgetSaver: BudgetCreator {
     
     let throwing: Bool
     
@@ -19,7 +19,7 @@ class MockBudgetSaver: BudgetSaver {
         self.throwing = throwing
     }
     
-    func save(budget: Budget) async throws {
+    func create(budget: Budget, ownedBy userId: UserId) async throws {
         try await Task.sleep(for: .seconds(0.5))
         if throwing { throw TextError("MockBudgetSaver.throwing") }
     }

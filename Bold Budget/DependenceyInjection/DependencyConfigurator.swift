@@ -37,7 +37,7 @@ func setup(iocContainer: Container) {
     iocContainer.autoregister(TransactionProvider.self, initializer: TransactionLedger.getInstance)
     
     // AddBudget
-    iocContainer.autoregister(BudgetSaver.self, initializer: getBudgetSaver)
+    iocContainer.autoregister(BudgetCreator.self, initializer: getBudgetSaver)
 
     // AddTransactions
     iocContainer.autoregister(TransactionSaver.self, initializer: TransactionLedger.getInstance)
@@ -83,7 +83,7 @@ fileprivate func getUserDataFetcher() -> UserDataFetcher {
 
 //MARK: Budgets
 
-fileprivate func getBudgetSaver() -> BudgetSaver {
+fileprivate func getBudgetSaver() -> BudgetCreator {
     if let mock = MockBudgetSaver.getTestInstance() {
         return mock
     }

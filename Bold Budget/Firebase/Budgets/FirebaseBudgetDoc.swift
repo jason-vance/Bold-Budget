@@ -12,31 +12,31 @@ struct FirebaseBudgetDoc: Codable {
     
     @DocumentID var id: String?
     var name: String?
-    var owner: String?
+    var users: [String]?
 
     enum CodingKeys: String, CodingKey {
         case id
         case name
-        case owner
+        case users
     }
     
     static func from(_ budget: Budget) -> FirebaseBudgetDoc {
         FirebaseBudgetDoc(
             id: budget.id,
             name: budget.name.value,
-            owner: budget.owner.value
+            users: budget.users.map { $0.value }
         )
     }
     
     func toBudget() -> Budget? {
         guard let id = id else { return nil }
         guard let name = Budget.Name(name) else { return nil }
-        guard let owner = UserId(owner) else { return nil }
+        guard let users = users else { return nil }
 
         return .init(
             id: id,
             name: name,
-            owner: owner
+            users: users.compactMap { UserId($0) }
         )
     }
 }

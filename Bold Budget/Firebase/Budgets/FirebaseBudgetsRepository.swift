@@ -15,7 +15,7 @@ class FirebaseBudgetsRepository {
     
     let budgetsCollection = Firestore.firestore().collection(BUDGETS)
     
-    let ownerField = FirebaseBudgetDoc.CodingKeys.owner.rawValue
+    let usersField = FirebaseBudgetDoc.CodingKeys.users.rawValue
 
     func getBudgetsPublisher(
         for userId: UserId,
@@ -23,17 +23,15 @@ class FirebaseBudgetsRepository {
         onError: @escaping (Error) -> ()
     ) -> AnyCancellable {
         let listener = budgetsCollection
-            .whereField(ownerField, isEqualTo: userId.value)
+            .whereField(usersField, arrayContains: userId.value)
             .addSnapshotListener { snapshot, error in
                 guard let snapshot = snapshot else {
                     onError(error ?? TextError("Unknown Error listening to budgets"))
                     return
                 }
-                
+
                 let budgets = snapshot.documents
-                    .compactMap {
-                        try? $0.data(as: FirebaseBudgetDoc.self).toBudget()
-                    }
+                    .compactMap { try? $0.data(as: FirebaseBudgetDoc.self).toBudget() }
                 onUpdate(budgets)
             }
         
@@ -41,8 +39,11 @@ class FirebaseBudgetsRepository {
     }
 }
 
-extension FirebaseBudgetsRepository: BudgetSaver {
-    func save(budget: Budget) async throws {
+extension FirebaseBudgetsRepository: BudgetCreator {
+    func create(budget: Budget, ownedBy userId: UserId) async throws {
+        let usersRepo = FirebaseBudgetUsersRepository()
+        try await usersRepo.add(user: userId, as: .owner, to: budget)
+        
         let doc = FirebaseBudgetDoc.from(budget)
         try await budgetsCollection.document(budget.id).setData(from: doc)
     }

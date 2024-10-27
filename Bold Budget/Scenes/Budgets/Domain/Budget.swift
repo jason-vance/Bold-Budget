@@ -9,14 +9,13 @@ import Foundation
 
 struct Budget {
     let id: String
-    //TODO: Add Budget.Name struct
     let name: Name
-    let owner: UserId
+    let users: [UserId]
     
     static let sample: Budget = .init(
         id: UUID().uuidString,
         name: .sample,
-        owner: .sample
+        users: [.sample]
     )
 }
 
