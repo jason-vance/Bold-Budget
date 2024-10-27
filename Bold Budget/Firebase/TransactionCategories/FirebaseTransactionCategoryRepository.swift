@@ -43,8 +43,16 @@ class FirebaseTransactionCategoryRepository {
     }
 }
 
+extension FirebaseTransactionCategoryRepository: TransactionCategoryFetcher {
+    func fetchTransactionCategories(in budget: Budget) async throws -> [Transaction.Category] {
+        try await categoriesCollection(in: budget)
+            .getDocuments()
+            .documents
+            .compactMap { try? $0.data(as: FirebaseTransactionCategoryDoc.self).toCategory() }
+    }
+}
+
 extension FirebaseTransactionCategoryRepository: TransactionCategorySaver {
-    
     func save(category: Transaction.Category, to budget: Budget) async throws {
         let doc = FirebaseTransactionCategoryDoc.from(category)
         try await categoriesCollection(in: budget).document(category.id).setData(from: doc)

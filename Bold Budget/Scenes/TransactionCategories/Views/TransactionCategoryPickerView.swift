@@ -27,8 +27,11 @@ struct TransactionCategoryPickerView: View {
     @State private var searchPresented: Bool = false
     @State private var isEditing: Bool = false
     
+    @State private var showAlert: Bool = false
+    @State private var alertMessage: String = ""
+    
     private let budget: Budget
-    private let categoryProvider = iocContainer~>TransactionCategoryRepo.self
+    private let categoryFetcher = iocContainer~>TransactionCategoryFetcher.self
     private var __mode: Mode?
 
     public func pickerMode(_ mode: Mode) -> TransactionCategoryPickerView {
@@ -57,16 +60,26 @@ struct TransactionCategoryPickerView: View {
             .filter { $0.name.value.contains(searchText) }
     }
     
-    private var categoriesPublisher: AnyPublisher<[Transaction.Category],Never> {
-        categoryProvider
-            .categoriesPublisher
-            .receive(on: RunLoop.main)
-            .eraseToAnyPublisher()
+    private func fetchCategories() {
+        Task {
+            do {
+                categories = try await categoryFetcher.fetchTransactionCategories(in: budget)
+            } catch {
+                let message = "Error fetching categories. \(error.localizedDescription)"
+                print(message)
+                show(alert: message)
+            }
+        }
     }
     
     private func select(category: Transaction.Category) {
         selectedCategory = category
         dismiss()
+    }
+    
+    private func show(alert: String) {
+        showAlert = true
+        alertMessage = alert
     }
     
     var body: some View {
@@ -99,8 +112,9 @@ struct TransactionCategoryPickerView: View {
         .navigationBarBackButtonHidden()
         .foregroundStyle(Color.text)
         .background(Color.background)
-        .onReceive(categoriesPublisher) { categories = $0 }
+        .onAppear { fetchCategories() }
         .onChange(of: __mode, initial: true) { _, mode in self.mode = mode }
+        .alert(alertMessage, isPresented: $showAlert) {}
     }
     
     @ViewBuilder func NoCategoriesView() -> some View {

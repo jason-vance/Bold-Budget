@@ -15,6 +15,7 @@ struct BudgetsListView: View {
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
     
+    //TODO: I should probably make this a fetcher and add refresh to this view
     private let budgetsProvider: BudgetsListBudgetsProvider
     
     init() {
