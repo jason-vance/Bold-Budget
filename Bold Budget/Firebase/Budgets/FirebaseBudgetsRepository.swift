@@ -44,6 +44,8 @@ extension FirebaseBudgetsRepository: BudgetCreator {
         let usersRepo = FirebaseBudgetUsersRepository()
         try await usersRepo.add(user: userId, as: .owner, to: budget)
         
+        //TODO: Set the fields directly like in updateUserDocument()
+        //TODO: Do an array union thing with the budget.users property
         let doc = FirebaseBudgetDoc.from(budget)
         try await budgetsCollection.document(budget.id).setData(from: doc)
     }
