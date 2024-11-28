@@ -44,7 +44,7 @@ extension Budget {
         }
         
         static var sample: Name {
-            .init("test.user's Budget")!
+            .init("Test Budget")!
         }
     }
 }

@@ -13,9 +13,11 @@ final class SfSymbolPickerTests: XCTestCase {
         // UI tests must launch the application that they test.
         let app = XCUIApplication()
         MockAuthenticationProvider.test(using: .signedIn, in: &app.launchEnvironment)
+        MockBudgetsProvider.test(usingSample: true, in: &app.launchEnvironment)
         app.launch()
 
         // Navigate to SfSymbolPickerView
+        app.buttons["BudgetsListView.BudgetRow.Test Budget"].tap()
         app.buttons["DashboardView.AddTransactionButton"].tap()
         let collectionViewsQuery = app.collectionViews
         collectionViewsQuery.buttons["AddTransactionView.CategoryField.SelectCategoryButton"].tap()

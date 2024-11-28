@@ -26,7 +26,8 @@ final class DashboardTests: XCTestCase {
         // UI tests must launch the application that they test.
         let app = XCUIApplication()
         
-        TransactionCategoryRepo.test(using: .categorySamples, in: &app.launchEnvironment)
+        MockBudgetsProvider.test(usingSample: true, in: &app.launchEnvironment)
+        MockTransactionCategoryRepo.test(using: .categorySamples, in: &app.launchEnvironment)
         TransactionLedger.test(using: .transactionSamples, in: &app.launchEnvironment)
         
         app.launch()

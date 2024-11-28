@@ -124,6 +124,7 @@
 				Extensions/DateExtensions.swift,
 				Extensions/DoubleExtensions.swift,
 				Scenes/Budgets/Domain/Budget.swift,
+				Scenes/Budgets/Workers/BudgetsProvider/BudgetsProvider.swift,
 				Scenes/Dashboard/Workers/TransactionProvider.swift,
 				Scenes/TransactionCategories/Domain/TransactionCategory.swift,
 				Scenes/TransactionCategories/Domain/TransactionCategoryName.swift,

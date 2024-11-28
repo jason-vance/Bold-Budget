@@ -91,6 +91,7 @@ struct TransactionsFilterMenu: View {
             }
         }
         .formRow()
+        .accessibilityIdentifier("TransactionsFilterMenu.TagsFieldButton")
         if !transactionsFilter.tags.isEmpty {
             ForEach(transactionsFilter.tags.sorted { $0.value < $1.value }) { tag in
                 HStack {

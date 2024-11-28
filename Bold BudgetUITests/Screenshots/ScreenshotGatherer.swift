@@ -25,9 +25,13 @@ final class ScreenshotGatherer: XCTestCase {
     func testDashboardScreenshot() throws {
         let app = XCUIApplication()
         MockAuthenticationProvider.test(using: .signedIn, in: &app.launchEnvironment)
-        TransactionCategoryRepo.test(using: .categorySamples, in: &app.launchEnvironment)
+        MockBudgetsProvider.test(usingSample: true, in: &app.launchEnvironment)
+        MockTransactionCategoryRepo.test(using: .categorySamples, in: &app.launchEnvironment)
         TransactionLedger.test(using: .screenshotSamples, in: &app.launchEnvironment)
         app.launch()
+        
+        // Budget List
+        app.buttons["BudgetsListView.BudgetRow.Test Budget"].tap()
         
         let attachment = XCTAttachment(screenshot: app.screenshot())
         attachment.name = "Dashboard"
@@ -38,9 +42,13 @@ final class ScreenshotGatherer: XCTestCase {
     func testAddTransactionScreenshot() throws {
         let app = XCUIApplication()
         MockAuthenticationProvider.test(using: .signedIn, in: &app.launchEnvironment)
-        TransactionCategoryRepo.test(using: .empty, in: &app.launchEnvironment)
+        MockBudgetsProvider.test(usingSample: true, in: &app.launchEnvironment)
+        MockTransactionCategoryRepo.test(using: .singleCategory_Groceries, in: &app.launchEnvironment)
         TransactionLedger.test(using: .empty, in: &app.launchEnvironment)
         app.launch()
+        
+        // Budget List
+        app.buttons["BudgetsListView.BudgetRow.Test Budget"].tap()
         
         // Dashboard
         app.buttons["DashboardView.AddTransactionButton"].tap()
@@ -49,22 +57,6 @@ final class ScreenshotGatherer: XCTestCase {
         app.collectionViews.buttons["AddTransactionView.CategoryField.SelectCategoryButton"].tap()
 
         // CategoryPicker
-        app.buttons["TransactionCategoryPickerView.AddCategoryButton"].tap()
-
-        // AddCategory
-        app.collectionViews.textFields["AddTransactionCategoryView.NameField.TextField"].tap()
-        app.collectionViews.textFields["AddTransactionCategoryView.NameField.TextField"].typeText("Groceries")
-        app.collectionViews.buttons["AddTransactionCategoryView.SymbolField.SelectSymbolButton"].tap()
-        
-        // SfSymbolPicker
-        app.textFields["SfSymbolPickerView.SearchArea"].tap()
-        app.textFields["SfSymbolPickerView.SearchArea"].typeText("bag")
-        app.scrollViews.otherElements.buttons["bag.fill"].tap()
-        
-        // AddCategory
-        app.buttons["AddTransactionCategoryView.Toolbar.SaveButton"].tap()
-        
-        // CategoryPicker
         app.collectionViews/*@START_MENU_TOKEN@*/.staticTexts["Groceries"]/*[[".buttons[\"Groceries\"].staticTexts[\"Groceries\"]",".staticTexts[\"Groceries\"]"],[[[-1,1],[-1,0]]],[0]]@END_MENU_TOKEN@*/.tap()
 
         // AddTransaction
@@ -72,8 +64,6 @@ final class ScreenshotGatherer: XCTestCase {
         app.collectionViews.textFields["AddTransactionView.AmountField.TextField"].clearAndEnterText("$87.63")
         app.collectionViews.textFields["AddTransactionView.TitleField.TextField"].tap()
         app.collectionViews.textFields["AddTransactionView.TitleField.TextField"].typeText("Walmart")
-        app.collectionViews.textFields["AddTransactionView.LocationField.TextField"].tap()
-        app.collectionViews.textFields["AddTransactionView.LocationField.TextField"].typeText("Seattle, WA")
         
         let attachment = XCTAttachment(screenshot: app.screenshot())
         attachment.name = "AddTransaction"
@@ -84,9 +74,13 @@ final class ScreenshotGatherer: XCTestCase {
     func testTransactionDetailScreenshot() throws {
         let app = XCUIApplication()
         MockAuthenticationProvider.test(using: .signedIn, in: &app.launchEnvironment)
-        TransactionCategoryRepo.test(using: .categorySamples, in: &app.launchEnvironment)
+        MockBudgetsProvider.test(usingSample: true, in: &app.launchEnvironment)
+        MockTransactionCategoryRepo.test(using: .categorySamples, in: &app.launchEnvironment)
         TransactionLedger.test(using: .screenshotSamples, in: &app.launchEnvironment)
         app.launch()
+        
+        // Budget List
+        app.buttons["BudgetsListView.BudgetRow.Test Budget"].tap()
         
         app.collectionViews.staticTexts["Gas"].tap()
         

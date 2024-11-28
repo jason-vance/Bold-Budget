@@ -12,9 +12,13 @@ final class TransactionTagsTests: XCTestCase {
     func testTransactionTagUiWorksAsExpected() throws {
         let app = XCUIApplication()
         MockAuthenticationProvider.test(using: .signedIn, in: &app.launchEnvironment)
-        TransactionCategoryRepo.test(using: .categorySamples, in: &app.launchEnvironment)
+        MockBudgetsProvider.test(usingSample: true, in: &app.launchEnvironment)
+        MockTransactionCategoryRepo.test(using: .categorySamples, in: &app.launchEnvironment)
         TransactionLedger.test(using: .transactionSamples, in: &app.launchEnvironment)
         app.launch()
+        
+        // Budget List
+        app.buttons["BudgetsListView.BudgetRow.Test Budget"].tap()
         
         // Dashboard
         app.buttons["DashboardView.AddTransactionButton"].tap()
@@ -48,7 +52,7 @@ final class TransactionTagsTests: XCTestCase {
         XCUIApplication().windows.children(matching: .other).element.children(matching: .other).element.children(matching: .other).element.children(matching: .other).element.children(matching: .other).element.children(matching: .other).element.children(matching: .other).element.children(matching: .other).element.children(matching: .other).element/*@START_MENU_TOKEN@*/.children(matching: .button).matching(identifier: "DashboardView.FilterTransactionsButton").element(boundBy: 1)/*[[".children(matching: .button).matching(identifier: \"line.3.horizontal.decrease\").element(boundBy: 1)",".children(matching: .button).matching(identifier: \"DashboardView.FilterTransactionsButton\").element(boundBy: 1)"],[[[-1,1],[-1,0]]],[0]]@END_MENU_TOKEN@*/.tap()
         
         // Transaction Filter Menu
-        app.collectionViews/*@START_MENU_TOKEN@*/.images["tag"]/*[[".cells",".buttons[\"Tag, Add\"]",".images[\"Tag\"]",".images[\"tag\"]"],[[[-1,3],[-1,2],[-1,1,2],[-1,0,1]],[[-1,3],[-1,2],[-1,1,2]],[[-1,3],[-1,2]]],[0]]@END_MENU_TOKEN@*/.tap()
+        app.buttons["TransactionsFilterMenu.TagsFieldButton"].tap()
         XCTAssertTrue(app.scrollViews.otherElements/*@START_MENU_TOKEN@*/.staticTexts["Test Tag"]/*[[".buttons[\"Test Tag\"].staticTexts[\"Test Tag\"]",".staticTexts[\"Test Tag\"]"],[[[-1,1],[-1,0]]],[0]]@END_MENU_TOKEN@*/.exists)
         app.scrollViews.otherElements/*@START_MENU_TOKEN@*/.staticTexts["Test Tag"]/*[[".buttons[\"Test Tag\"].staticTexts[\"Test Tag\"]",".staticTexts[\"Test Tag\"]"],[[[-1,1],[-1,0]]],[0]]@END_MENU_TOKEN@*/.tap()
         XCTAssertTrue(app.collectionViews/*@START_MENU_TOKEN@*/.staticTexts["Test Tag"]/*[[".cells.staticTexts[\"Test Tag\"]",".staticTexts[\"Test Tag\"]"],[[[-1,1],[-1,0]]],[0]]@END_MENU_TOKEN@*/.exists)

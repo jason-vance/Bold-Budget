@@ -80,6 +80,7 @@ struct BudgetsListView: View {
             Text(budget.name.value)
         }
         .listRow()
+        .accessibilityIdentifier("BudgetsListView.BudgetRow.\(budget.name.value)")
     }
     
     @ViewBuilder func AddBudgetButton() -> some View {
