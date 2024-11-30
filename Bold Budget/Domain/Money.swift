@@ -15,7 +15,8 @@ class Money {
     
     let amount: Amount
     
-    init?(_ amount: Amount) {
+    init?(_ amount: Amount?) {
+        guard let amount = amount else { return nil }
         guard amount >= 0 else { return nil }
         self.amount = amount
     }

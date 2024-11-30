@@ -9,6 +9,7 @@ import SwiftUI
 import SwinjectAutoregistration
 import Combine
 
+//TODO: Rename to BudgetView or something
 struct DashboardView: View {
     
     private enum ExtraOptionsMenu {

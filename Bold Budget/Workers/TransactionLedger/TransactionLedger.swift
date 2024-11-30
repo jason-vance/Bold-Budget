@@ -8,10 +8,6 @@
 import Combine
 import Foundation
 
-protocol TransactionSaver {
-    func insert(transaction: Transaction)
-}
-
 protocol TransactionDeleter {
     func delete(transaction: Transaction)
 }
@@ -66,7 +62,7 @@ class TransactionLedger {
     
     public var transactions: [Transaction] { transactionsSubject.value }
     
-    func insert(transaction: Transaction) {
+    func save(transaction: Transaction, to budget: Budget) async throws {
         insertTransaction(transaction)
         transactionsSubject.send(transactionsSubject.value + [transaction])
     }
