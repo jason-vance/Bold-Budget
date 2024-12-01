@@ -30,6 +30,7 @@ struct DashboardView: View {
     @State private var timeFrame: TimeFrame = .init(period: .month, containing: .now)
     @State private var transactionsFilter: TransactionsFilter = .none
     
+    @State private var loadingTransactions: Bool = false
     @State private var showTimeFramePicker: Bool = false
     @State private var showFilterTransactionsOptions: Bool = false
     
@@ -129,6 +130,7 @@ struct DashboardView: View {
     
     private func fetchTransactions() {
         Task {
+            loadingTransactions = true
             do {
                 transactions = try await transactionFetcher.fetchTransactions(in: budget)
             } catch {
@@ -136,6 +138,7 @@ struct DashboardView: View {
                 print(message)
                 show(alert: message)
             }
+            loadingTransactions = false
         }
     }
     
@@ -146,20 +149,24 @@ struct DashboardView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            TopBar()
-            List {
-                Chart()
-                TransactionList()
-            }
-            .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
-            .scrollIndicators(.hidden)
-            .safeAreaInset(edge: .bottom, alignment: .trailing) { AddTransactionButton() }
-            .overlay(alignment: .top) {
-                Rectangle()
-                    .opacity(0)
-                    .overlay(alignment: .top) { ExtraOptionsMenuOverlay() }
-                    .clipped()
+            if loadingTransactions {
+                BlockingSpinnerView()
+            } else {
+                TopBar()
+                List {
+                    Chart()
+                    TransactionList()
+                }
+                .listStyle(.insetGrouped)
+                .scrollContentBackground(.hidden)
+                .scrollIndicators(.hidden)
+                .safeAreaInset(edge: .bottom, alignment: .trailing) { AddTransactionButton() }
+                .overlay(alignment: .top) {
+                    Rectangle()
+                        .opacity(0)
+                        .overlay(alignment: .top) { ExtraOptionsMenuOverlay() }
+                        .clipped()
+                }
             }
         }
         .navigationTitle(budget.name.value)
