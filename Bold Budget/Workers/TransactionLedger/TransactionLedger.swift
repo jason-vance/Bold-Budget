@@ -73,7 +73,11 @@ class TransactionLedger {
     }
 }
 
-extension TransactionLedger: TransactionProvider {}
+extension TransactionLedger: TransactionFetcher {
+    func fetchTransactions(in budget: Budget) async throws -> [Transaction] {
+        transactions
+    }
+}
 
 extension TransactionLedger: TransactionSaver {}
 

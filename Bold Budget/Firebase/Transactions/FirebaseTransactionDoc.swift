@@ -42,12 +42,12 @@ struct FirebaseTransactionDoc: Codable {
     
     func toTransaction(categoryDict: [String:Transaction.Category]) -> Transaction? {
         guard let id = id else { return nil }
-        guard let title = Transaction.Title(title) else { return nil }
+        let title = Transaction.Title(title)
         guard let amount = Money(amount) else { return nil }
         guard let intDate = intDate else { return nil }
         guard let date = SimpleDate(rawValue: UInt32(intDate)) else { return nil }
         guard let category = categoryDict[categoryId ?? ""] else { return nil }
-        guard let location = Transaction.Location(location) else { return nil }
+        let location = Transaction.Location(location)
         let tags = Set((tags ?? []).compactMap { Transaction.Tag($0) })
 
         return .init(

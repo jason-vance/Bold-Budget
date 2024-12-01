@@ -21,8 +21,8 @@ func setup(iocContainer: Container) {
     iocContainer.autoregister(BudgetsListBudgetsProvider.self, initializer: BudgetsListBudgetsProvider.init)
     
     // TransactionCategories
-    registerTransactionCategoryFetcher(in: iocContainer)
-    registerTransactionCategorySaver(in: iocContainer)
+    registerTransactionCategoryFetcher()
+    registerTransactionCategorySaver()
 
     // Authentication
     iocContainer.autoregister(AuthenticationProvider.self, initializer: getAuthenticationProvider)
@@ -34,10 +34,10 @@ func setup(iocContainer: Container) {
     
     // Dashboard
     iocContainer.autoregister(BudgetsProvider.self, initializer: getBudgetsProvider)
-    iocContainer.autoregister(TransactionProvider.self, initializer: TransactionLedger.getInstance)
+    registerTransactionFetcher()
     
     // AddBudget
-    registerBudgetCreator(in: iocContainer)
+    registerBudgetCreator()
 
     // AddTransactions
     registerTransactionSaver()
@@ -83,7 +83,7 @@ fileprivate func getUserDataFetcher() -> UserDataFetcher {
 
 //MARK: Budgets
 
-fileprivate func registerBudgetCreator(in: Container) {
+fileprivate func registerBudgetCreator() {
     var service: BudgetCreator = FirebaseBudgetsRepository()
     if let mock = MockBudgetSaver.getTestInstance() {
         service = mock
@@ -96,7 +96,7 @@ fileprivate func registerBudgetCreator(in: Container) {
 
 //TODO: Change all of these to single instances if appropriate, like the following
 
-fileprivate func registerTransactionCategoryFetcher(in: Container) {
+fileprivate func registerTransactionCategoryFetcher() {
     var service: TransactionCategoryFetcher = FirebaseTransactionCategoryRepository()
     if let mock = MockTransactionCategoryRepo.getTestInstance() {
         service = mock
@@ -105,7 +105,7 @@ fileprivate func registerTransactionCategoryFetcher(in: Container) {
     iocContainer.autoregister(TransactionCategoryFetcher.self, initializer: { service })
 }
 
-fileprivate func registerTransactionCategorySaver(in: Container) {
+fileprivate func registerTransactionCategorySaver() {
     var service: TransactionCategorySaver = FirebaseTransactionCategoryRepository()
     if let mock = MockTransactionCategoryRepo.getTestInstance() {
         service = mock
@@ -138,6 +138,14 @@ fileprivate func getBudgetsProvider() -> BudgetsProvider {
         return mock
     }
     return FirebaseBudgetsProvider()
+}
+
+fileprivate func registerTransactionFetcher() {
+    var service: TransactionFetcher = FirebaseTransactionRepository()
+    if let mock = MockTransactionFetcher.getTestInstance() {
+        service = mock
+    }
+    iocContainer.autoregister(TransactionFetcher.self, initializer: { service })
 }
 
 //MARK: AddTransactionView

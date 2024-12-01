@@ -23,15 +23,6 @@ struct DashboardView: View {
         var transactions: [Transaction]
     }
     
-    //TODO: Put this into the constructor
-    let transactionProvider = iocContainer~>TransactionProvider.self
-    private var transactionsPublisher: AnyPublisher<[Transaction],Never> {
-        transactionProvider
-            .transactionPublisher
-            .receive(on: RunLoop.main)
-            .eraseToAnyPublisher()
-    }
-    
     let budget: Budget
     
     @State private var currentUserData: UserData? = nil
@@ -42,12 +33,17 @@ struct DashboardView: View {
     @State private var showTimeFramePicker: Bool = false
     @State private var showFilterTransactionsOptions: Bool = false
     
+    @State private var showAlert: Bool = false
+    @State private var alertMessage: String = ""
+    
+    private let transactionFetcher: TransactionFetcher
     private let currentUserIdProvider: CurrentUserIdProvider
     private let currentUserDataProvider: CurrentUserDataProvider
     
     init(budget: Budget) {
         self.init(
             budget: budget,
+            transactionFetcher: iocContainer~>TransactionFetcher.self,
             currentUserIdProvider: iocContainer~>CurrentUserIdProvider.self,
             currentUserDataProvider: iocContainer~>CurrentUserDataProvider.self
         )
@@ -55,10 +51,12 @@ struct DashboardView: View {
     
     init(
         budget: Budget,
+        transactionFetcher: TransactionFetcher,
         currentUserIdProvider: CurrentUserIdProvider,
         currentUserDataProvider: CurrentUserDataProvider
     ) {
         self.budget = budget
+        self.transactionFetcher = transactionFetcher
         self.currentUserIdProvider = currentUserIdProvider
         self.currentUserDataProvider = currentUserDataProvider
     }
@@ -129,6 +127,23 @@ struct DashboardView: View {
         }
     }
     
+    private func fetchTransactions() {
+        Task {
+            do {
+                transactions = try await transactionFetcher.fetchTransactions(in: budget)
+            } catch {
+                let message = "Failed to fetch transactions. \(error.localizedDescription)"
+                print(message)
+                show(alert: message)
+            }
+        }
+    }
+    
+    private func show(alert: String) {
+        showAlert = true
+        alertMessage = alert
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
             TopBar()
@@ -151,8 +166,9 @@ struct DashboardView: View {
         .navigationBarTitleDisplayMode(.inline)
         .foregroundStyle(Color.text)
         .background(Color.background)
-        .onReceive(transactionsPublisher) { transactions = $0 }
+        .onAppear { fetchTransactions() }
         .onReceive(currentUserDataProvider.currentUserDataPublisher) { currentUserData = $0 }
+        .alert(alertMessage, isPresented: $showAlert) {}
     }
     
     @ViewBuilder private func NewBudgetDialogSheet() -> some View {
@@ -351,6 +367,7 @@ struct DashboardView: View {
     NavigationStack {
         DashboardView(
             budget: .sample,
+            transactionFetcher: MockTransactionFetcher(),
             currentUserIdProvider: MockCurrentUserIdProvider(currentUserId: .sample),
             currentUserDataProvider: MockCurrentUserDataProvider()
         )
