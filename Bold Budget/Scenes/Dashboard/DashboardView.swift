@@ -30,6 +30,7 @@ struct DashboardView: View {
     @State private var timeFrame: TimeFrame = .init(period: .month, containing: .now)
     @State private var transactionsFilter: TransactionsFilter = .none
     
+    @State private var hasInitiallyFetchedTransactions: Bool = false
     @State private var loadingTransactions: Bool = false
     @State private var showTimeFramePicker: Bool = false
     @State private var showFilterTransactionsOptions: Bool = false
@@ -38,32 +39,22 @@ struct DashboardView: View {
     @State private var alertMessage: String = ""
     
     private let transactionFetcher: TransactionFetcher
-    private let currentUserIdProvider: CurrentUserIdProvider
-    private let currentUserDataProvider: CurrentUserDataProvider
     
     init(budget: Budget) {
         self.init(
             budget: budget,
-            transactionFetcher: iocContainer~>TransactionFetcher.self,
-            currentUserIdProvider: iocContainer~>CurrentUserIdProvider.self,
-            currentUserDataProvider: iocContainer~>CurrentUserDataProvider.self
+            transactionFetcher: iocContainer~>TransactionFetcher.self
         )
     }
     
     init(
         budget: Budget,
-        transactionFetcher: TransactionFetcher,
-        currentUserIdProvider: CurrentUserIdProvider,
-        currentUserDataProvider: CurrentUserDataProvider
+        transactionFetcher: TransactionFetcher
     ) {
         self.budget = budget
         self.transactionFetcher = transactionFetcher
-        self.currentUserIdProvider = currentUserIdProvider
-        self.currentUserDataProvider = currentUserDataProvider
     }
     
-    private var currentUserId: UserId? { currentUserIdProvider.currentUserId }
-
     private var filteredTransactions: [Transaction] {
         transactions
             .filter {
@@ -128,6 +119,12 @@ struct DashboardView: View {
         }
     }
     
+    private func fetchInitialTransactions() {
+        guard !hasInitiallyFetchedTransactions else { return }
+        hasInitiallyFetchedTransactions = true
+        fetchTransactions()
+    }
+    
     private func fetchTransactions() {
         Task {
             loadingTransactions = true
@@ -173,8 +170,7 @@ struct DashboardView: View {
         .navigationBarTitleDisplayMode(.inline)
         .foregroundStyle(Color.text)
         .background(Color.background)
-        .onAppear { fetchTransactions() }
-        .onReceive(currentUserDataProvider.currentUserDataPublisher) { currentUserData = $0 }
+        .onAppear { fetchInitialTransactions() }
         .alert(alertMessage, isPresented: $showAlert) {}
     }
     
@@ -374,9 +370,7 @@ struct DashboardView: View {
     NavigationStack {
         DashboardView(
             budget: .sample,
-            transactionFetcher: MockTransactionFetcher(),
-            currentUserIdProvider: MockCurrentUserIdProvider(currentUserId: .sample),
-            currentUserDataProvider: MockCurrentUserDataProvider()
+            transactionFetcher: MockTransactionFetcher()
         )
     }
 }
