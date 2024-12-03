@@ -23,7 +23,7 @@ struct DashboardView: View {
         var transactions: [Transaction]
     }
     
-    let budget: Budget
+    let budget: BudgetInfo
     
     @State private var currentUserData: UserData? = nil
     @State private var transactions: [Transaction] = []
@@ -40,7 +40,7 @@ struct DashboardView: View {
     
     private let transactionFetcher: TransactionFetcher
     
-    init(budget: Budget) {
+    init(budget: BudgetInfo) {
         self.init(
             budget: budget,
             transactionFetcher: iocContainer~>TransactionFetcher.self
@@ -48,7 +48,7 @@ struct DashboardView: View {
     }
     
     init(
-        budget: Budget,
+        budget: BudgetInfo,
         transactionFetcher: TransactionFetcher
     ) {
         self.budget = budget

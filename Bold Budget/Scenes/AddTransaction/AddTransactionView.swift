@@ -28,7 +28,7 @@ struct AddTransactionView: View {
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
     
-    let budget: Budget
+    let budget: BudgetInfo
     
     private var transaction: Transaction? {
         guard let category = category else { return nil }

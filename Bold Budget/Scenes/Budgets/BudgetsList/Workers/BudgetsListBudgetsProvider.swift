@@ -10,7 +10,7 @@ import Combine
 
 class BudgetsListBudgetsProvider {
     
-    let budgetsPublisher: CurrentValueSubject<[Budget]?,Never> = .init(nil)
+    let budgetsPublisher: CurrentValueSubject<[BudgetInfo]?,Never> = .init(nil)
     
     private var userId: UserId? = nil
     

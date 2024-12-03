@@ -19,7 +19,7 @@ class FirebaseBudgetsRepository {
 
     func getBudgetsPublisher(
         for userId: UserId,
-        onUpdate: @escaping ([Budget]) -> (),
+        onUpdate: @escaping ([BudgetInfo]) -> (),
         onError: @escaping (Error) -> ()
     ) -> AnyCancellable {
         let listener = budgetsCollection
@@ -40,7 +40,7 @@ class FirebaseBudgetsRepository {
 }
 
 extension FirebaseBudgetsRepository: BudgetCreator {
-    func create(budget: Budget, ownedBy userId: UserId) async throws {
+    func create(budget: BudgetInfo, ownedBy userId: UserId) async throws {
         let usersRepo = FirebaseBudgetUsersRepository()
         try await usersRepo.add(user: userId, as: .owner, to: budget)
         

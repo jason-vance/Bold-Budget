@@ -8,7 +8,7 @@
 import Foundation
 
 protocol BudgetCreator {
-    func create(budget: Budget, ownedBy userId: UserId) async throws
+    func create(budget: BudgetInfo, ownedBy userId: UserId) async throws
 }
 
 class MockBudgetSaver: BudgetCreator {
@@ -19,7 +19,7 @@ class MockBudgetSaver: BudgetCreator {
         self.throwing = throwing
     }
     
-    func create(budget: Budget, ownedBy userId: UserId) async throws {
+    func create(budget: BudgetInfo, ownedBy userId: UserId) async throws {
         try await Task.sleep(for: .seconds(0.5))
         if throwing { throw TextError("MockBudgetSaver.throwing") }
     }

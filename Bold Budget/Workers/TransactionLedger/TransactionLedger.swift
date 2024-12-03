@@ -62,7 +62,7 @@ class TransactionLedger {
     
     public var transactions: [Transaction] { transactionsSubject.value }
     
-    func save(transaction: Transaction, to budget: Budget) async throws {
+    func save(transaction: Transaction, to budget: BudgetInfo) async throws {
         insertTransaction(transaction)
         transactionsSubject.send(transactionsSubject.value + [transaction])
     }
@@ -74,7 +74,7 @@ class TransactionLedger {
 }
 
 extension TransactionLedger: TransactionFetcher {
-    func fetchTransactions(in budget: Budget) async throws -> [Transaction] {
+    func fetchTransactions(in budget: BudgetInfo) async throws -> [Transaction] {
         transactions
     }
 }

@@ -13,7 +13,7 @@ class FirebaseTransactionCategoryRepository {
     
     static let TRANSACTION_CATEGORIES = "TransactionCategories"
     
-    func categoriesCollection(in budget: Budget) -> CollectionReference {
+    func categoriesCollection(in budget: BudgetInfo) -> CollectionReference {
         Firestore.firestore()
             .collection(FirebaseBudgetsRepository.BUDGETS)
             .document(budget.id)
@@ -21,7 +21,7 @@ class FirebaseTransactionCategoryRepository {
     }
 
     func listenToTransactionCategories(
-        in budget: Budget,
+        in budget: BudgetInfo,
         onUpdate: @escaping ([Transaction.Category]) -> (),
         onError: @escaping (Error) -> ()
     ) -> AnyCancellable {
@@ -44,7 +44,7 @@ class FirebaseTransactionCategoryRepository {
 }
 
 extension FirebaseTransactionCategoryRepository: TransactionCategoryFetcher {
-    func fetchTransactionCategories(in budget: Budget) async throws -> [Transaction.Category] {
+    func fetchTransactionCategories(in budget: BudgetInfo) async throws -> [Transaction.Category] {
         try await categoriesCollection(in: budget)
             .getDocuments()
             .documents
@@ -53,7 +53,7 @@ extension FirebaseTransactionCategoryRepository: TransactionCategoryFetcher {
 }
 
 extension FirebaseTransactionCategoryRepository: TransactionCategorySaver {
-    func save(category: Transaction.Category, to budget: Budget) async throws {
+    func save(category: Transaction.Category, to budget: BudgetInfo) async throws {
         let doc = FirebaseTransactionCategoryDoc.from(category)
         try await categoriesCollection(in: budget).document(category.id).setData(from: doc)
     }

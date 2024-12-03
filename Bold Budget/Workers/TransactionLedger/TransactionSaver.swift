@@ -8,14 +8,14 @@
 import Foundation
 
 protocol TransactionSaver {
-    func save(transaction: Transaction, to budget: Budget) async throws
+    func save(transaction: Transaction, to budget: BudgetInfo) async throws
 }
 
 class MockTransactionSaver: TransactionSaver {
     
     var willThrow: Bool = false
     
-    func save(transaction: Transaction, to budget: Budget) async throws {
+    func save(transaction: Transaction, to budget: BudgetInfo) async throws {
         if willThrow { throw TextError("MockTransactionSaver.TestError") }
     }
 }

@@ -40,11 +40,11 @@ struct AddBudgetView: View {
     
     private var isFormComplete: Bool { budget != nil }
     
-    private var budget: Budget? {
+    private var budget: BudgetInfo? {
         guard let userId = currentUserId else { return nil }
-        guard let name = Budget.Name(nameString) else { return nil }
+        guard let name = BudgetInfo.Name(nameString) else { return nil }
 
-        return Budget(
+        return BudgetInfo(
             id: UUID().uuidString,
             name: name,
             users: [userId]

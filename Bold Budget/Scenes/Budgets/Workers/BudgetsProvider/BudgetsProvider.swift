@@ -9,24 +9,24 @@ import Foundation
 import Combine
 
 protocol BudgetsProvider {
-    func getBudgetsPublisher(for: UserId) -> AnyPublisher<[Budget]?,Never>
+    func getBudgetsPublisher(for: UserId) -> AnyPublisher<[BudgetInfo]?,Never>
 }
 
 class MockBudgetsProvider: BudgetsProvider {
     
-    let budgets: [Budget]
+    let budgets: [BudgetInfo]
     var userId: UserId? = nil
-    var subject: CurrentValueSubject<[Budget]?,Never>? = nil
+    var subject: CurrentValueSubject<[BudgetInfo]?,Never>? = nil
     
-    init(budgets: [Budget]) {
+    init(budgets: [BudgetInfo]) {
         self.budgets = budgets
     }
     
-    func getBudgetsPublisher(for userId: UserId) -> AnyPublisher<[Budget]?, Never> {
+    func getBudgetsPublisher(for userId: UserId) -> AnyPublisher<[BudgetInfo]?, Never> {
         if self.userId != userId {
             self.userId = userId
             
-            subject = CurrentValueSubject<[Budget]?,Never>(nil)
+            subject = CurrentValueSubject<[BudgetInfo]?,Never>(nil)
             
             Task {
                 try await Task.sleep(for: .seconds(0.5))

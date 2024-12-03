@@ -10,7 +10,7 @@ import SwinjectAutoregistration
 
 struct BudgetsListView: View {
     
-    @State private var budgets: [Budget]? = nil
+    @State private var budgets: [BudgetInfo]? = nil
     
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
@@ -73,7 +73,7 @@ struct BudgetsListView: View {
         }
     }
     
-    @ViewBuilder private func BudgetRow(_ budget: Budget) -> some View {
+    @ViewBuilder private func BudgetRow(_ budget: BudgetInfo) -> some View {
         NavigationLink {
             DashboardView(budget: budget)
         } label: {

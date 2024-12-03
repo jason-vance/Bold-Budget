@@ -9,7 +9,7 @@ import Foundation
 import Combine
 
 protocol TransactionFetcher {
-    func fetchTransactions(in budget: Budget) async throws -> [Transaction]
+    func fetchTransactions(in budget: BudgetInfo) async throws -> [Transaction]
 }
 
 class MockTransactionFetcher: TransactionFetcher {
@@ -17,7 +17,7 @@ class MockTransactionFetcher: TransactionFetcher {
     var transactions: [Transaction] = []
     var error: Error? = nil
     
-    func fetchTransactions(in budget: Budget) async throws -> [Transaction] {
+    func fetchTransactions(in budget: BudgetInfo) async throws -> [Transaction] {
         if let error = error {
             throw error
         }

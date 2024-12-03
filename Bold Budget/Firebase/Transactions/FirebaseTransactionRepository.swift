@@ -15,7 +15,7 @@ class FirebaseTransactionRepository {
     
     private let intDateField = FirebaseTransactionDoc.CodingKeys.intDate.rawValue
     
-    func transactionsCollection(in budget: Budget) -> CollectionReference {
+    func transactionsCollection(in budget: BudgetInfo) -> CollectionReference {
         Firestore.firestore()
             .collection(FirebaseBudgetsRepository.BUDGETS)
             .document(budget.id)
@@ -24,7 +24,7 @@ class FirebaseTransactionRepository {
 }
 
 extension FirebaseTransactionRepository: TransactionSaver {
-    func save(transaction: Transaction, to budget: Budget) async throws {
+    func save(transaction: Transaction, to budget: BudgetInfo) async throws {
         let doc = FirebaseTransactionDoc.from(transaction)
         try await transactionsCollection(in: budget).document(transaction.id).setData(from: doc)
     }
@@ -33,7 +33,7 @@ extension FirebaseTransactionRepository: TransactionSaver {
 extension FirebaseTransactionRepository: TransactionFetcher {
     //TODO: Make a better version of this that doesn't fetch every single transaction
     func fetchTransactions(
-        in budget: Budget
+        in budget: BudgetInfo
     ) async throws -> [Transaction] {
         let categoryDict = try await {
             let categoryRepo = FirebaseTransactionCategoryRepository()

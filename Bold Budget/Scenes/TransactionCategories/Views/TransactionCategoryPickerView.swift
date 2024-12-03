@@ -30,7 +30,7 @@ struct TransactionCategoryPickerView: View {
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
     
-    private let budget: Budget
+    private let budget: BudgetInfo
     private let categoryFetcher = iocContainer~>TransactionCategoryFetcher.self
     private var __mode: Mode?
 
@@ -41,7 +41,7 @@ struct TransactionCategoryPickerView: View {
     }
     
     init(
-        budget: Budget,
+        budget: BudgetInfo,
         selectedCategory: Binding<Transaction.Category?>
     ) {
         self.budget = budget

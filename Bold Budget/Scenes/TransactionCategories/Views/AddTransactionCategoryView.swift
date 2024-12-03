@@ -28,10 +28,10 @@ struct AddTransactionCategoryView: View {
     
     private var categoryToEdit: OptionalCategory = .none
     
-    private let budget: Budget
+    private let budget: BudgetInfo
     private let categorySaver: TransactionCategorySaver
     
-    init(budget: Budget) {
+    init(budget: BudgetInfo) {
         self.init(
             budget: budget,
             categorySaver: iocContainer~>TransactionCategorySaver.self
@@ -39,7 +39,7 @@ struct AddTransactionCategoryView: View {
     }
     
     init(
-        budget: Budget,
+        budget: BudgetInfo,
         categorySaver: TransactionCategorySaver
     ) {
         self.budget = budget

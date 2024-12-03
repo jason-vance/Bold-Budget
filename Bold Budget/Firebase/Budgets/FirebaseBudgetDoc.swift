@@ -20,7 +20,7 @@ struct FirebaseBudgetDoc: Codable {
         case users
     }
     
-    static func from(_ budget: Budget) -> FirebaseBudgetDoc {
+    static func from(_ budget: BudgetInfo) -> FirebaseBudgetDoc {
         FirebaseBudgetDoc(
             id: budget.id,
             name: budget.name.value,
@@ -28,9 +28,9 @@ struct FirebaseBudgetDoc: Codable {
         )
     }
     
-    func toBudget() -> Budget? {
+    func toBudget() -> BudgetInfo? {
         guard let id = id else { return nil }
-        guard let name = Budget.Name(name) else { return nil }
+        guard let name = BudgetInfo.Name(name) else { return nil }
         guard let users = users else { return nil }
 
         return .init(

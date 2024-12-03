@@ -47,13 +47,13 @@ class MockTransactionCategoryRepo {
 }
 
 extension MockTransactionCategoryRepo: TransactionCategorySaver {
-    func save(category: Transaction.Category, to budget: Budget) async throws {
+    func save(category: Transaction.Category, to budget: BudgetInfo) async throws {
         save(category: category)
     }
 }
 
 extension MockTransactionCategoryRepo: TransactionCategoryFetcher {
-    func fetchTransactionCategories(in budget: Budget) async throws -> [Transaction.Category] {
+    func fetchTransactionCategories(in budget: BudgetInfo) async throws -> [Transaction.Category] {
         categories
     }
 }

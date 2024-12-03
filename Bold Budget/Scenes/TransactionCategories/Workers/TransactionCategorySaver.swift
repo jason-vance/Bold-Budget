@@ -8,7 +8,7 @@
 import Foundation
 
 protocol TransactionCategorySaver {
-    func save(category: Transaction.Category, to budget: Budget) async throws
+    func save(category: Transaction.Category, to budget: BudgetInfo) async throws
 }
 
 class MockTransactionCategorySaver: TransactionCategorySaver {
@@ -19,7 +19,7 @@ class MockTransactionCategorySaver: TransactionCategorySaver {
         self.willThrow = willThrow
     }
     
-    func save(category: Transaction.Category, to budget: Budget) async throws {
+    func save(category: Transaction.Category, to budget: BudgetInfo) async throws {
         try await Task.sleep(for: .seconds(0.5))
         if willThrow { throw TextError("MockTransactionCategorySaver.willThrow") }
     }

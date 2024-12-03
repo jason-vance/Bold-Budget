@@ -12,18 +12,18 @@ class FirebaseBudgetsProvider: BudgetsProvider {
     
     private let budgetRepo = FirebaseBudgetsRepository()
     
-    private let budgetsSubject: CurrentValueSubject<[Budget]?,Never>
-    private let budgetsPublisher: AnyPublisher<[Budget]?,Never>
+    private let budgetsSubject: CurrentValueSubject<[BudgetInfo]?,Never>
+    private let budgetsPublisher: AnyPublisher<[BudgetInfo]?,Never>
 
     private var userId: UserId? = nil
     private var listener: AnyCancellable? = nil
     
     init() {
-        budgetsSubject = CurrentValueSubject<[Budget]?,Never>(nil)
+        budgetsSubject = CurrentValueSubject<[BudgetInfo]?,Never>(nil)
         budgetsPublisher = budgetsSubject.eraseToAnyPublisher()
     }
     
-    func getBudgetsPublisher(for userId: UserId) -> AnyPublisher<[Budget]?, Never> {
+    func getBudgetsPublisher(for userId: UserId) -> AnyPublisher<[BudgetInfo]?, Never> {
         if userId != self.userId {
             self.userId = userId
             
@@ -39,7 +39,7 @@ class FirebaseBudgetsProvider: BudgetsProvider {
         return budgetsPublisher
     }
     
-    private func onUpdate(budgets: [Budget]) {
+    private func onUpdate(budgets: [BudgetInfo]) {
         budgetsSubject.send(budgets)
     }
     

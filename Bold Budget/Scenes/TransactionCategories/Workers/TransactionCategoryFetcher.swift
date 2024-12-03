@@ -8,5 +8,5 @@
 import Foundation
 
 protocol TransactionCategoryFetcher {
-    func fetchTransactionCategories(in budget: Budget) async throws -> [Transaction.Category]
+    func fetchTransactionCategories(in budget: BudgetInfo) async throws -> [Transaction.Category]
 }

@@ -1,5 +1,5 @@
 //
-//  Budget.swift
+//  BudgetInfo.swift
 //  Bold Budget
 //
 //  Created by Jason Vance on 10/20/24.
@@ -7,22 +7,22 @@
 
 import Foundation
 
-struct Budget {
+struct BudgetInfo {
     let id: String
     let name: Name
     let users: [UserId]
     
-    static let sample: Budget = .init(
+    static let sample: BudgetInfo = .init(
         id: UUID().uuidString,
         name: .sample,
         users: [.sample]
     )
 }
 
-extension Budget: Identifiable {}
-extension Budget: Equatable {}
+extension BudgetInfo: Identifiable {}
+extension BudgetInfo: Equatable {}
 
-extension Budget {
+extension BudgetInfo {
     struct Name: Equatable {
         
         private static let minTextLength = 3

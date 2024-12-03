@@ -49,7 +49,7 @@ struct TransactionsFilter {
 
 struct TransactionsFilterMenu: View {
     
-    @State var budget: Budget
+    @State var budget: BudgetInfo
     @Binding var isMenuVisible: Bool
     @Binding var transactionsFilter: TransactionsFilter
     @Binding var transactionCount: Int
