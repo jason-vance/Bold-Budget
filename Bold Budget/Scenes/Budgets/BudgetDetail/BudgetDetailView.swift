@@ -1,5 +1,5 @@
 //
-//  DashboardView.swift
+//  BudgetDetailView.swift
 //  Bold Budget
 //
 //  Created by Jason Vance on 9/28/24.
@@ -9,8 +9,7 @@ import SwiftUI
 import SwinjectAutoregistration
 import Combine
 
-//TODO: Rename to BudgetDetailView or something
-struct DashboardView: View {
+struct BudgetDetailView: View {
     
     private enum ExtraOptionsMenu {
         case timeFrame
@@ -329,7 +328,7 @@ struct DashboardView: View {
 
 #Preview {
     NavigationStack {
-        DashboardView(
+        BudgetDetailView(
             budget: Budget(info: .sample)
         )
     }

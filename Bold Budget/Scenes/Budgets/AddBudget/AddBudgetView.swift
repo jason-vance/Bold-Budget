@@ -105,7 +105,6 @@ struct AddBudgetView: View {
     }
     
     @ViewBuilder func CloseButton() -> some View {
-        //TODO: Hide this if budgets is empty
         Button {
             dismiss()
         } label: {

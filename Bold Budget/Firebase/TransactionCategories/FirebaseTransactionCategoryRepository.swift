@@ -19,29 +19,6 @@ class FirebaseTransactionCategoryRepository {
             .document(budget.id)
             .collection(Self.TRANSACTION_CATEGORIES)
     }
-
-    //TODO: Remove this listener version and just use fetch
-    func listenToTransactionCategories(
-        in budget: BudgetInfo,
-        onUpdate: @escaping ([Transaction.Category]) -> (),
-        onError: @escaping (Error) -> ()
-    ) -> AnyCancellable {
-        let listener = categoriesCollection(in: budget)
-            .addSnapshotListener { snapshot, error in
-                guard let snapshot = snapshot else {
-                    onError(error ?? TextError("Unknown Error listening to transaction categories"))
-                    return
-                }
-                
-                let categories = snapshot.documents
-                    .compactMap {
-                        try? $0.data(as: FirebaseTransactionCategoryDoc.self).toCategory()
-                    }
-                onUpdate(categories)
-            }
-        
-        return .init({ listener.remove() })
-    }
 }
 
 extension FirebaseTransactionCategoryRepository: TransactionCategoryFetcher {
