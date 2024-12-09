@@ -108,6 +108,7 @@ class Budget: ObservableObject {
         }
     }
     
+    //TODO: Change this to handle editing an existing category
     func add(transactionCategory: Transaction.Category) {
         transactionCategories = transactionCategories + [transactionCategory]
         Task {

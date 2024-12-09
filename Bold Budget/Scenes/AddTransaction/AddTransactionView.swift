@@ -210,7 +210,7 @@ struct AddTransactionView: View {
     @ViewBuilder func CategoryField() -> some View {
         NavigationLink {
             TransactionCategoryPickerView(
-                budget: budget.info,
+                budget: budget,
                 selectedCategory: $category
             )
             .pickerMode(.pickerAndEditor)

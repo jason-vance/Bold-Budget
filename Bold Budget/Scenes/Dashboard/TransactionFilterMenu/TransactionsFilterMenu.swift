@@ -151,7 +151,7 @@ struct TransactionsFilterMenu: View {
     @ViewBuilder func CategoryField() -> some View {
         NavigationLink {
             TransactionCategoryPickerView(
-                budget: budget.info,
+                budget: budget,
                 selectedCategory: $transactionsFilter.category
             )
             .pickerMode(.picker)

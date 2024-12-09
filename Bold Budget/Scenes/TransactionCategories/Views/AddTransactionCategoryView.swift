@@ -28,22 +28,10 @@ struct AddTransactionCategoryView: View {
     
     private var categoryToEdit: OptionalCategory = .none
     
-    private let budget: BudgetInfo
-    private let categorySaver: TransactionCategorySaver
+    @StateObject var budget: Budget
     
-    init(budget: BudgetInfo) {
-        self.init(
-            budget: budget,
-            categorySaver: iocContainer~>TransactionCategorySaver.self
-        )
-    }
-    
-    init(
-        budget: BudgetInfo,
-        categorySaver: TransactionCategorySaver
-    ) {
-        self.budget = budget
-        self.categorySaver = categorySaver
+    init(budget: Budget) {
+        self._budget = .init(wrappedValue: budget)
     }
     
     public func editing(_ category: Transaction.Category) -> AddTransactionCategoryView {
@@ -68,17 +56,9 @@ struct AddTransactionCategoryView: View {
     private var isFormComplete: Bool { category != nil }
     
     private func saveCategory() {
-        Task {
-            do {
-                guard let category = category else { return }
-                try await categorySaver.save(category: category, to: budget)
-                dismiss()
-            } catch {
-                let message = "Error saving category. \(error.localizedDescription)"
-                print(message)
-                show(alert: message)
-            }
-        }
+        guard let category = category else { return }
+        budget.add(transactionCategory: category)
+        dismiss()
     }
     
     private func setNameInstructions(_ nameString: String) {
@@ -223,13 +203,13 @@ struct AddTransactionCategoryView: View {
 
 #Preview("New") {
     NavigationStack {
-        AddTransactionCategoryView(budget: .sample)
+        AddTransactionCategoryView(budget: Budget(info: .sample))
     }
 }
 
 #Preview("Edit") {
     NavigationStack {
-        AddTransactionCategoryView(budget: .sample)
+        AddTransactionCategoryView(budget: Budget(info: .sample))
             .editing(.init(
                 id: UUID().uuidString,
                 kind: .income,

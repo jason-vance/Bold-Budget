@@ -19,10 +19,10 @@ struct TransactionCategoryPickerView: View {
     
     @Environment(\.dismiss) private var dismiss
     
+    @StateObject public var budget: Budget
     @Binding public var selectedCategory: Transaction.Category?
     
     @State private var mode: Mode? = nil
-    @State private var categories: [Transaction.Category]? = nil
     @State private var searchText: String = ""
     @State private var searchPresented: Bool = false
     @State private var isEditing: Bool = false
@@ -30,8 +30,6 @@ struct TransactionCategoryPickerView: View {
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
     
-    private let budget: BudgetInfo
-    private let categoryFetcher = iocContainer~>TransactionCategoryFetcher.self
     private var __mode: Mode?
 
     public func pickerMode(_ mode: Mode) -> TransactionCategoryPickerView {
@@ -41,16 +39,15 @@ struct TransactionCategoryPickerView: View {
     }
     
     init(
-        budget: BudgetInfo,
+        budget: Budget,
         selectedCategory: Binding<Transaction.Category?>
     ) {
-        self.budget = budget
+        self._budget = .init(wrappedValue: budget)
         self._selectedCategory = selectedCategory
     }
     
     private var filteredCategories: [Transaction.Category] {
-        guard let categories = categories else { return [] }
-        let sortedCategories = categories.sorted { $0.name.value < $1.name.value }
+        let sortedCategories = budget.transactionCategories.sorted { $0.name.value < $1.name.value }
         
         guard !searchText.isEmpty else {
             return sortedCategories
@@ -58,18 +55,6 @@ struct TransactionCategoryPickerView: View {
         
         return sortedCategories
             .filter { $0.name.value.contains(searchText) }
-    }
-    
-    private func fetchCategories() {
-        Task {
-            do {
-                categories = try await categoryFetcher.fetchTransactionCategories(in: budget)
-            } catch {
-                let message = "Error fetching categories. \(error.localizedDescription)"
-                print(message)
-                show(alert: message)
-            }
-        }
     }
     
     private func select(category: Transaction.Category) {
@@ -87,9 +72,9 @@ struct TransactionCategoryPickerView: View {
             SearchArea()
             BarDivider()
             List {
-                if categories?.isEmpty == true {
+                if budget.transactionCategories.isEmpty {
                     NoCategoriesView()
-                } else if categories != nil {
+                } else {
                     ForEach(filteredCategories) { category in
                         CategoryButton(category)
                             .listRowNoChrome()
@@ -98,8 +83,6 @@ struct TransactionCategoryPickerView: View {
                                                  bottom: 0,
                                                  trailing: 0))
                     }
-                } else {
-                    LoadingSpinner()
                 }
             }
             .listStyle(.insetGrouped)
@@ -112,7 +95,6 @@ struct TransactionCategoryPickerView: View {
         .navigationBarBackButtonHidden()
         .foregroundStyle(Color.text)
         .background(Color.background)
-        .onAppear { fetchCategories() }
         .onChange(of: __mode, initial: true) { _, mode in self.mode = mode }
         .alert(alertMessage, isPresented: $showAlert) {}
     }
@@ -217,7 +199,7 @@ struct TransactionCategoryPickerView: View {
         } label: {
             Image(systemName: isEditing ? "pencil.slash" : "pencil")
         }
-        .opacity(mode == .pickerAndEditor && categories?.isEmpty == false ? 1 : 0)
+        .opacity(mode == .pickerAndEditor && budget.transactionCategories.isEmpty ? 1 : 0)
         .accessibilityIdentifier("TransactionCategoryPickerView.Toolbar.EditButton")
     }
     
@@ -255,7 +237,7 @@ struct TransactionCategoryPickerView: View {
 #Preview("Picker") {
     NavigationStack {
         TransactionCategoryPickerView(
-            budget: .sample,
+            budget: Budget(info: .sample),
             selectedCategory: .constant(nil)
         )
         .pickerMode(.picker)
@@ -265,7 +247,7 @@ struct TransactionCategoryPickerView: View {
 #Preview("Picker And Editor") {
     NavigationStack {
         TransactionCategoryPickerView(
-            budget: .sample,
+            budget: Budget(info: .sample),
             selectedCategory: .constant(nil)
         )
         .pickerMode(.pickerAndEditor)
