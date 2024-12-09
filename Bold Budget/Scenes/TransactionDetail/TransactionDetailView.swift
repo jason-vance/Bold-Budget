@@ -11,6 +11,7 @@ struct TransactionDetailView: View {
     
     @Environment(\.dismiss) private var dismiss
     
+    @StateObject var budget: Budget
     @State var transaction: Transaction
     
     @State private var showDeleteDialog: Bool = false
@@ -18,12 +19,7 @@ struct TransactionDetailView: View {
     @State private var alertMessage: String = ""
     
     private func deleteTransaction() {
-        guard let deleter = iocContainer.resolve(TransactionDeleter.self) else {
-            show(alert: "Failed to delete. Service unavailable.")
-            return
-        }
-        
-        deleter.delete(transaction: transaction)
+        budget.remove(transaction: transaction)
         dismiss()
     }
     
@@ -238,6 +234,9 @@ struct TransactionDetailView: View {
 
 #Preview {
     NavigationStack {
-        TransactionDetailView(transaction: .sampleRandomBasic)
+        TransactionDetailView(
+            budget: Budget(info: .sample),
+            transaction: .sampleRandomBasic
+        )
     }
 }

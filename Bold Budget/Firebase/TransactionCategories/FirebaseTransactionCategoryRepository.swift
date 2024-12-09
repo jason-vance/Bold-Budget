@@ -20,6 +20,7 @@ class FirebaseTransactionCategoryRepository {
             .collection(Self.TRANSACTION_CATEGORIES)
     }
 
+    //TODO: Remove this listener version and just use fetch
     func listenToTransactionCategories(
         in budget: BudgetInfo,
         onUpdate: @escaping ([Transaction.Category]) -> (),

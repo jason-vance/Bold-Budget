@@ -9,6 +9,7 @@ import SwiftUI
 
 struct TimeFramePicker: View {
     
+    @StateObject var budget: Budget
     @Binding var timeFrame: TimeFrame
     
     @State private var period: TimeFrame.Period = .month
@@ -27,8 +28,7 @@ struct TimeFramePicker: View {
     }
     
     private var oldestTransactionDate: SimpleDate {
-        guard let ledger = iocContainer.resolve(TransactionLedger.self) else { return .now }
-        guard let oldestTransaction = (ledger.transactions.min { $0.date < $1.date }) else { return .now }
+        guard let oldestTransaction = (budget.transactions.min { $0.date < $1.date }) else { return .now }
         return oldestTransaction.date
     }
     
@@ -137,7 +137,10 @@ struct TimeFramePicker: View {
 #Preview {
     StatefulPreviewContainer(TimeFrame.init(period: .month, containing: .now)) { timeFrame in
         VStack {
-            TimeFramePicker(timeFrame: timeFrame)
+            TimeFramePicker(
+                budget: Budget(info: .sample),
+                timeFrame: timeFrame
+            )
             Text(timeFrame.wrappedValue.toUiString())
         }
     }

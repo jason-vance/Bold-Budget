@@ -10,45 +10,38 @@ import Swinject
 import SwinjectAutoregistration
 
 func setup(iocContainer: Container) {
-    iocContainer.autoregister(TransactionTagProvider.self, initializer: TransactionLedger.getInstance)
-    iocContainer.autoregister(TransactionLedger.self, initializer: TransactionLedger.getInstance)
+    // Misc
     iocContainer.autoregister(CurrentUserIdProvider.self, initializer: getCurrentUserIdProvider)
     iocContainer.autoregister(CurrentUserDataProvider.self, initializer: getCurrentUserDataProvider)
     iocContainer.autoregister(UserDataProvider.self, initializer: getUserDataProvider)
     iocContainer.autoregister(UserDataFetcher.self, initializer: getUserDataFetcher)
     
-    // Budgets
-    iocContainer.autoregister(BudgetsListBudgetsProvider.self, initializer: BudgetsListBudgetsProvider.init)
-    
-    // TransactionCategories
-    registerTransactionCategoryFetcher()
-    registerTransactionCategorySaver()
-
     // Authentication
     iocContainer.autoregister(AuthenticationProvider.self, initializer: getAuthenticationProvider)
     iocContainer.autoregister(UserSignOutService.self, initializer: getUserSignOutService)
     iocContainer.autoregister(UserAccountDeleter.self, initializer: getUserAccountDeleter)
-
-    // Onboarding
-    iocContainer.autoregister(UserOnboardingStateProvider.self, initializer: UserOnboardingStateProvider.init)
-    
-    // Dashboard
-    iocContainer.autoregister(BudgetsProvider.self, initializer: getBudgetsProvider)
-    registerTransactionFetcher()
-    
-    // AddBudget
-    registerBudgetCreator()
-
-    // AddTransactions
-    registerTransactionSaver()
-    
-    // TransactionDetail
-    iocContainer.autoregister(TransactionDeleter.self, initializer: TransactionLedger.getInstance)
     
     // UserProfile
     iocContainer.autoregister(UsernameAvailabilityChecker.self, initializer: getUsernameAvailabilityChecker)
     iocContainer.autoregister(UserDataSaver.self, initializer: getUserDataSaver)
     iocContainer.autoregister(ProfileImageUploader.self, initializer: getProfileImageUploader)
+    
+    // Onboarding
+    iocContainer.autoregister(UserOnboardingStateProvider.self, initializer: UserOnboardingStateProvider.init)
+    
+    // Budgets
+    registerBudgetCreator()
+    iocContainer.autoregister(BudgetsListBudgetsProvider.self, initializer: BudgetsListBudgetsProvider.init)
+    iocContainer.autoregister(BudgetsProvider.self, initializer: getBudgetsProvider)
+
+    // TransactionCategories
+    registerTransactionCategoryFetcher()
+    registerTransactionCategorySaver()
+    
+    // Transactions
+    registerTransactionFetcher()
+    registerTransactionSaver()
+    registerTransactionDeleter()
 }
 
 //MARK: Misc
@@ -81,6 +74,46 @@ fileprivate func getUserDataFetcher() -> UserDataFetcher {
     return FirebaseUserRepository()
 }
 
+//MARK: Authentication
+
+fileprivate func getAuthenticationProvider() -> AuthenticationProvider {
+    if let mock = MockAuthenticationProvider.getTestInstance() {
+        return mock
+    }
+    return FirebaseAuthentication.instance
+}
+
+fileprivate func getUserSignOutService() -> UserSignOutService {
+    return FirebaseAuthentication.instance
+}
+
+fileprivate func getUserAccountDeleter() -> UserAccountDeleter {
+    return FirebaseAuthentication.instance
+}
+
+//MARK: UserProfile
+
+fileprivate func getUsernameAvailabilityChecker() -> UsernameAvailabilityChecker {
+    if let mock = MockUsernameAvailabilityChecker.getTestInstance() {
+        return mock
+    }
+    return FirebaseUserRepository()
+}
+
+fileprivate func getUserDataSaver() -> UserDataSaver {
+    if let mock = MockUserDataSaver.getTestInstance() {
+        return mock
+    }
+    return FirebaseUserRepository()
+}
+
+fileprivate func getProfileImageUploader() -> ProfileImageUploader {
+    if let mock = MockProfileImageUploader.getTestInstance() {
+        return mock
+    }
+    return FirebaseProfileImageStorage()
+}
+
 //MARK: Budgets
 
 fileprivate func registerBudgetCreator() {
@@ -90,6 +123,13 @@ fileprivate func registerBudgetCreator() {
     }
 
     iocContainer.autoregister(BudgetCreator.self, initializer: { service })
+}
+
+fileprivate func getBudgetsProvider() -> BudgetsProvider {
+    if let mock = MockBudgetsProvider.getTestInstance() {
+        return mock
+    }
+    return FirebaseBudgetsProvider()
 }
 
 //MARK: TransactionCategories
@@ -114,31 +154,7 @@ fileprivate func registerTransactionCategorySaver() {
     iocContainer.autoregister(TransactionCategorySaver.self, initializer: { service })
 }
 
-//MARK: Authentication
-
-fileprivate func getAuthenticationProvider() -> AuthenticationProvider {
-    if let mock = MockAuthenticationProvider.getTestInstance() {
-        return mock
-    }
-    return FirebaseAuthentication.instance
-}
-
-fileprivate func getUserSignOutService() -> UserSignOutService {
-    return FirebaseAuthentication.instance
-}
-
-fileprivate func getUserAccountDeleter() -> UserAccountDeleter {
-    return FirebaseAuthentication.instance
-}
-
-//MARK: Dashboard
-
-fileprivate func getBudgetsProvider() -> BudgetsProvider {
-    if let mock = MockBudgetsProvider.getTestInstance() {
-        return mock
-    }
-    return FirebaseBudgetsProvider()
-}
+//MARK: Transactions
 
 fileprivate func registerTransactionFetcher() {
     var service: TransactionFetcher = FirebaseTransactionRepository()
@@ -148,8 +164,6 @@ fileprivate func registerTransactionFetcher() {
     iocContainer.autoregister(TransactionFetcher.self, initializer: { service })
 }
 
-//MARK: AddTransactionView
-
 fileprivate func registerTransactionSaver() {
     var service: TransactionSaver = FirebaseTransactionRepository()
     if let mock = MockTransactionSaver.getTestInstance() {
@@ -158,25 +172,10 @@ fileprivate func registerTransactionSaver() {
     iocContainer.autoregister(TransactionSaver.self, initializer: { service })
 }
 
-//MARK: UserProfile
-
-fileprivate func getUsernameAvailabilityChecker() -> UsernameAvailabilityChecker {
-    if let mock = MockUsernameAvailabilityChecker.getTestInstance() {
-        return mock
+fileprivate func registerTransactionDeleter() {
+    var service: TransactionDeleter = FirebaseTransactionRepository()
+    if let mock = MockTransactionDeleter.getTestInstance() {
+        service = mock
     }
-    return FirebaseUserRepository()
-}
-
-fileprivate func getUserDataSaver() -> UserDataSaver {
-    if let mock = MockUserDataSaver.getTestInstance() {
-        return mock
-    }
-    return FirebaseUserRepository()
-}
-
-fileprivate func getProfileImageUploader() -> ProfileImageUploader {
-    if let mock = MockProfileImageUploader.getTestInstance() {
-        return mock
-    }
-    return FirebaseProfileImageStorage()
+    iocContainer.autoregister(TransactionDeleter.self, initializer: { service })
 }

@@ -47,3 +47,11 @@ extension FirebaseTransactionRepository: TransactionFetcher {
             .compactMap { try? $0.data(as: FirebaseTransactionDoc.self).toTransaction(categoryDict: categoryDict) }
     }
 }
+
+extension FirebaseTransactionRepository: TransactionDeleter {
+    func delete(transaction: Transaction, from budget: BudgetInfo) async throws {
+        try await transactionsCollection(in: budget)
+            .document(transaction.id)
+            .delete()
+    }
+}

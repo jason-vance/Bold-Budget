@@ -23,40 +23,20 @@ struct DashboardView: View {
         var transactions: [Transaction]
     }
     
-    let budget: BudgetInfo
+    @StateObject var budget: Budget
     
     @State private var currentUserData: UserData? = nil
-    @State private var transactions: [Transaction] = []
     @State private var timeFrame: TimeFrame = .init(period: .month, containing: .now)
     @State private var transactionsFilter: TransactionsFilter = .none
     
-    @State private var hasInitiallyFetchedTransactions: Bool = false
-    @State private var loadingTransactions: Bool = false
     @State private var showTimeFramePicker: Bool = false
     @State private var showFilterTransactionsOptions: Bool = false
     
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
     
-    private let transactionFetcher: TransactionFetcher
-    
-    init(budget: BudgetInfo) {
-        self.init(
-            budget: budget,
-            transactionFetcher: iocContainer~>TransactionFetcher.self
-        )
-    }
-    
-    init(
-        budget: BudgetInfo,
-        transactionFetcher: TransactionFetcher
-    ) {
-        self.budget = budget
-        self.transactionFetcher = transactionFetcher
-    }
-    
     private var filteredTransactions: [Transaction] {
-        transactions
+        budget.transactions
             .filter {
                 $0.date >= timeFrame.start &&
                 $0.date <= timeFrame.end &&
@@ -119,26 +99,6 @@ struct DashboardView: View {
         }
     }
     
-    private func fetchInitialTransactions() {
-        guard !hasInitiallyFetchedTransactions else { return }
-        hasInitiallyFetchedTransactions = true
-        fetchTransactions()
-    }
-    
-    private func fetchTransactions() {
-        Task {
-            loadingTransactions = true
-            do {
-                transactions = try await transactionFetcher.fetchTransactions(in: budget)
-            } catch {
-                let message = "Failed to fetch transactions. \(error.localizedDescription)"
-                print(message)
-                show(alert: message)
-            }
-            loadingTransactions = false
-        }
-    }
-    
     private func show(alert: String) {
         showAlert = true
         alertMessage = alert
@@ -146,31 +106,26 @@ struct DashboardView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            if loadingTransactions {
-                BlockingSpinnerView()
-            } else {
-                TopBar()
-                List {
-                    Chart()
-                    TransactionList()
-                }
-                .listStyle(.insetGrouped)
-                .scrollContentBackground(.hidden)
-                .scrollIndicators(.hidden)
-                .safeAreaInset(edge: .bottom, alignment: .trailing) { AddTransactionButton() }
-                .overlay(alignment: .top) {
-                    Rectangle()
-                        .opacity(0)
-                        .overlay(alignment: .top) { ExtraOptionsMenuOverlay() }
-                        .clipped()
-                }
+            TopBar()
+            List {
+                Chart()
+                TransactionList()
+            }
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .scrollIndicators(.hidden)
+            .safeAreaInset(edge: .bottom, alignment: .trailing) { AddTransactionButton() }
+            .overlay(alignment: .top) {
+                Rectangle()
+                    .opacity(0)
+                    .overlay(alignment: .top) { ExtraOptionsMenuOverlay() }
+                    .clipped()
             }
         }
-        .navigationTitle(budget.name.value)
+        .navigationTitle(budget.info.name.value)
         .navigationBarTitleDisplayMode(.inline)
         .foregroundStyle(Color.text)
         .background(Color.background)
-        .onAppear { fetchInitialTransactions() }
         .alert(alertMessage, isPresented: $showAlert) {}
     }
     
@@ -194,9 +149,11 @@ struct DashboardView: View {
                     )
                 } else if showTimeFramePicker {
                     //TODO: Turn this into a sheet
-                    TimeFramePicker(timeFrame: .init(
-                        get: { timeFrame },
-                        set: { timeFrame in withAnimation(.snappy) { self.timeFrame = timeFrame } }
+                    TimeFramePicker(
+                        budget: budget,
+                        timeFrame: .init(
+                            get: { timeFrame },
+                            set: { timeFrame in withAnimation(.snappy) { self.timeFrame = timeFrame } }
                     ))
                 }
                 BarDivider()
@@ -259,7 +216,7 @@ struct DashboardView: View {
     
     @ViewBuilder func DecrementTimeFrameButton() -> some View {
         let isDisabled: Bool = {
-            guard let _ = (transactions.first { $0.date <= timeFrame.previous.end }) else { return true }
+            guard let _ = (budget.transactions.first { $0.date <= timeFrame.previous.end }) else { return true }
             return false
         }()
         
@@ -274,7 +231,7 @@ struct DashboardView: View {
     
     @ViewBuilder func IncrementTimeFrameButton() -> some View {
         let isDisabled: Bool = {
-            guard let _ = (transactions.first { $0.date >= timeFrame.next.start }) else { return true }
+            guard let _ = (budget.transactions.first { $0.date >= timeFrame.next.start }) else { return true }
             return false
         }()
         
@@ -337,7 +294,7 @@ struct DashboardView: View {
             .listSectionSeparator(.hidden)
             .listSectionSpacing(0)
         }
-        if transactions.isEmpty {
+        if budget.transactions.isEmpty {
             ContentUnavailableView(
                 "No Transactions",
                 systemImage: "dollarsign",
@@ -358,7 +315,10 @@ struct DashboardView: View {
     
     @ViewBuilder private func TransactionRow(_ transaction: Transaction) -> some View {
         NavigationLink {
-            TransactionDetailView(transaction: transaction)
+            TransactionDetailView(
+                budget: budget,
+                transaction: transaction
+            )
         } label: {
             TransactionRowView(transaction)
         }
@@ -369,8 +329,7 @@ struct DashboardView: View {
 #Preview {
     NavigationStack {
         DashboardView(
-            budget: .sample,
-            transactionFetcher: MockTransactionFetcher()
+            budget: Budget(info: .sample)
         )
     }
 }

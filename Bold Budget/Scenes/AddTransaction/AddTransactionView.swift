@@ -11,6 +11,8 @@ struct AddTransactionView: View {
     
     @Environment(\.dismiss) private var dismiss
     
+    @StateObject var budget: Budget
+    
     @State private var category: Transaction.Category? = nil
     @State private var amountDouble: Double = 0
     @State private var transactionDate: Date = .now
@@ -27,8 +29,6 @@ struct AddTransactionView: View {
     
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
-    
-    let budget: BudgetInfo
     
     private var transaction: Transaction? {
         guard let category = category else { return nil }
@@ -108,19 +108,8 @@ struct AddTransactionView: View {
     
     private func saveTransaction() {
         guard let transaction = transaction else { return }
-        guard let saver = iocContainer.resolve(TransactionSaver.self) else {
-            show(alert: "Failed to save transaction. Service unavailable.")
-            return
-        }
-        
-        Task {
-            do {
-                try await saver.save(transaction: transaction, to: budget)
-                dismiss()
-            } catch {
-                show(alert: "Failed to save transaction. \(error.localizedDescription)")
-            }
-        }
+        budget.add(transaction: transaction)
+        dismiss()
     }
     
     private func show(alert: String) {
@@ -221,7 +210,7 @@ struct AddTransactionView: View {
     @ViewBuilder func CategoryField() -> some View {
         NavigationLink {
             TransactionCategoryPickerView(
-                budget: budget,
+                budget: budget.info,
                 selectedCategory: $category
             )
             .pickerMode(.pickerAndEditor)
@@ -392,6 +381,6 @@ struct AddTransactionView: View {
 
 #Preview {
     NavigationStack {
-        AddTransactionView(budget: .sample)
+        AddTransactionView(budget: Budget(info: .sample))
     }
 }

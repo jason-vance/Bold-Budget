@@ -44,6 +44,7 @@ class FirebaseUserRepository {
         try await usersCollection.document(userData.id.value).updateData(dict)
     }
     
+    //TODO: Change to a simple fetch if possible
     func listenToUserDocument(
         withId id: UserId,
         onUpdate: @escaping (FirebaseUserDoc?)->(),

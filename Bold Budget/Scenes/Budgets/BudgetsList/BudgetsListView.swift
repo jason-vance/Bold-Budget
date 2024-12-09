@@ -75,7 +75,7 @@ struct BudgetsListView: View {
     
     @ViewBuilder private func BudgetRow(_ budget: BudgetInfo) -> some View {
         NavigationLink {
-            DashboardView(budget: budget)
+            DashboardView(budget: Budget(info: budget))
         } label: {
             Text(budget.name.value)
         }

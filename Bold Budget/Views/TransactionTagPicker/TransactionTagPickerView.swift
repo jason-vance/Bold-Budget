@@ -13,15 +13,14 @@ struct TransactionTagPickerView: View {
     
     @Environment(\.dismiss) private var dismiss
     
-    @State private var tags: Set<Transaction.Tag>? = nil
+    @StateObject var budget: Budget
     @State private var searchText: String = ""
     @State private var searchPresented: Bool = false
     
     public var onSelected: (Transaction.Tag) -> ()
     
     private var filteredTags: [Transaction.Tag] {
-        guard let tags = tags else { return [] }
-        let sortedTags = tags.sorted { $0.value < $1.value }
+        let sortedTags = budget.transactionTags.sorted { $0.value < $1.value }
         
         guard !searchText.isEmpty else {
             return sortedTags
@@ -29,13 +28,6 @@ struct TransactionTagPickerView: View {
         
         return sortedTags
             .filter { $0.value.contains(searchText) }
-    }
-    
-    private var tagsPublisher: AnyPublisher<Set<Transaction.Tag>,Never> {
-        (iocContainer~>TransactionTagProvider.self)
-            .tagsPublisher
-            .receive(on: RunLoop.main)
-            .eraseToAnyPublisher()
     }
     
     private func select(tag: Transaction.Tag) {
@@ -49,17 +41,12 @@ struct TransactionTagPickerView: View {
             BarDivider()
             ScrollView {
                 LazyVStack {
-                    if tags?.isEmpty == true {
+                    if budget.transactionTags.isEmpty {
                         NoTagsView()
-                    } else if tags != nil {
+                    } else {
                         ForEach(filteredTags) { tag in
                             TagButton(tag)
                         }
-                    } else {
-                        ProgressView()
-                            .progressViewStyle(.circular)
-                            .tint(Color.text)
-                            .padding(.top, 100)
                     }
                 }
                 .padding()
@@ -71,7 +58,6 @@ struct TransactionTagPickerView: View {
         .navigationBarBackButtonHidden()
         .foregroundStyle(Color.text)
         .background(Color.background)
-        .onReceive(tagsPublisher) { tags = $0 }
     }
     
     @ViewBuilder func NoTagsView() -> some View {
@@ -125,6 +111,6 @@ struct TransactionTagPickerView: View {
 
 #Preview {
     NavigationStack {
-        TransactionTagPickerView() { tag in }
+        TransactionTagPickerView(budget: Budget(info: .sample)) { tag in }
     }
 }

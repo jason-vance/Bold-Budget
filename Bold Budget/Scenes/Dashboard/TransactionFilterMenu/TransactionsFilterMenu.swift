@@ -49,7 +49,7 @@ struct TransactionsFilter {
 
 struct TransactionsFilterMenu: View {
     
-    @State var budget: BudgetInfo
+    @StateObject var budget: Budget
     @Binding var isMenuVisible: Bool
     @Binding var transactionsFilter: TransactionsFilter
     @Binding var transactionCount: Int
@@ -81,7 +81,7 @@ struct TransactionsFilterMenu: View {
     
     @ViewBuilder private func TagsField() -> some View {
         NavigationLink {
-            TransactionTagPickerView { transactionsFilter.tags.insert($0) }
+            TransactionTagPickerView(budget: budget) { transactionsFilter.tags.insert($0) }
         } label: {
             HStack {
                 Text("Tags")
@@ -151,7 +151,7 @@ struct TransactionsFilterMenu: View {
     @ViewBuilder func CategoryField() -> some View {
         NavigationLink {
             TransactionCategoryPickerView(
-                budget: budget,
+                budget: budget.info,
                 selectedCategory: $transactionsFilter.category
             )
             .pickerMode(.picker)
@@ -216,7 +216,7 @@ struct TransactionsFilterMenu: View {
     NavigationStack {
         StatefulPreviewContainer(TransactionsFilter.none) { filter in
             TransactionsFilterMenu(
-                budget: .sample,
+                budget: Budget(info: .sample),
                 isMenuVisible: .constant(true),
                 transactionsFilter: filter,
                 transactionCount: .constant(10)

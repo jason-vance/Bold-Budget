@@ -17,6 +17,7 @@ class FirebaseBudgetsRepository {
     
     let usersField = FirebaseBudgetDoc.CodingKeys.users.rawValue
 
+    //TODO: Change to a simple fetch
     func getBudgetsPublisher(
         for userId: UserId,
         onUpdate: @escaping ([BudgetInfo]) -> (),
