@@ -111,6 +111,7 @@ struct DashboardView: View {
                 Chart()
                 TransactionList()
             }
+            .refreshable { budget.refresh() }
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
             .scrollIndicators(.hidden)

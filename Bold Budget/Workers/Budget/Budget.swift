@@ -61,10 +61,20 @@ class Budget: ObservableObject {
         fetchData()
     }
     
+    public func refresh() {
+        fetchData()
+    }
+    
     private func fetchData() {
         Task {
-            await fetchTransactionCategories()
-            await fetchTransactions()
+            await withTaskGroup(of: Void.self) { group in
+                group.addTask {
+                    await self.fetchTransactionCategories()
+                }
+                group.addTask {
+                    await self.fetchTransactions()
+                }
+            }
         }
     }
     
