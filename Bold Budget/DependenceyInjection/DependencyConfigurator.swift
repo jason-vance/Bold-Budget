@@ -31,8 +31,7 @@ func setup(iocContainer: Container) {
     
     // Budgets
     registerBudgetCreator()
-    iocContainer.autoregister(BudgetsListBudgetsProvider.self, initializer: BudgetsListBudgetsProvider.init)
-    iocContainer.autoregister(BudgetsProvider.self, initializer: getBudgetsProvider)
+    registerBudgetFetcher()
 
     // TransactionCategories
     registerTransactionCategoryFetcher()
@@ -117,24 +116,22 @@ fileprivate func getProfileImageUploader() -> ProfileImageUploader {
 //MARK: Budgets
 
 fileprivate func registerBudgetCreator() {
-    var service: BudgetCreator = FirebaseBudgetsRepository()
+    var service: BudgetCreator = FirebaseBudgetRepository()
     if let mock = MockBudgetSaver.getTestInstance() {
         service = mock
     }
-
     iocContainer.autoregister(BudgetCreator.self, initializer: { service })
 }
 
-fileprivate func getBudgetsProvider() -> BudgetsProvider {
-    if let mock = MockBudgetsProvider.getTestInstance() {
-        return mock
+fileprivate func registerBudgetFetcher() {
+    var service: BudgetFetcher = FirebaseBudgetRepository()
+    if let mock = MockBudgetFetcher.getTestInstance() {
+        service = mock
     }
-    return FirebaseBudgetsProvider()
+    iocContainer.autoregister(BudgetFetcher.self, initializer: { service })
 }
 
 //MARK: TransactionCategories
-
-//TODO: Change all of these to single instances if appropriate, like the following
 
 fileprivate func registerTransactionCategoryFetcher() {
     var service: TransactionCategoryFetcher = FirebaseTransactionCategoryRepository()

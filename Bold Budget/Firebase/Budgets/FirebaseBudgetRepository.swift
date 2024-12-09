@@ -1,5 +1,5 @@
 //
-//  FirebaseBudgetsRepository.swift
+//  FirebaseBudgetRepository.swift
 //  Bold Budget
 //
 //  Created by Jason Vance on 10/22/24.
@@ -9,38 +9,28 @@ import Foundation
 import FirebaseFirestore
 import Combine
 
-class FirebaseBudgetsRepository {
+class FirebaseBudgetRepository {
     
     static let BUDGETS = "Budgets"
     
     let budgetsCollection = Firestore.firestore().collection(BUDGETS)
     
     let usersField = FirebaseBudgetDoc.CodingKeys.users.rawValue
+}
 
-    //TODO: Change to a simple fetch
-    func getBudgetsPublisher(
-        for userId: UserId,
-        onUpdate: @escaping ([BudgetInfo]) -> (),
-        onError: @escaping (Error) -> ()
-    ) -> AnyCancellable {
-        let listener = budgetsCollection
+extension FirebaseBudgetRepository: BudgetFetcher {
+    func fetchBudgets(
+        for userId: UserId
+    ) async throws -> [BudgetInfo] {
+        try await budgetsCollection
             .whereField(usersField, arrayContains: userId.value)
-            .addSnapshotListener { snapshot, error in
-                guard let snapshot = snapshot else {
-                    onError(error ?? TextError("Unknown Error listening to budgets"))
-                    return
-                }
-
-                let budgets = snapshot.documents
-                    .compactMap { try? $0.data(as: FirebaseBudgetDoc.self).toBudget() }
-                onUpdate(budgets)
-            }
-        
-        return .init({ listener.remove() })
+            .getDocuments()
+            .documents
+            .compactMap { try? $0.data(as: FirebaseBudgetDoc.self).toBudget() }
     }
 }
 
-extension FirebaseBudgetsRepository: BudgetCreator {
+extension FirebaseBudgetRepository: BudgetCreator {
     func create(budget: BudgetInfo, ownedBy userId: UserId) async throws {
         let usersRepo = FirebaseBudgetUsersRepository()
         try await usersRepo.add(user: userId, as: .owner, to: budget)

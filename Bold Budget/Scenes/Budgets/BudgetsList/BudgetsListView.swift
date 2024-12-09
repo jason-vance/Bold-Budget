@@ -15,19 +15,37 @@ struct BudgetsListView: View {
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
     
-    //TODO: I should probably make this a fetcher and add refresh to this view
-    private let budgetsProvider: BudgetsListBudgetsProvider
+    private let budgetFetcher: BudgetFetcher
+    private let currentUserIdProvider: CurrentUserIdProvider
     
     init() {
         self.init(
-            budgetsProvider: iocContainer~>BudgetsListBudgetsProvider.self
+            budgetFetcher: iocContainer~>BudgetFetcher.self,
+            currentUserIdProvider: iocContainer~>CurrentUserIdProvider.self
         )
     }
     
     init(
-        budgetsProvider: BudgetsListBudgetsProvider
+        budgetFetcher: BudgetFetcher,
+        currentUserIdProvider: CurrentUserIdProvider
     ) {
-        self.budgetsProvider = budgetsProvider
+        self.budgetFetcher = budgetFetcher
+        self.currentUserIdProvider = currentUserIdProvider
+    }
+    
+    private func fetchBudgets() {
+        Task {
+            do {
+                guard let userId = currentUserIdProvider.currentUserId else {
+                    throw TextError("User is apparently not logged in")
+                }
+                budgets = try await budgetFetcher.fetchBudgets(for: userId)
+            } catch {
+                let message = "Failed to fetch budgets. \(error.localizedDescription)"
+                show(alert: message)
+                print(message)
+            }
+        }
     }
     
     private func show(alert: String) {
@@ -55,6 +73,7 @@ struct BudgetsListView: View {
                     .listRowNoChrome()
             }
         }
+        .refreshable { fetchBudgets() }
         .safeAreaInset(edge: .bottom, alignment: .trailing) { AddBudgetButton() }
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
@@ -63,8 +82,8 @@ struct BudgetsListView: View {
         .navigationTitle("Budgets")
         .foregroundStyle(Color.text)
         .background(Color.background)
-        .onReceive(budgetsProvider.budgetsPublisher) { budgets = $0 }
         .alert(alertMessage, isPresented: $showAlert) {}
+        .onAppear { fetchBudgets() }
     }
     
     @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
@@ -103,27 +122,19 @@ struct BudgetsListView: View {
 }
 
 #Preview {
-    let budgetsProvider = BudgetsListBudgetsProvider(
-        userIdProvider: MockCurrentUserIdProvider(currentUserId: .sample),
-        budgetsProvider: MockBudgetsProvider(budgets: [.sample])
-    )
-    
     NavigationStack {
         BudgetsListView(
-            budgetsProvider: budgetsProvider
+            budgetFetcher: MockBudgetFetcher(),
+            currentUserIdProvider: MockCurrentUserIdProvider()
         )
     }
 }
 
 #Preview("No budgets") {
-    let budgetsProvider = BudgetsListBudgetsProvider(
-        userIdProvider: MockCurrentUserIdProvider(currentUserId: .sample),
-        budgetsProvider: MockBudgetsProvider(budgets: [])
-    )
-    
     NavigationStack {
         BudgetsListView(
-            budgetsProvider: budgetsProvider
+            budgetFetcher: MockBudgetFetcher(budgets: []),
+            currentUserIdProvider: MockCurrentUserIdProvider()
         )
     }
 }

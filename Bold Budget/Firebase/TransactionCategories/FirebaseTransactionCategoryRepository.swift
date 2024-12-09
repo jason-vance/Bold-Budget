@@ -15,7 +15,7 @@ class FirebaseTransactionCategoryRepository {
     
     func categoriesCollection(in budget: BudgetInfo) -> CollectionReference {
         Firestore.firestore()
-            .collection(FirebaseBudgetsRepository.BUDGETS)
+            .collection(FirebaseBudgetRepository.BUDGETS)
             .document(budget.id)
             .collection(Self.TRANSACTION_CATEGORIES)
     }
