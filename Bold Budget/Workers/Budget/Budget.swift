@@ -9,6 +9,7 @@ import Foundation
 import SwinjectAutoregistration
 import Combine
 
+@MainActor
 class Budget: ObservableObject {
     
     //TODO: Since I should only have one of each item in each these collections, should I make them dicts or sets instead of arrays?
