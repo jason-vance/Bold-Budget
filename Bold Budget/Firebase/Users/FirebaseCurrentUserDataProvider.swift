@@ -11,13 +11,12 @@ import Combine
 
 class FirebaseCurrentUserDataProvider: CurrentUserDataProvider {
     
-    @Published var currentUserData: UserData?
-    var currentUserDataPublisher: AnyPublisher<UserData?, Never> { $currentUserData.eraseToAnyPublisher() }
-    
-    var userDocListener: ListenerRegistration?
+    var currentUserDataPublisher: AnyPublisher<UserData?, Never> {
+        userDataProvider.$userData.eraseToAnyPublisher()
+    }
     
     let currentUserIdProvider = FirebaseAuthentication.instance
-    let userRepo = FirebaseUserRepository()
+    let userDataProvider = FirebaseUserDataProvider()
     
     var currentUserIdSub: AnyCancellable? = nil
     
@@ -29,34 +28,11 @@ class FirebaseCurrentUserDataProvider: CurrentUserDataProvider {
             .sink(receiveValue: onUpdate(userId:))
     }
     
-    deinit {
-        cleanUpListeners()
-    }
-    
-    private func cleanUpListeners() {
-        userDocListener?.remove()
-        userDocListener = nil
-    }
-    
     private func onUpdate(userId: UserId?) {
-        guard let userId = userId else { return }
-        startListeningToUser(withId: userId)
-    }
-    
-    private func startListeningToUser(withId id: UserId) {
-        cleanUpListeners()
-        
-        userDocListener = userRepo.listenToUserDocument(
-            withId: id,
-            onUpdate: onUpdate(userDoc:)
-        )
-    }
-    
-    private func onUpdate(userDoc: FirebaseUserDoc?) {
-        guard let userData = userDoc?.toUserData() else {
-            currentUserData = nil
-            return
+        if let userId = userId {
+            userDataProvider.startListeningToUser(withId: userId)
+        } else {
+            userDataProvider.stopListeningToUser()
         }
-        currentUserData = userData
     }
 }

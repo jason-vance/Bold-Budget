@@ -44,24 +44,6 @@ class FirebaseUserRepository {
         try await usersCollection.document(userData.id.value).updateData(dict)
     }
     
-    //TODO: Change to a simple fetch if possible
-    func listenToUserDocument(
-        withId id: UserId,
-        onUpdate: @escaping (FirebaseUserDoc?)->(),
-        onError: ((Error)->())? = nil
-    ) -> ListenerRegistration {
-        usersCollection.document(id.value).addSnapshotListener { snapshot, error in
-            if let snapshot = snapshot {
-                let userDoc = try? snapshot.data(as: FirebaseUserDoc.self)
-                onUpdate(userDoc)
-            } else if let error = error {
-                onError?(error)
-            } else {
-                onError?(TextError("¯\\_(ツ)_/¯ While listening to user doc changes"))
-            }
-        }
-    }
-    
     func fetchUserDocument(withId id: String) async throws -> FirebaseUserDoc? {
         let snapshot = try await usersCollection.document(id).getDocument()
         return try? snapshot.data(as: FirebaseUserDoc.self)

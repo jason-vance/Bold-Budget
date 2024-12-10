@@ -9,7 +9,6 @@ import Foundation
 import Combine
 
 protocol CurrentUserDataProvider {
-    var currentUserData: UserData? { get }
     var currentUserDataPublisher: AnyPublisher<UserData?,Never> { get }
 }
 

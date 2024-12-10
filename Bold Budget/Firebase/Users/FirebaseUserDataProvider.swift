@@ -11,6 +11,11 @@ import Combine
 
 class FirebaseUserDataProvider: UserDataProvider {
     
+    private let pollingInterval: TimeInterval = 30
+    
+    private var timer: Timer?
+    private var userId: UserId?
+    
     @Published var userData: UserData? = nil
     var userDataPublisher: AnyPublisher<UserData,Never> {
         $userData
@@ -23,23 +28,39 @@ class FirebaseUserDataProvider: UserDataProvider {
     let userRepo = FirebaseUserRepository()
     
     deinit {
-        cleanUpListeners()
+        stopTimer()
     }
     
-    private func cleanUpListeners() {
-        userDocListener?.remove()
-        userDocListener = nil
+    private func startTimer() {
+        stopTimer()
+        
+        timer = Timer.scheduledTimer(withTimeInterval: pollingInterval, repeats: true) { [weak self] _ in
+            self?.fetchUserData()
+        }
+        RunLoop.current.add(timer!, forMode: .default)
+    }
+    
+    private func stopTimer() {
+        timer?.invalidate()
+        timer = nil
+    }
+    
+    private func fetchUserData() {
+        Task {
+            guard let userId = userId else { return }
+            userData = try await userRepo.fetchUserData(withId: userId)
+        }
     }
     
     func startListeningToUser(withId id: UserId) {
-        cleanUpListeners()
-        
-        userDocListener = userRepo.listenToUserDocument(withId: id) { userDoc in
-            if let userData = userDoc?.toUserData() {
-                self.userData = userData
-            } else {
-                self.userData = UserData(id: id)
-            }
-        }
+        self.userId = id
+        fetchUserData()
+        startTimer()
+    }
+    
+    func stopListeningToUser() {
+        stopTimer()
+        self.userId = nil
+        self.userData = nil
     }
 }
