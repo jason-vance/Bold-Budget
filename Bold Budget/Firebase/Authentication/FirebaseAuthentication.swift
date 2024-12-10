@@ -123,7 +123,6 @@ class FirebaseAuthentication {
             throw TextError("User is not logged in")
         }
         
-        //TODO: Delete any user data?
         try await reathenticate(withAuthorization: authorization)
         try await currentUser.delete()
     }

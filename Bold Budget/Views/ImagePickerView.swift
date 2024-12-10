@@ -33,7 +33,6 @@ struct ImagePickerView: UIViewControllerRepresentable {
     }
     
     private func configureColors(_ config: inout YPImagePickerConfiguration) {
-        //TODO: Make sure all of these colors are good
         config.colors.bottomMenuItemUnselectedTextColor = UIColor(Color.text).withAlphaComponent(0.6)
         config.colors.bottomMenuItemSelectedTextColor = UIColor(Color.text)
         config.colors.tintColor = UIColor(Color.text)

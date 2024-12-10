@@ -140,7 +140,6 @@ struct BudgetDetailView: View {
         if showExtraOptionsMenu {
             VStack(spacing: 0) {
                 if showFilterTransactionsOptions {
-                    //TODO: Turn this into a sheet
                     TransactionsFilterMenu(
                         budget: budget,
                         isMenuVisible: $showFilterTransactionsOptions,
@@ -148,7 +147,6 @@ struct BudgetDetailView: View {
                         transactionCount: .init(get: { filteredTransactions.count }, set: {_ in})
                     )
                 } else if showTimeFramePicker {
-                    //TODO: Turn this into a sheet
                     TimeFramePicker(
                         budget: budget,
                         timeFrame: .init(

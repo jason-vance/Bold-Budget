@@ -31,7 +31,6 @@ extension FirebaseTransactionRepository: TransactionSaver {
 }
 
 extension FirebaseTransactionRepository: TransactionFetcher {
-    //TODO: Make a better version of this that doesn't fetch every single transaction
     func fetchTransactions(
         in budget: BudgetInfo
     ) async throws -> [Transaction] {

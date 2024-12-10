@@ -83,7 +83,6 @@ extension View {
         self
             .listRowBackground(Color.text.opacity(.opacityButtonBackground))
             .listRowSeparatorTint(Color.text.opacity(.opacityButtonBackground))
-        //TODO: revisit these padding values
             .listRowInsets(.init(top: .paddingVerticalButtonXSmall,
                                  leading: .paddingHorizontalButtonXSmall,
                                  bottom: .paddingVerticalButtonXSmall,
