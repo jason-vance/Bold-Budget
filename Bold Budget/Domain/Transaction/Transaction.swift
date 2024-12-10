@@ -54,6 +54,16 @@ extension Transaction {
         )
     }
     
+    static var taggedSample: Transaction {
+        .init(
+            id: Id(),
+            amount: Money(10)!,
+            date: .now,
+            category: .sampleGroceries,
+            tags: [.sample]
+        )
+    }
+    
     static var samples: [Transaction] {
         (0...100).map { _ in Transaction.sampleRandomBasic }
     }

@@ -175,9 +175,16 @@ struct BudgetDetailView: View {
     
     @ViewBuilder func TopBar() -> some View {
         ScreenTitleBar(
-            primaryContent: { TimeFrameButton() },
-            leadingContent: { FilterTransactionsButton().opacity(0) },
-            trailingContent: { FilterTransactionsButton() }
+            primaryContent: {
+                TimeFrameButton()
+            },
+            leadingContent: {
+                FilterTransactionsButton().opacity(0)
+            },
+            trailingContent: {
+                FilterTransactionsButton()
+                    .accessibilityIdentifier("DashboardView.FilterTransactionsButton")
+            }
         )
     }
     
@@ -194,7 +201,6 @@ struct BudgetDetailView: View {
                     }
                 }
         }
-        .accessibilityIdentifier("DashboardView.FilterTransactionsButton")
     }
     
     @ViewBuilder func TimeFrameButton() -> some View {

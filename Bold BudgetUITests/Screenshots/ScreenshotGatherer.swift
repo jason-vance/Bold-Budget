@@ -25,9 +25,9 @@ final class ScreenshotGatherer: XCTestCase {
     func testDashboardScreenshot() throws {
         let app = XCUIApplication()
         MockAuthenticationProvider.test(using: .signedIn, in: &app.launchEnvironment)
-        MockBudgetsProvider.test(usingSample: true, in: &app.launchEnvironment)
+        MockBudgetFetcher.test(usingSample: true, in: &app.launchEnvironment)
+        MockTransactionFetcher.test(using: .screenshotSamples, in: &app.launchEnvironment)
         MockTransactionCategoryRepo.test(using: .categorySamples, in: &app.launchEnvironment)
-        TransactionLedger.test(using: .screenshotSamples, in: &app.launchEnvironment)
         app.launch()
         
         // Budget List
@@ -42,9 +42,9 @@ final class ScreenshotGatherer: XCTestCase {
     func testAddTransactionScreenshot() throws {
         let app = XCUIApplication()
         MockAuthenticationProvider.test(using: .signedIn, in: &app.launchEnvironment)
-        MockBudgetsProvider.test(usingSample: true, in: &app.launchEnvironment)
+        MockBudgetFetcher.test(usingSample: true, in: &app.launchEnvironment)
+        MockTransactionFetcher.test(using: .screenshotSamples, in: &app.launchEnvironment)
         MockTransactionCategoryRepo.test(using: .singleCategory_Groceries, in: &app.launchEnvironment)
-        TransactionLedger.test(using: .empty, in: &app.launchEnvironment)
         app.launch()
         
         // Budget List
@@ -74,9 +74,9 @@ final class ScreenshotGatherer: XCTestCase {
     func testTransactionDetailScreenshot() throws {
         let app = XCUIApplication()
         MockAuthenticationProvider.test(using: .signedIn, in: &app.launchEnvironment)
-        MockBudgetsProvider.test(usingSample: true, in: &app.launchEnvironment)
+        MockBudgetFetcher.test(usingSample: true, in: &app.launchEnvironment)
+        MockTransactionFetcher.test(using: .screenshotSamples, in: &app.launchEnvironment)
         MockTransactionCategoryRepo.test(using: .categorySamples, in: &app.launchEnvironment)
-        TransactionLedger.test(using: .screenshotSamples, in: &app.launchEnvironment)
         app.launch()
         
         // Budget List

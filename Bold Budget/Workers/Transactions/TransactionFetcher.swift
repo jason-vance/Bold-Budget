@@ -30,6 +30,8 @@ extension MockTransactionFetcher {
     public enum TestCategory: String, RawRepresentable {
         case empty
         case samples
+        case taggedSample
+        case screenshotSamples
         case error
     }
     
@@ -50,6 +52,12 @@ extension MockTransactionFetcher {
             break
         case .samples:
             mock.transactions = Transaction.samples
+            break
+        case .taggedSample:
+            mock.transactions = [Transaction.taggedSample]
+            break
+        case .screenshotSamples:
+            mock.transactions = Transaction.screenshotSamples
             break
         case .error:
             mock.error = TextError("MockTransactionFetcher.TestError")

@@ -72,7 +72,6 @@
 				Firebase/BudgetUsers/FirebaseBudgetUsersRepository.swift,
 				Firebase/TransactionCategories/FirebaseTransactionCategoryDoc.swift,
 				Firebase/TransactionCategories/FirebaseTransactionCategoryRepository.swift,
-				Firebase/Users/FirebaseCurrentUserDataProvider.swift,
 				Firebase/Users/FirebaseUserDoc.swift,
 				Firebase/Users/FirebaseUserRepository.swift,
 				Scenes/Budgets/AddBudget/Workers/BudgetCreator.swift,

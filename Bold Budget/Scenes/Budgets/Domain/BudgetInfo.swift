@@ -44,7 +44,7 @@ extension BudgetInfo {
         }
         
         static var sample: Name {
-            .init("Test Budget")!
+            .init("Family Budget")!
         }
     }
 }
