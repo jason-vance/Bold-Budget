@@ -8,13 +8,12 @@
 import Foundation
 
 enum PrivacyPolicy {
-    //TODO: Update this for Bold Budget
     static let markdownContent: String = """
 ## **Privacy Policy**
 
-### **Last Updated: 10 Sep 2024**
+### **Last Updated: 9 Dec 2024**
 
-At The Carnivore Diet Guide, we are committed to protecting your privacy. This Privacy Policy outlines how we collect, use, and protect your personal information when you use our app. By accessing or using The Carnivore Diet Guide, you agree to this policy.
+At Bold Budget, we are committed to protecting your privacy. This Privacy Policy outlines how we collect, use, and protect your personal information when you use our app. By accessing or using Bold Budget, you agree to this policy.
 
 ### **1. Information We Collect**
 
@@ -25,7 +24,6 @@ When you create an account or use certain features of the app, we may collect pe
 - Name
 - Email address
 - Username or profile information
-- Payment information (for subscriptions or purchases)
 
 #### **b. Usage Data**
 We may collect information about how you access and use the app, such as:
@@ -87,7 +85,7 @@ Our app is not intended for use by children under the age of 13. We do not knowi
 
 ### **8. International Data Transfers**
 
-If you are accessing The Carnivore Diet Guide from outside of The United States of America, please be aware that your personal data may be transferred to, and processed in, countries other than your own. We take steps to ensure that your data is adequately protected, regardless of where it is processed.
+If you are accessing Bold Budget from outside of The United States of America, please be aware that your personal data may be transferred to, and processed in, countries other than your own. We take steps to ensure that your data is adequately protected, regardless of where it is processed.
 
 ### **9. Changes to This Privacy Policy**
 
