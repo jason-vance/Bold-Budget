@@ -35,7 +35,7 @@ struct BudgetDetailView: View {
     @State private var alertMessage: String = ""
     
     private var filteredTransactions: [Transaction] {
-        budget.transactions
+        budget.transactions.values
             .filter {
                 $0.date >= timeFrame.start &&
                 $0.date <= timeFrame.end &&
@@ -214,7 +214,7 @@ struct BudgetDetailView: View {
     
     @ViewBuilder func DecrementTimeFrameButton() -> some View {
         let isDisabled: Bool = {
-            guard let _ = (budget.transactions.first { $0.date <= timeFrame.previous.end }) else { return true }
+            guard let _ = (budget.transactions.values.first { $0.date <= timeFrame.previous.end }) else { return true }
             return false
         }()
         
@@ -229,7 +229,7 @@ struct BudgetDetailView: View {
     
     @ViewBuilder func IncrementTimeFrameButton() -> some View {
         let isDisabled: Bool = {
-            guard let _ = (budget.transactions.first { $0.date >= timeFrame.next.start }) else { return true }
+            guard let _ = (budget.transactions.values.first { $0.date >= timeFrame.next.start }) else { return true }
             return false
         }()
         

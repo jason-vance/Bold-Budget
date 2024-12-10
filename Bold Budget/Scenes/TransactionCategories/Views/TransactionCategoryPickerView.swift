@@ -47,7 +47,7 @@ struct TransactionCategoryPickerView: View {
     }
     
     private var filteredCategories: [Transaction.Category] {
-        let sortedCategories = budget.transactionCategories.sorted { $0.name.value < $1.name.value }
+        let sortedCategories = budget.transactionCategories.values.sorted { $0.name.value < $1.name.value }
         
         guard !searchText.isEmpty else {
             return sortedCategories

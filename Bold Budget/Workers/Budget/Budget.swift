@@ -12,13 +12,12 @@ import Combine
 @MainActor
 class Budget: ObservableObject {
     
-    //TODO: Since I should only have one of each item in each these collections, should I make them dicts or sets instead of arrays?
-    @Published var transactions: [Transaction] = []
-    @Published var transactionCategories: [Transaction.Category] = []
+    @Published var transactions: [Transaction.Id:Transaction] = [:]
+    @Published var transactionCategories: [Transaction.Category.Id:Transaction.Category] = [:]
     
     var transactionTags: Set<Transaction.Tag> {
         transactions
-            .reduce(Set<Transaction.Tag>()) { tags, transaction in tags.union(transaction.tags) }
+            .reduce(Set<Transaction.Tag>()) { tags, transaction in tags.union(transaction.value.tags) }
     }
 
     let info: BudgetInfo
@@ -80,7 +79,8 @@ class Budget: ObservableObject {
     
     private func fetchTransactionCategories() async {
         do {
-            transactionCategories = try await categoryFetcher.fetchTransactionCategories(in: info)
+            let categories = try await categoryFetcher.fetchTransactionCategories(in: info)
+            transactionCategories = Dictionary(uniqueKeysWithValues: categories.map { ($0.id, $0) })
         } catch {
             print("Failed to fetch transaction categories from backend. \(error.localizedDescription)")
         }
@@ -88,45 +88,48 @@ class Budget: ObservableObject {
     
     private func fetchTransactions() async {
         do {
-            transactions = try await transactionFetcher.fetchTransactions(in: info)
+            let transactions = try await transactionFetcher.fetchTransactions(in: info)
+            self.transactions = Dictionary(uniqueKeysWithValues: transactions.map { ($0.id, $0) })
         } catch {
             print("Failed to fetch transactions from backend. \(error.localizedDescription)")
         }
     }
     
-    func add(transaction: Transaction) {
-        transactions = transactions + [transaction]
+    func save(transaction: Transaction) {
+        let tmp = transactions[transaction.id]
+        transactions[transaction.id] = transaction
         Task {
             do {
                 try await transactionSaver.save(transaction: transaction, to: info)
             } catch {
                 print("Failed to save transaction on backend. \(error.localizedDescription)")
-                transactions = transactions.filter { $0.id != transaction.id }
+                transactions[transaction.id] = tmp
             }
         }
     }
     
     func remove(transaction: Transaction) {
-        transactions = transactions.filter { $0.id != transaction.id }
+        let tmp = transactions[transaction.id]
+        transactions.removeValue(forKey: transaction.id)
         Task {
             do {
                 try await transactionDeleter.delete(transaction: transaction, from: info)
             } catch {
                 print("Failed to delete transaction on backend. \(error.localizedDescription)")
-                transactions = transactions + [transaction]
+                transactions[transaction.id] = tmp
             }
         }
     }
     
-    //TODO: Change this to handle editing an existing category
     func add(transactionCategory: Transaction.Category) {
-        transactionCategories = transactionCategories + [transactionCategory]
+        let tmp = transactionCategories[transactionCategory.id]
+        transactionCategories[transactionCategory.id] = transactionCategory
         Task {
             do {
                 try await categorySaver.save(category: transactionCategory, to: info)
             } catch {
                 print("Failed to save transaction category on backend. \(error.localizedDescription)")
-                transactionCategories = transactionCategories.filter { $0.id != transactionCategory.id }
+                transactionCategories[transactionCategory.id] = tmp
             }
         }
     }

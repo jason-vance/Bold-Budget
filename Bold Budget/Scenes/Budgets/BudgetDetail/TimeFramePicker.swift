@@ -28,7 +28,7 @@ struct TimeFramePicker: View {
     }
     
     private var oldestTransactionDate: SimpleDate {
-        guard let oldestTransaction = (budget.transactions.min { $0.date < $1.date }) else { return .now }
+        guard let oldestTransaction = (budget.transactions.values.min { $0.date < $1.date }) else { return .now }
         return oldestTransaction.date
     }
     

@@ -108,7 +108,7 @@ struct AddTransactionView: View {
     
     private func saveTransaction() {
         guard let transaction = transaction else { return }
-        budget.add(transaction: transaction)
+        budget.save(transaction: transaction)
         dismiss()
     }
     
