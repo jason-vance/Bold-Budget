@@ -24,18 +24,22 @@ extension Transaction {
             }
         }
         
-        let id: String
+        let id: Id
         let kind: Kind
         let name: Name
         let sfSymbol: SfSymbol
         
-        init(id: String, kind: Kind, name: Name, sfSymbol: SfSymbol) {
+        init(id: Id, kind: Kind, name: Name, sfSymbol: SfSymbol) {
             self.id = id
             self.kind = kind
             self.name = name
             self.sfSymbol = sfSymbol
         }
     }
+}
+
+extension Transaction.Category {
+    typealias Id = UUID
 }
 
 extension Transaction.Category: Identifiable {}
@@ -55,37 +59,37 @@ extension Transaction.Category: Hashable {
 extension Transaction.Category {
     
     static let sampleEntertainment = Transaction.Category(
-        id: UUID().uuidString,
+        id: Id(),
         kind: .expense,
         name: .init("Entertainment")!,
         sfSymbol: .init("ticket.fill")!
     )
     static let sampleGroceries = Transaction.Category(
-        id: UUID().uuidString,
+        id: Id(),
         kind: .expense,
         name: .init("Groceries")!,
         sfSymbol: .init("bag.fill")!
     )
     static let sampleHousing = Transaction.Category(
-        id: UUID().uuidString,
+        id: Id(),
         kind: .expense,
         name: .init("Housing")!,
         sfSymbol: .init("house.fill")!
     )
     static let samplePaycheck = Transaction.Category(
-        id: UUID().uuidString,
+        id: Id(),
         kind: .income,
         name: .init("Paycheck")!,
         sfSymbol: .init("banknote.fill")!
     )
     static let sampleTravel = Transaction.Category(
-        id: UUID().uuidString,
+        id: Id(),
         kind: .expense,
         name: .init("Travel")!,
         sfSymbol: .init("airplane")!
     )
     static let sampleVehicle = Transaction.Category(
-        id: UUID().uuidString,
+        id: Id(),
         kind: .expense,
         name: .init("Vehicle")!,
         sfSymbol: .init("car.side.fill")!

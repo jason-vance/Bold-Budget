@@ -9,7 +9,7 @@ import Foundation
 
 struct Transaction: Identifiable {
     
-    let id: String
+    let id: Id
     let title: Transaction.Title?
     let amount: Money
     let date: SimpleDate
@@ -20,7 +20,7 @@ struct Transaction: Identifiable {
     var description: String { title?.value ?? category.name.value }
     
     init(
-        id: String,
+        id: Id,
         title: Transaction.Title? = nil,
         amount: Money,
         date: SimpleDate,
@@ -39,9 +39,13 @@ struct Transaction: Identifiable {
 }
 
 extension Transaction {
+    typealias Id = UUID
+}
+
+extension Transaction {
     static var sampleRandomBasic: Transaction {
         .init(
-            id: UUID().uuidString,
+            id: Id(),
             title: .sample,
             amount: .sampleRandom,
             date: .now,
@@ -71,7 +75,7 @@ extension Transaction {
     
     static let screenshotSamples: [Transaction] = [
         .init(
-            id: UUID().uuidString,
+            id: Id(),
             title: .init("Movie Tickets")!,
             amount: .init(47.52)!,
             date: .now,
@@ -79,7 +83,7 @@ extension Transaction {
             location: .init("Redmond, WA")
         ),
         .init(
-            id: UUID().uuidString,
+            id: Id(),
             title: .init("Walmart")!,
             amount: .init(87.63)!,
             date: .now,
@@ -87,21 +91,21 @@ extension Transaction {
             location: .init("Seattle, WA")
         ),
         .init(
-            id: UUID().uuidString,
+            id: Id(),
             title: .init("Rent"),
             amount: .init(750)!,
             date: .now,
             category: .sampleHousing
         ),
         .init(
-            id: UUID().uuidString,
+            id: Id(),
             title: .init("Paycheck")!,
             amount: .init(1084.62)!,
             date: .now,
             category: .samplePaycheck
         ),
         .init(
-            id: UUID().uuidString,
+            id: Id(),
             title: .init("Gas"),
             amount: .init(57.30)!,
             date: .now,
@@ -109,7 +113,7 @@ extension Transaction {
             location: .init("Redmond, WA")
         ),
         .init(
-            id: UUID().uuidString,
+            id: Id(),
             title: .init("Walmart")!,
             amount: .init(65.24)!,
             date: .startOfMonth(containing: .now),

@@ -33,6 +33,8 @@ extension FirebaseTransactionCategoryRepository: TransactionCategoryFetcher {
 extension FirebaseTransactionCategoryRepository: TransactionCategorySaver {
     func save(category: Transaction.Category, to budget: BudgetInfo) async throws {
         let doc = FirebaseTransactionCategoryDoc.from(category)
-        try await categoriesCollection(in: budget).document(category.id).setData(from: doc)
+        try await categoriesCollection(in: budget)
+            .document(category.id.uuidString)
+            .setData(from: doc)
     }
 }

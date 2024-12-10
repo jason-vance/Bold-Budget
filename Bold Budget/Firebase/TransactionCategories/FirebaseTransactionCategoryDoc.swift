@@ -24,7 +24,7 @@ struct FirebaseTransactionCategoryDoc: Codable {
     
     static func from(_ category: Transaction.Category) -> FirebaseTransactionCategoryDoc {
         FirebaseTransactionCategoryDoc(
-            id: category.id,
+            id: category.id.uuidString,
             kind: category.kind.rawValue,
             name: category.name.value,
             sfSymbol: category.sfSymbol.value
@@ -32,7 +32,7 @@ struct FirebaseTransactionCategoryDoc: Codable {
     }
     
     func toCategory() -> Transaction.Category? {
-        guard let id = id else { return nil }
+        guard let id = Transaction.Category.Id(uuidString: id ?? "") else { return nil }
         guard let kind = Transaction.Category.Kind(rawValue: kind ?? "") else { return nil }
         guard let name = Transaction.Category.Name(name) else { return nil }
         guard let sfSymbol = Transaction.Category.SfSymbol(sfSymbol) else { return nil }

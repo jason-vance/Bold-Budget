@@ -46,7 +46,7 @@ struct AddTransactionCategoryView: View {
         guard let sfSymbol = Transaction.Category.SfSymbol(symbolString) else { return nil }
 
         return .init(
-            id: categoryToEdit.category?.id ?? UUID().uuidString,
+            id: categoryToEdit.category?.id ?? Transaction.Category.Id(),
             kind: kind,
             name: name,
             sfSymbol: sfSymbol
@@ -211,7 +211,7 @@ struct AddTransactionCategoryView: View {
     NavigationStack {
         AddTransactionCategoryView(budget: Budget(info: .sample))
             .editing(.init(
-                id: UUID().uuidString,
+                id: Transaction.Category.Id(),
                 kind: .income,
                 name: .init("Category To Edit")!,
                 sfSymbol: .init("pencil.and.outline")!

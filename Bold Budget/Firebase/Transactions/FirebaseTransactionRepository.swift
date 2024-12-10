@@ -26,7 +26,9 @@ class FirebaseTransactionRepository {
 extension FirebaseTransactionRepository: TransactionSaver {
     func save(transaction: Transaction, to budget: BudgetInfo) async throws {
         let doc = FirebaseTransactionDoc.from(transaction)
-        try await transactionsCollection(in: budget).document(transaction.id).setData(from: doc)
+        try await transactionsCollection(in: budget)
+            .document(transaction.id.uuidString)
+            .setData(from: doc)
     }
 }
 
@@ -50,7 +52,7 @@ extension FirebaseTransactionRepository: TransactionFetcher {
 extension FirebaseTransactionRepository: TransactionDeleter {
     func delete(transaction: Transaction, from budget: BudgetInfo) async throws {
         try await transactionsCollection(in: budget)
-            .document(transaction.id)
+            .document(transaction.id.uuidString)
             .delete()
     }
 }
