@@ -40,7 +40,7 @@ struct UserProfileButton: View {
         } label: {
             ProfileImageView(
                 currentUserData?.profileImageUrl,
-                size: 22,
+                size: 26,
                 padding: .borderWidthThin
             )
         }
