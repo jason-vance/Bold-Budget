@@ -123,8 +123,16 @@ class FirebaseAuthentication {
             throw TextError("User is not logged in")
         }
         
+        self.userAuthState = .working
         try await reathenticate(withAuthorization: authorization)
+        try await deleteUserDoc(userId: currentUser.uid)
         try await currentUser.delete()
+        self.userAuthState = .loggedOut
+    }
+    
+    private func deleteUserDoc(userId: String) async throws {
+        let repo = FirebaseUserRepository()
+        try await repo.deleteUserDoc(withId: userId)
     }
 }
 
