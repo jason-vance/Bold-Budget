@@ -10,6 +10,7 @@ import Combine
 
 protocol CurrentUserDataProvider {
     var currentUserDataPublisher: AnyPublisher<UserData?,Never> { get }
+    func onNew(userData: UserData)
 }
 
 class MockCurrentUserDataProvider: CurrentUserDataProvider {
@@ -19,6 +20,10 @@ class MockCurrentUserDataProvider: CurrentUserDataProvider {
     
     init(currentUserData: UserData? = .sample) {
         self.currentUserData = currentUserData
+    }
+    
+    func onNew(userData: UserData) {
+        currentUserData = userData
     }
 }
 

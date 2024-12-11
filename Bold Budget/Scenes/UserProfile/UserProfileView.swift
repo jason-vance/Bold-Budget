@@ -124,6 +124,7 @@ struct UserProfileView: View {
         .onChange(of: __userId, initial: true) { _, userId in userDataProvider.startListeningToUser(withId: userId) }
         .onReceive(userDataProvider.userDataPublisher) { userData = $0 }
         .alert(alertMessage, isPresented: $showAlert) {}
+        .onDisappear { userDataProvider.stopListeningToUser() }
     }
     
     @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {

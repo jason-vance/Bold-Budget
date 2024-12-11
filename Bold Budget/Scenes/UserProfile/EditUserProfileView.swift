@@ -95,7 +95,6 @@ struct EditUserProfileView: View {
     private func saveProfileData() async -> TaskStatus {
         do {
             guard let username = username else { return .failed("Username is invalid. A username...\n\(Username.rulesDescription)") }
-            print("username: \(username.value)")
             if mode == .createProfile {
                 guard termsOfServiceAcceptance != nil else { return .failed("Please agree to the Terms of Service") }
                 guard privacyPolicyAcceptance != nil else { return .failed("Please accept the Privacy Policy") }
@@ -114,12 +113,18 @@ struct EditUserProfileView: View {
             }
 
             try await userDataSaver.saveOnboarding(userData: userData)
+            sendToCurrentUserDataProvider(userData: userData)
             return .success
         } catch {
             let error = "Unable to save profile data: \(error.localizedDescription)"
             print(error)
             return .failed(error)
         }
+    }
+    
+    private func sendToCurrentUserDataProvider(userData: UserData) {
+        guard let provider = iocContainer.resolve(CurrentUserDataProvider.self) else { return }
+        provider.onNew(userData: userData)
     }
     
     private func show(alert: String) {

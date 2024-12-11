@@ -19,7 +19,7 @@ class FirebaseCurrentUserDataProvider: CurrentUserDataProvider {
     let userDataProvider = FirebaseUserDataProvider()
     
     var currentUserIdSub: AnyCancellable? = nil
-    
+
     static var instance: FirebaseCurrentUserDataProvider = .init()
     
     private init() {
@@ -34,5 +34,9 @@ class FirebaseCurrentUserDataProvider: CurrentUserDataProvider {
         } else {
             userDataProvider.stopListeningToUser()
         }
+    }
+    
+    func onNew(userData: UserData) {
+        userDataProvider.userData = userData
     }
 }

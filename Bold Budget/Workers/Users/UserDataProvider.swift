@@ -11,6 +11,7 @@ import Combine
 protocol UserDataProvider {
     var userDataPublisher: AnyPublisher<UserData,Never> { get }
     func startListeningToUser(withId id: UserId)
+    func stopListeningToUser()
 }
 
 class MockUserDataProvider: UserDataProvider {
@@ -21,6 +22,8 @@ class MockUserDataProvider: UserDataProvider {
     func startListeningToUser(withId id: UserId) {
         userData = userData
     }
+    
+    func stopListeningToUser() { }
 }
 
 extension MockUserDataProvider {
