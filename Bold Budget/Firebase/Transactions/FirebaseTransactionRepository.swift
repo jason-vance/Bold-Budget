@@ -41,7 +41,6 @@ extension FirebaseTransactionRepository: TransactionFetcher {
             let categories = try await categoryRepo.fetchTransactionCategories(in: budget)
             return Dictionary(uniqueKeysWithValues: categories.map { ($0.id, $0) })
         }()
-        
         return try await transactionsCollection(in: budget)
             .getDocuments()
             .documents

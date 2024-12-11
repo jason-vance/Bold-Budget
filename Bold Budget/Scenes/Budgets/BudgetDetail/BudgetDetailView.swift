@@ -121,12 +121,18 @@ struct BudgetDetailView: View {
                     .overlay(alignment: .top) { ExtraOptionsMenuOverlay() }
                     .clipped()
             }
+            .overlay {
+                if budget.isLoading {
+                    BlockingSpinnerView()
+                }
+            }
         }
         .navigationTitle(budget.info.name.value)
         .navigationBarTitleDisplayMode(.inline)
         .foregroundStyle(Color.text)
         .background(Color.background)
         .alert(alertMessage, isPresented: $showAlert) {}
+        .animation(.snappy, value: budget.isLoading)
     }
     
     @ViewBuilder private func NewBudgetDialogSheet() -> some View {

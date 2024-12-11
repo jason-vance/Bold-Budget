@@ -12,6 +12,7 @@ import Combine
 @MainActor
 class Budget: ObservableObject {
     
+    @Published var isLoading: Bool = false
     @Published var transactions: [Transaction.Id:Transaction] = [:]
     @Published var transactionCategories: [Transaction.Category.Id:Transaction.Category] = [:]
     
@@ -65,6 +66,9 @@ class Budget: ObservableObject {
     }
     
     private func fetchData() {
+        isLoading = true
+        let isLoading_False = { self.isLoading = false }
+        
         Task {
             await withTaskGroup(of: Void.self) { group in
                 group.addTask {
@@ -74,6 +78,8 @@ class Budget: ObservableObject {
                     await self.fetchTransactions()
                 }
             }
+            
+            RunLoop.main.perform { isLoading_False() }
         }
     }
     
