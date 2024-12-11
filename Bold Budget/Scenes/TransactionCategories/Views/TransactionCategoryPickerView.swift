@@ -199,7 +199,7 @@ struct TransactionCategoryPickerView: View {
         } label: {
             Image(systemName: isEditing ? "pencil.slash" : "pencil")
         }
-        .opacity(mode == .pickerAndEditor && budget.transactionCategories.isEmpty ? 1 : 0)
+        .opacity(mode == .pickerAndEditor && budget.transactionCategories.isEmpty ? 0 : 1)
         .accessibilityIdentifier("TransactionCategoryPickerView.Toolbar.EditButton")
     }
     
