@@ -48,8 +48,12 @@ class FirebaseUserDataProvider: UserDataProvider {
     private func fetchUserData() {
         Task {
             guard let userId = userId else { return }
-            let userData = try await userRepo.fetchUserData(withId: userId)
-            RunLoop.main.perform { self.userData = userData }
+            
+            if let userData = try? await userRepo.fetchUserData(withId: userId) {
+                RunLoop.main.perform { self.userData = userData }
+            } else {
+                RunLoop.main.perform { self.userData = UserData(id: userId) }
+            }
         }
     }
     
