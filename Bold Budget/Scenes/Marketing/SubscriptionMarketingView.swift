@@ -57,25 +57,21 @@ struct SubscriptionMarketingView: View {
                 .padding(.top)
             Text("Bold Budget+")
                 .font(.title2.bold())
-            HStack {
-                Text("Benefits:")
-                    .font(.headline)
-                    .multilineTextAlignment(.leading)
-                Spacer()
-            }
-            .padding(.top)
+            Text("Benefits")
+                .font(.headline)
+                .padding(.top)
             HStack {
                 Text("• Create multiple budgets")
                     .multilineTextAlignment(.leading)
                 Spacer()
             }
             HStack {
-                Text("• Add users to your budgets")
+                Text("• Add other users to your budgets")
                     .multilineTextAlignment(.leading)
                 Spacer()
             }
             HStack {
-                Text("• Other premium features")
+                Text("• More premium features coming soon")
                     .multilineTextAlignment(.leading)
                 Spacer()
             }
