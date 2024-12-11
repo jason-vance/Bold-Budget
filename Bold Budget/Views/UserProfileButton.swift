@@ -44,6 +44,7 @@ struct UserProfileButton: View {
                 padding: .borderWidthThin
             )
         }
+        .onReceive(currentUserDataProvider.currentUserDataPublisher) { self.currentUserData = $0 }
     }
 }
 
