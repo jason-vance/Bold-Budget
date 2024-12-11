@@ -12,25 +12,31 @@ struct BudgetsListView: View {
     
     @State private var budgets: [BudgetInfo]? = nil
     
+    @State private var showMarketingView: Bool = false
+    
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
     
     private let budgetFetcher: BudgetFetcher
     private let currentUserIdProvider: CurrentUserIdProvider
+    private let subscriptionManager: SubscriptionLevelProvider
     
     init() {
         self.init(
             budgetFetcher: iocContainer~>BudgetFetcher.self,
-            currentUserIdProvider: iocContainer~>CurrentUserIdProvider.self
+            currentUserIdProvider: iocContainer~>CurrentUserIdProvider.self,
+            subscriptionManager: iocContainer~>SubscriptionLevelProvider.self
         )
     }
     
     init(
         budgetFetcher: BudgetFetcher,
-        currentUserIdProvider: CurrentUserIdProvider
+        currentUserIdProvider: CurrentUserIdProvider,
+        subscriptionManager: SubscriptionLevelProvider
     ) {
         self.budgetFetcher = budgetFetcher
         self.currentUserIdProvider = currentUserIdProvider
+        self.subscriptionManager = subscriptionManager
     }
     
     private func fetchBudgets() {
@@ -64,9 +70,7 @@ struct BudgetsListView: View {
                     )
                     .listRowNoChrome()
                 } else {
-                    ForEach(budgets) { budget in
-                        BudgetRow(budget)
-                    }
+                    BudgetsSection(budgets)
                 }
             } else {
                 BlockingSpinnerView()
@@ -92,6 +96,14 @@ struct BudgetsListView: View {
         }
     }
     
+    @ViewBuilder private func BudgetsSection(_ budgets: [BudgetInfo]) -> some View {
+        Section {
+            ForEach(budgets) { budget in
+                BudgetRow(budget)
+            }
+        }
+    }
+    
     @ViewBuilder private func BudgetRow(_ budget: BudgetInfo) -> some View {
         NavigationLink {
             BudgetDetailView(budget: Budget(info: budget))
@@ -103,21 +115,40 @@ struct BudgetsListView: View {
     }
     
     @ViewBuilder func AddBudgetButton() -> some View {
-        NavigationLink {
-            AddBudgetView()
-        } label: {
-            Image(systemName: "plus")
-                .foregroundStyle(Color.background)
-                .font(.title)
-                .padding()
-                .background {
-                    Circle()
-                        .foregroundStyle(Color.text)
-                        .shadow(color: Color.background, radius: .padding)
+        if let count = budgets?.count {
+            if count == 0 || subscriptionManager.subscriptionLevel == .boldBudgetPlus {
+                NavigationLink {
+                    AddBudgetView()
+                } label: {
+                    AddBudgetButtonLabel()
                 }
+                .padding()
+                .accessibilityIdentifier("BudgetsListView.AddBudgetButton")
+            } else {
+                Button {
+                    showMarketingView = true
+                } label: {
+                    AddBudgetButtonLabel()
+                }
+                .padding()
+                .accessibilityIdentifier("BudgetsListView.AddBudgetButton")
+                .fullScreenCover(isPresented: $showMarketingView) {
+                    SubscriptionMarketingView()
+                }
+            }
         }
-        .padding()
-        .accessibilityIdentifier("BudgetsListView.AddBudgetButton")
+    }
+    
+    @ViewBuilder private func AddBudgetButtonLabel() -> some View {
+        Image(systemName: "plus")
+            .foregroundStyle(Color.background)
+            .font(.title)
+            .padding()
+            .background {
+                Circle()
+                    .foregroundStyle(Color.text)
+                    .shadow(color: Color.background, radius: .padding)
+            }
     }
 }
 
@@ -125,7 +156,8 @@ struct BudgetsListView: View {
     NavigationStack {
         BudgetsListView(
             budgetFetcher: MockBudgetFetcher(),
-            currentUserIdProvider: MockCurrentUserIdProvider()
+            currentUserIdProvider: MockCurrentUserIdProvider(),
+            subscriptionManager: MockSubscriptionLevelProvider(level: .none)
         )
     }
 }
@@ -134,7 +166,8 @@ struct BudgetsListView: View {
     NavigationStack {
         BudgetsListView(
             budgetFetcher: MockBudgetFetcher(budgets: []),
-            currentUserIdProvider: MockCurrentUserIdProvider()
+            currentUserIdProvider: MockCurrentUserIdProvider(),
+            subscriptionManager: MockSubscriptionLevelProvider(level: .none)
         )
     }
 }

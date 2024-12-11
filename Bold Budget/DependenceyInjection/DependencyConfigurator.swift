@@ -15,6 +15,7 @@ func setup(iocContainer: Container) {
     iocContainer.autoregister(CurrentUserDataProvider.self, initializer: getCurrentUserDataProvider)
     iocContainer.autoregister(UserDataProvider.self, initializer: getUserDataProvider)
     iocContainer.autoregister(UserDataFetcher.self, initializer: getUserDataFetcher)
+    iocContainer.autoregister(SubscriptionLevelProvider.self, initializer: { StoreKitSubscriptionLevelProvider.instance })
     
     // Authentication
     iocContainer.autoregister(AuthenticationProvider.self, initializer: getAuthenticationProvider)
