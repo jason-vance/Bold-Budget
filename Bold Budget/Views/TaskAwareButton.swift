@@ -27,7 +27,7 @@ struct TaskAwareButton<Label: View>: View {
     @State private var wiggle: Bool = false
     
     public init(
-        buttonColor: Color = .accentColor,
+        buttonColor: Color = .accent,
         contentColor: Color = .white,
         showErrorsAsAlert: Bool = false,
         action: @escaping () async -> TaskStatus,
@@ -81,7 +81,6 @@ struct TaskAwareButton<Label: View>: View {
                               ? .green
                               : .red)
                 }
-                .clipped()  // So shadows only apply to capsule shape
                 .overlay {
                     if isWorking && taskStatus == .idle {
                         ProgressView()
