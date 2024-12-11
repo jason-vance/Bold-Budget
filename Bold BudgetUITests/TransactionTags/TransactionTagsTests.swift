@@ -12,6 +12,8 @@ final class TransactionTagsTests: XCTestCase {
     func testTransactionTagAppearsInAddTransactionView() throws {
         let app = XCUIApplication()
         MockAuthenticationProvider.test(using: .signedIn, in: &app.launchEnvironment)
+        MockCurrentUserDataProvider.test(usingSample: true, in: &app.launchEnvironment)
+        MockCurrentUserIdProvider.test(using: .sample, in: &app.launchEnvironment)
         MockBudgetFetcher.test(usingSample: true, in: &app.launchEnvironment)
         MockTransactionCategoryRepo.test(using: .categorySamples, in: &app.launchEnvironment)
         app.launch()
@@ -20,6 +22,7 @@ final class TransactionTagsTests: XCTestCase {
         app.buttons["BudgetsListView.BudgetRow.Family Budget"].tap()
         
         // Dashboard
+        _ = app.buttons["DashboardView.AddTransactionButton"].waitForExistence(timeout: 2)
         app.buttons["DashboardView.AddTransactionButton"].tap()
 
         // Add Transaction
@@ -36,6 +39,8 @@ final class TransactionTagsTests: XCTestCase {
     func testTransactionTagAppearsInTransactionDetailView() throws {
         let app = XCUIApplication()
         MockAuthenticationProvider.test(using: .signedIn, in: &app.launchEnvironment)
+        MockCurrentUserDataProvider.test(usingSample: true, in: &app.launchEnvironment)
+        MockCurrentUserIdProvider.test(using: .sample, in: &app.launchEnvironment)
         MockBudgetFetcher.test(usingSample: true, in: &app.launchEnvironment)
         MockTransactionFetcher.test(using: .taggedSample, in: &app.launchEnvironment)
         MockTransactionCategoryRepo.test(using: .categorySamples, in: &app.launchEnvironment)
@@ -45,7 +50,8 @@ final class TransactionTagsTests: XCTestCase {
         app.buttons["BudgetsListView.BudgetRow.Family Budget"].tap()
         
         // BudgetDetailView
-        app.collectionViews.buttons["Groceries, $10.00, Today"].tap()
+        _ = app.buttons["Groceries, $10.00, Today"].waitForExistence(timeout: 2)
+        app.buttons["Groceries, $10.00, Today"].tap()
         
         // Transaction Detail
         XCTAssertTrue(app.collectionViews.staticTexts["Beach Trip"].exists)
@@ -54,6 +60,8 @@ final class TransactionTagsTests: XCTestCase {
     func testTransactionTagAppearsInTransactionTagPickerView() throws {
         let app = XCUIApplication()
         MockAuthenticationProvider.test(using: .signedIn, in: &app.launchEnvironment)
+        MockCurrentUserDataProvider.test(usingSample: true, in: &app.launchEnvironment)
+        MockCurrentUserIdProvider.test(using: .sample, in: &app.launchEnvironment)
         MockBudgetFetcher.test(usingSample: true, in: &app.launchEnvironment)
         MockTransactionFetcher.test(using: .taggedSample, in: &app.launchEnvironment)
         MockTransactionCategoryRepo.test(using: .categorySamples, in: &app.launchEnvironment)
@@ -75,6 +83,8 @@ final class TransactionTagsTests: XCTestCase {
     func testSelectedTransactionTagAppearsInTransactionsFilterMenu() throws {
         let app = XCUIApplication()
         MockAuthenticationProvider.test(using: .signedIn, in: &app.launchEnvironment)
+        MockCurrentUserDataProvider.test(usingSample: true, in: &app.launchEnvironment)
+        MockCurrentUserIdProvider.test(using: .sample, in: &app.launchEnvironment)
         MockBudgetFetcher.test(usingSample: true, in: &app.launchEnvironment)
         MockTransactionFetcher.test(using: .taggedSample, in: &app.launchEnvironment)
         MockTransactionCategoryRepo.test(using: .categorySamples, in: &app.launchEnvironment)
@@ -90,6 +100,7 @@ final class TransactionTagsTests: XCTestCase {
         app.buttons["TransactionsFilterMenu.TagsFieldButton"].tap()
         
         // TransactionTagPickerView
+        _ = app.scrollViews.otherElements.staticTexts["Beach Trip"].waitForExistence(timeout: 2)
         app.scrollViews.otherElements.staticTexts["Beach Trip"].tap()
         
         // Transaction Filter Menu

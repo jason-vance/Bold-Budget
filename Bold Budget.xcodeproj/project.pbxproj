@@ -116,6 +116,7 @@
 				Domain/Transaction/TransactionTag.swift,
 				Domain/Transaction/TransactionTitle.swift,
 				Domain/Users/UserAuthState.swift,
+				Domain/Users/UserData.swift,
 				Domain/Users/UserId.swift,
 				Domain/Users/Username.swift,
 				Domain/Users/UserOnboardingState.swift,
@@ -136,6 +137,8 @@
 				Views/Gestures/TouchWithLocation.swift,
 				Workers/Authentication/AuthenticationProvider.swift,
 				Workers/Transactions/TransactionFetcher.swift,
+				Workers/Users/CurrentUserDataProvider.swift,
+				Workers/Users/CurrentUserIdProvider.swift,
 			);
 			target = 5673DA282CA7FA5A007833E0 /* Bold BudgetUITests */;
 		};

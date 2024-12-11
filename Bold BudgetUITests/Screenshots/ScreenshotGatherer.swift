@@ -25,16 +25,21 @@ final class ScreenshotGatherer: XCTestCase {
     func testDashboardScreenshot() throws {
         let app = XCUIApplication()
         MockAuthenticationProvider.test(using: .signedIn, in: &app.launchEnvironment)
+        MockCurrentUserDataProvider.test(usingSample: true, in: &app.launchEnvironment)
+        MockCurrentUserIdProvider.test(using: .sample, in: &app.launchEnvironment)
         MockBudgetFetcher.test(usingSample: true, in: &app.launchEnvironment)
         MockTransactionFetcher.test(using: .screenshotSamples, in: &app.launchEnvironment)
         MockTransactionCategoryRepo.test(using: .categorySamples, in: &app.launchEnvironment)
         app.launch()
         
         // Budget List
-        app.buttons["BudgetsListView.BudgetRow.Test Budget"].tap()
+        app.buttons["BudgetsListView.BudgetRow.Family Budget"].tap()
+        
+        // Budget Detail
+        _ = app.staticTexts["Net Total"].waitForExistence(timeout: 2)
         
         let attachment = XCTAttachment(screenshot: app.screenshot())
-        attachment.name = "Dashboard"
+        attachment.name = "BoldBudget.BudgetDetail"
         attachment.lifetime = .keepAlways
         add(attachment)
     }
@@ -42,15 +47,18 @@ final class ScreenshotGatherer: XCTestCase {
     func testAddTransactionScreenshot() throws {
         let app = XCUIApplication()
         MockAuthenticationProvider.test(using: .signedIn, in: &app.launchEnvironment)
+        MockCurrentUserDataProvider.test(usingSample: true, in: &app.launchEnvironment)
+        MockCurrentUserIdProvider.test(using: .sample, in: &app.launchEnvironment)
         MockBudgetFetcher.test(usingSample: true, in: &app.launchEnvironment)
         MockTransactionFetcher.test(using: .screenshotSamples, in: &app.launchEnvironment)
         MockTransactionCategoryRepo.test(using: .singleCategory_Groceries, in: &app.launchEnvironment)
         app.launch()
         
         // Budget List
-        app.buttons["BudgetsListView.BudgetRow.Test Budget"].tap()
+        app.buttons["BudgetsListView.BudgetRow.Family Budget"].tap()
         
         // Dashboard
+        _ = app.buttons["DashboardView.AddTransactionButton"].waitForExistence(timeout: 2)
         app.buttons["DashboardView.AddTransactionButton"].tap()
 
         // AddTransaction
@@ -66,7 +74,7 @@ final class ScreenshotGatherer: XCTestCase {
         app.collectionViews.textFields["AddTransactionView.TitleField.TextField"].typeText("Walmart")
         
         let attachment = XCTAttachment(screenshot: app.screenshot())
-        attachment.name = "AddTransaction"
+        attachment.name = "BoldBudget.AddTransaction"
         attachment.lifetime = .keepAlways
         add(attachment)
     }
@@ -74,18 +82,23 @@ final class ScreenshotGatherer: XCTestCase {
     func testTransactionDetailScreenshot() throws {
         let app = XCUIApplication()
         MockAuthenticationProvider.test(using: .signedIn, in: &app.launchEnvironment)
+        MockCurrentUserDataProvider.test(usingSample: true, in: &app.launchEnvironment)
+        MockCurrentUserIdProvider.test(using: .sample, in: &app.launchEnvironment)
         MockBudgetFetcher.test(usingSample: true, in: &app.launchEnvironment)
         MockTransactionFetcher.test(using: .screenshotSamples, in: &app.launchEnvironment)
         MockTransactionCategoryRepo.test(using: .categorySamples, in: &app.launchEnvironment)
         app.launch()
         
         // Budget List
-        app.buttons["BudgetsListView.BudgetRow.Test Budget"].tap()
+        app.buttons["BudgetsListView.BudgetRow.Family Budget"].tap()
         
+        _ = app.collectionViews.staticTexts["Gas"].waitForExistence(timeout: 2)
         app.collectionViews.staticTexts["Gas"].tap()
         
+        _ = app.staticTexts["Total"].waitForExistence(timeout: 2)
+
         let attachment = XCTAttachment(screenshot: app.screenshot())
-        attachment.name = "TransactionDetail"
+        attachment.name = "BoldBudget.TransactionDetail"
         attachment.lifetime = .keepAlways
         add(attachment)
     }
