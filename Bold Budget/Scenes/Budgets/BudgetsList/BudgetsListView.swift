@@ -63,15 +63,11 @@ struct BudgetsListView: View {
         List {
             if let budgets = budgets {
                 if budgets.isEmpty {
-                    ContentUnavailableView(
-                        "No Budgets",
-                        systemImage: "square.dashed",
-                        description: Text("You currently don't have any budgets. Any budgets that you create, or are invited to, will show up here.")
-                    )
-                    .listRowNoChrome()
+                    NoBudgetsSection()
                 } else {
                     BudgetsSection(budgets)
                 }
+                AdSection()
             } else {
                 BlockingSpinnerView()
                     .listRowNoChrome()
@@ -96,6 +92,17 @@ struct BudgetsListView: View {
         }
     }
     
+    @ViewBuilder private func NoBudgetsSection() -> some View {
+        Section {
+            ContentUnavailableView(
+                "No Budgets",
+                systemImage: "square.dashed",
+                description: Text("You currently don't have any budgets. Any budgets that you create, or are invited to, will show up here.")
+            )
+            .listRowNoChrome()
+        }
+    }
+    
     @ViewBuilder private func BudgetsSection(_ budgets: [BudgetInfo]) -> some View {
         Section {
             ForEach(budgets) { budget in
@@ -112,6 +119,21 @@ struct BudgetsListView: View {
         }
         .listRow()
         .accessibilityIdentifier("BudgetsListView.BudgetRow.\(budget.name.value)")
+    }
+    
+    @ViewBuilder private func AdSection() -> some View {
+        //TODO: Don't show if subscribed
+        if let budgets = budgets {
+            Section {
+                if budgets.isEmpty {
+                    SimpleNativeAdView(size: .small)
+                        .listRow()
+                } else {
+                    SimpleNativeAdView(size: .medium)
+                        .listRow()
+                }
+            }
+        }
     }
     
     @ViewBuilder func AddBudgetButton() -> some View {

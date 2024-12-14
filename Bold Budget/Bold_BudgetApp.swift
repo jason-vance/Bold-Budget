@@ -7,17 +7,23 @@
 
 import SwiftUI
 import FirebaseCore
+import GoogleMobileAds
 
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
     func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil
     ) -> Bool {
+        configureAdMob()
         configureFirebase()
         setupToolbars()
         setupNavBars()
         setup(iocContainer: iocContainer)
         return true
+    }
+    
+    private func configureAdMob() {
+        GADMobileAds.sharedInstance().start(completionHandler: nil)
     }
     
     private func configureFirebase() {

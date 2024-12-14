@@ -22,6 +22,12 @@
     "3-32 characters. No spaces. At least 1 letter." : {
 
     },
+    "Ad contains a video asset." : {
+
+    },
+    "Ad does not contain a video." : {
+
+    },
     "Add" : {
 
     },
@@ -194,6 +200,9 @@
 
     },
     "Pick a Tag" : {
+
+    },
+    "Refresh Ad" : {
 
     },
     "Required" : {
