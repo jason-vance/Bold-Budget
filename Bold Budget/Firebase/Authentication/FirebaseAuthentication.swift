@@ -123,11 +123,14 @@ class FirebaseAuthentication {
             throw TextError("User is not logged in")
         }
         
-        RunLoop.main.perform { self.userAuthState = .working }
+        let setWorkingState = { self.userAuthState = .working }
+        let setLoggedOutState = { self.userAuthState = .loggedOut }
+
+        RunLoop.main.perform { setWorkingState() }
         try await reathenticate(withAuthorization: authorization)
         try await deleteUserDoc(userId: currentUser.uid)
         try await currentUser.delete()
-        RunLoop.main.perform { self.userAuthState = .loggedOut }
+        RunLoop.main.perform { setLoggedOutState() }
     }
     
     private func deleteUserDoc(userId: String) async throws {
