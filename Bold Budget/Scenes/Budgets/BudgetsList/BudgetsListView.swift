@@ -132,7 +132,30 @@ struct BudgetsListView: View {
                     SimpleNativeAdView(size: .medium)
                         .listRow()
                 }
+            } footer: {
+                RemoveAdsButton()
             }
+        }
+    }
+    
+    @ViewBuilder private func RemoveAdsButton() -> some View {
+        HStack {
+            Spacer()
+            Button {
+                showMarketingView = true
+            } label: {
+                Text("Remove Ads")
+                    .font(.caption.bold())
+                    .foregroundStyle(Color.text)
+                    .padding(.horizontal, .paddingHorizontalButtonMedium)
+                    .padding(.vertical, .paddingVerticalButtonSmall)
+                    .background {
+                        Capsule()
+                            .foregroundStyle(Color.text.opacity(.opacityButtonBackground))
+                    }
+            }
+            .accessibilityIdentifier("BudgetsListView.RemoveAdsButton")
+            Spacer()
         }
     }
     
