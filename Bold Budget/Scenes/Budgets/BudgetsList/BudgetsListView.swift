@@ -122,8 +122,7 @@ struct BudgetsListView: View {
     }
     
     @ViewBuilder private func AdSection() -> some View {
-        //TODO: Don't show if subscribed
-        if let budgets = budgets {
+        if let budgets = budgets, subscriptionManager.subscriptionLevel == .none {
             Section {
                 if budgets.isEmpty {
                     SimpleNativeAdView(size: .small)
