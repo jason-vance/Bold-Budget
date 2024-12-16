@@ -139,7 +139,7 @@ private struct NativeAdView: UIViewRepresentable {
         (nativeAdView.iconView as? UIImageView)?.image = nativeAd.icon?.image
         
         (nativeAdView.starRatingView as? UIImageView)?.image = imageOfStars(from: nativeAd.starRating)
-        
+
         (nativeAdView.storeView as? UILabel)?.text = nativeAd.store
         
         (nativeAdView.priceView as? UILabel)?.text = nativeAd.price
@@ -163,16 +163,17 @@ private struct NativeAdView: UIViewRepresentable {
         guard let rating = starRating?.doubleValue else {
             return nil
         }
+        
+        var image: UIImage? = nil
         if rating >= 5 {
-            return UIImage(named: "stars_5")
+            image = UIImage(named: "stars_5")
         } else if rating >= 4.5 {
-            return UIImage(named: "stars_4_5")
+            image = UIImage(named: "stars_4_5")
         } else if rating >= 4 {
-            return UIImage(named: "stars_4")
+            image = UIImage(named: "stars_4")
         } else if rating >= 3.5 {
-            return UIImage(named: "stars_3_5")
-        } else {
-            return nil
+            image = UIImage(named: "stars_3_5")
         }
+        return image?.withTintColor(.white)
     }
 }
