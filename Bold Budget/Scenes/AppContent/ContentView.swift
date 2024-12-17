@@ -69,6 +69,10 @@ struct ContentView: View {
             NotOnboardedView()
         } else {
             BlockingSpinnerView()
+                .overlay {  // To pre-load subscription info
+                    SubscriptionMarketingView()
+                        .opacity(0)
+                }
         }
     }
     
