@@ -20,20 +20,24 @@ struct AddBudgetView: View {
     
     private let currentUserIdProvider: CurrentUserIdProvider
     private let budgetCreator: BudgetCreator
+    private let subscriptionManager: SubscriptionLevelProvider
     
     init() {
         self.init(
             currentUserIdProvider: iocContainer~>CurrentUserIdProvider.self,
-            budgetCreator: iocContainer~>BudgetCreator.self
+            budgetCreator: iocContainer~>BudgetCreator.self,
+            subscriptionManager: iocContainer~>SubscriptionLevelProvider.self
         )
     }
     
     init(
         currentUserIdProvider: CurrentUserIdProvider,
-        budgetCreator: BudgetCreator
+        budgetCreator: BudgetCreator,
+        subscriptionManager: SubscriptionLevelProvider
     ) {
         self.currentUserIdProvider = currentUserIdProvider
         self.budgetCreator = budgetCreator
+        self.subscriptionManager = subscriptionManager
     }
     
     private var currentUserId: UserId? { currentUserIdProvider.currentUserId }
@@ -75,6 +79,7 @@ struct AddBudgetView: View {
     var body: some View {
         NavigationStack {
             Form {
+                AdSection()
                 Section {
                     NameField()
                 }
@@ -122,6 +127,14 @@ struct AddBudgetView: View {
         .opacity(isFormComplete ? 1 : .opacityButtonBackground)
         .disabled(!isFormComplete)
         .accessibilityIdentifier("AddBudgetView.Toolbar.SaveButton")
+    }
+    
+    @ViewBuilder func AdSection() -> some View {
+        if subscriptionManager.subscriptionLevel == .none {
+            Section {
+                SimpleBannerAdView()
+            }
+        }
     }
     
     @ViewBuilder func NameField() -> some View {

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwinjectAutoregistration
 
 struct TransactionDetailView: View {
     
@@ -17,6 +18,29 @@ struct TransactionDetailView: View {
     @State private var showDeleteDialog: Bool = false
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
+    
+    private let subscriptionManager: SubscriptionLevelProvider
+    
+    init(
+        budget: Budget,
+        transaction: Transaction
+    ) {
+        self.init(
+            budget: budget,
+            transaction: transaction,
+            subscriptionManager: iocContainer~>SubscriptionLevelProvider.self
+        )
+    }
+    
+    init(
+        budget: Budget,
+        transaction: Transaction,
+        subscriptionManager: SubscriptionLevelProvider
+    ) {
+        self._budget = .init(wrappedValue: budget)
+        self._transaction = .init(initialValue: transaction)
+        self.subscriptionManager = subscriptionManager
+    }
     
     private func deleteTransaction() {
         budget.remove(transaction: transaction)
@@ -30,6 +54,7 @@ struct TransactionDetailView: View {
     
     var body: some View {
         List {
+            AdSection()
             HeaderSection()
             PropertiesSection()
             ItemizedSection()
@@ -91,6 +116,14 @@ struct TransactionDetailView: View {
         Button(role: .cancel) {
         } label: {
             Text("Cancel")
+        }
+    }
+    
+    @ViewBuilder func AdSection() -> some View {
+        if subscriptionManager.subscriptionLevel == .none {
+            Section {
+                SimpleBannerAdView()
+            }
         }
     }
     

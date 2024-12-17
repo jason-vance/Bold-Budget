@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwinjectAutoregistration
 
 struct AddTransactionView: View {
     
@@ -29,6 +30,23 @@ struct AddTransactionView: View {
     
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
+    
+    private let subscriptionManager: SubscriptionLevelProvider
+    
+    init(budget: Budget) {
+        self.init(
+            budget: budget,
+            subscriptionManager: iocContainer~>SubscriptionLevelProvider.self
+        )
+    }
+    
+    init(
+        budget: Budget,
+        subscriptionManager: SubscriptionLevelProvider
+    ) {
+        self._budget = .init(wrappedValue: budget)
+        self.subscriptionManager = subscriptionManager
+    }
     
     private var transaction: Transaction? {
         guard let category = category else { return nil }
@@ -119,6 +137,7 @@ struct AddTransactionView: View {
 
     var body: some View {
         Form {
+            AdSection()
             Section {
                 CategoryField()
                 AmountField()
@@ -205,6 +224,14 @@ struct AddTransactionView: View {
         .opacity(isFormComplete ? 1 : .opacityButtonBackground)
         .disabled(!isFormComplete)
         .accessibilityIdentifier("AddTransactionView.Toolbar.SaveButton")
+    }
+    
+    @ViewBuilder func AdSection() -> some View {
+        if subscriptionManager.subscriptionLevel == .none {
+            Section {
+                SimpleBannerAdView()
+            }
+        }
     }
     
     @ViewBuilder func CategoryField() -> some View {

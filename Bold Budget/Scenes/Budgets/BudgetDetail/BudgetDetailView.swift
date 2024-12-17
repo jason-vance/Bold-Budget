@@ -34,6 +34,23 @@ struct BudgetDetailView: View {
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
     
+    private let subscriptionManager: SubscriptionLevelProvider
+    
+    init(budget: Budget) {
+        self.init(
+            budget: budget,
+            subscriptionManager: iocContainer~>SubscriptionLevelProvider.self
+        )
+    }
+    
+    init(
+        budget: Budget,
+        subscriptionManager: SubscriptionLevelProvider
+    ) {
+        self._budget = .init(wrappedValue: budget)
+        self.subscriptionManager = subscriptionManager
+    }
+    
     private var filteredTransactions: [Transaction] {
         budget.transactions.values
             .filter {
@@ -108,6 +125,7 @@ struct BudgetDetailView: View {
             TopBar()
             List {
                 Chart()
+                AdSection()
                 TransactionList()
             }
             .refreshable { budget.refresh() }
@@ -333,6 +351,14 @@ struct BudgetDetailView: View {
             TransactionRowView(transaction)
         }
         .dashboardTransactionRow()
+    }
+    
+    @ViewBuilder func AdSection() -> some View {
+        if subscriptionManager.subscriptionLevel == .none {
+            Section {
+                SimpleBannerAdView()
+            }
+        }
     }
 }
 
