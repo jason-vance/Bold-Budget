@@ -142,7 +142,7 @@ struct TransactionsFilterMenu: View {
         Button {
             withAnimation(.snappy) { self.transactionsFilter = .none }
         } label: {
-            Text("Clear All")
+            Text("Clear Filters")
                 .frame(maxWidth: .infinity)
                 .buttonLabelMedium()
         }
