@@ -158,7 +158,7 @@ struct TransactionDetailView: View {
                     Spacer(minLength: 0)
                     Text(transaction.date.toDate()!.toBasicUiString())
                         .font(.caption.bold())
-                        .foregroundStyle(Color.text.opacity(0.75))
+                        .foregroundStyle(Color.text.opacity(.opacityMutedText))
                         .multilineTextAlignment(.center)
                     Spacer(minLength: 0)
                 }
@@ -191,7 +191,7 @@ struct TransactionDetailView: View {
     @ViewBuilder private func RowLabel(_ label: String, labelFont: Font = .caption.bold()) -> some View {
         Text(label)
             .font(labelFont)
-            .foregroundStyle(Color.text.opacity(0.75))
+            .foregroundStyle(Color.text.opacity(.opacityMutedText))
             .lineLimit(1)
     }
     

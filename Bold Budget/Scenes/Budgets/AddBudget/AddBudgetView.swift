@@ -147,7 +147,7 @@ struct AddBudgetView: View {
                 Spacer(minLength: 0)
                 Text(nameInstructions)
                     .font(.caption2)
-                    .foregroundStyle(Color.text.opacity(0.75))
+                    .foregroundStyle(Color.text.opacity(.opacityMutedText))
                     .padding(.horizontal, .paddingHorizontalButtonXSmall)
             }
             TextField("Name",

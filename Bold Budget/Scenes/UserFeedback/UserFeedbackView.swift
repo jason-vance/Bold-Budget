@@ -112,7 +112,7 @@ struct UserFeedbackView: View {
                 Spacer(minLength: 0)
                 Text(feedbackInstructions)
                     .font(.caption2)
-                    .foregroundStyle(Color.text.opacity(0.75))
+                    .foregroundStyle(Color.text.opacity(.opacityMutedText))
                     .padding(.horizontal, .paddingHorizontalButtonXSmall)
                     .animation(.snappy, value: feedbackInstructions)
             }

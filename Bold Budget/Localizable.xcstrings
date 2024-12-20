@@ -7,6 +7,16 @@
     "%@" : {
 
     },
+    "%@(%@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@(%2$@)"
+          }
+        }
+      }
+    },
     "• Add other users to your budgets" : {
 
     },
@@ -273,6 +283,9 @@
 
     },
     "Username is valid and available" : {
+
+    },
+    "Version:" : {
 
     },
     "What do you think about Bold Budget?" : {

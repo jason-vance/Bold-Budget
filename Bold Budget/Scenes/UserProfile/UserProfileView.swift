@@ -100,6 +100,7 @@ struct UserProfileView: View {
             EditUserProfileSection()
             FeedbackSection()
             SignOutDeleteAccountSection()
+            AppVersionSection()
         }
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
@@ -320,6 +321,19 @@ struct UserProfileView: View {
         }
         .accessibilityIdentifier("UserProfileView.CancelDeleteAccountButton")
         .frame(height: 48)
+    }
+    
+    @ViewBuilder private func AppVersionSection() -> some View {
+        Section {
+            HStack {
+                Spacer()
+                Text("Version:")
+                Text("\(AppInfo.versionString)(\(AppInfo.buildNumberString))")
+                Spacer()
+            }
+            .foregroundStyle(Color.text.opacity(.opacityMutedText))
+            .listRowNoChrome()
+        }
     }
 }
 
