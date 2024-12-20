@@ -42,6 +42,9 @@ func setup(iocContainer: Container) {
     registerTransactionFetcher()
     registerTransactionSaver()
     registerTransactionDeleter()
+    
+    // Feedback
+    registerFeedbackSender()
 }
 
 //MARK: Misc
@@ -176,4 +179,14 @@ fileprivate func registerTransactionDeleter() {
         service = mock
     }
     iocContainer.autoregister(TransactionDeleter.self, initializer: { service })
+}
+
+//MARK: Feedback
+
+fileprivate func registerFeedbackSender() {
+    var service: FeedbackSender = FirebaseFeedbackRepository()
+    if let mock = MockFeedbackSender.getTestInstance() {
+        service = mock
+    }
+    iocContainer.autoregister(FeedbackSender.self, initializer: { service })
 }

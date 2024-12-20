@@ -158,7 +158,6 @@ private struct NativeAdView: UIViewRepresentable {
     }
     // [END create_native_ad_view]
     
-    //TODO: Get these stars images
     private func imageOfStars(from starRating: NSDecimalNumber?) -> UIImage? {
         guard let rating = starRating?.doubleValue else {
             return nil

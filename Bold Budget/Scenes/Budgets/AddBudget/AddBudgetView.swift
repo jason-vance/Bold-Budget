@@ -14,6 +14,7 @@ struct AddBudgetView: View {
     
     @State private var nameString: String = ""
     @State private var nameInstructions: String = ""
+    //TODO: set the instructions for the budget name
     
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
@@ -77,6 +78,7 @@ struct AddBudgetView: View {
     }
     
     var body: some View {
+        //TODO: I should probably take off this NavigationStack?
         NavigationStack {
             Form {
                 AdSection()

@@ -136,6 +136,9 @@
     "Family Budget, etc..." : {
 
     },
+    "Feedback" : {
+
+    },
     "Filter Transactions" : {
 
     },
@@ -242,7 +245,13 @@
         }
       }
     },
+    "Send" : {
+
+    },
     "Sign Out" : {
+
+    },
+    "Submit Feedback" : {
 
     },
     "Symbol" : {
@@ -266,10 +275,16 @@
     "Username is valid and available" : {
 
     },
+    "What do you think about Bold Budget?" : {
+
+    },
     "Year" : {
 
     },
     "You currently don't have any budgets. Any budgets that you create, or are invited to, will show up here." : {
+
+    },
+    "Your Feedback" : {
 
     }
   },

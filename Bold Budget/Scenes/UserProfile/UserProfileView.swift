@@ -20,7 +20,7 @@ struct UserProfileView: View {
     @State private var showSignOutDialog: Bool = false
     @State private var showDeleteAccountDialog: Bool = false
     @State private var showConfirmDeleteAccountSheet: Bool = false
-    
+
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
     
@@ -96,20 +96,10 @@ struct UserProfileView: View {
     
     var body: some View {
         List {
-            Section {
-                ProfileImage()
-            }
-            Section {
-                if isMe {
-                    EditUserProfileButton()
-                }
-            }
-            Section {
-                if isMe {
-                    SignOutButton()
-                    DeleteAccountButton()
-                }
-            }
+            ProfileImageSection()
+            EditUserProfileSection()
+            FeedbackSection()
+            SignOutDeleteAccountSection()
         }
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
@@ -138,6 +128,12 @@ struct UserProfileView: View {
         }
     }
     
+    @ViewBuilder private func ProfileImageSection() -> some View {
+        Section {
+            ProfileImage()
+        }
+    }
+    
     @ViewBuilder private func ProfileImage() -> some View {
         HStack {
             Spacer(minLength: 0)
@@ -146,6 +142,14 @@ struct UserProfileView: View {
         }
         .listRowBackground(Color.background)
         .listRowSeparator(.hidden)
+    }
+    
+    @ViewBuilder private func EditUserProfileSection() -> some View {
+        if isMe {
+            Section {
+                EditUserProfileButton()
+            }
+        }
     }
     
     @ViewBuilder private func EditUserProfileButton() -> some View {
@@ -163,6 +167,36 @@ struct UserProfileView: View {
         .fullScreenCover(isPresented: $showEditUserProfile) {
             NavigationStack {
                 EditUserProfileView(mode: .editProfile)
+            }
+        }
+    }
+    
+    @ViewBuilder private func FeedbackSection() -> some View {
+        Section {
+            SubmitFeedbackButton()
+        }
+    }
+    
+    @ViewBuilder private func SubmitFeedbackButton() -> some View {
+        NavigationLink {
+            UserFeedbackView()
+        } label: {
+            HStack {
+                Image(systemName: "envelope")
+                    .listRowIcon()
+                Text("Submit Feedback")
+                Spacer(minLength: 0)
+            }
+        }
+        .listRow()
+        .accessibilityIdentifier("UserProfileView.SubmitFeedbackButton")
+    }
+    
+    @ViewBuilder private func SignOutDeleteAccountSection() -> some View {
+        if isMe {
+            Section {
+                SignOutButton()
+                DeleteAccountButton()
             }
         }
     }

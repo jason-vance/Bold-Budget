@@ -46,6 +46,8 @@ class MockSubscriptionLevelProvider: SubscriptionLevelProvider {
     }
 }
 
+//TODO: Add ability to mock MockSubscriptionLevelProvider in UI tests
+
 class StoreKitSubscriptionLevelProvider: SubscriptionLevelProvider {
     
     private let subscriptionLevelKey = "subscriptionLevelKey"
