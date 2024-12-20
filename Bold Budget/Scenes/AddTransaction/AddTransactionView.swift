@@ -325,7 +325,7 @@ struct AddTransactionView: View {
             }
             TextField("Title",
                       text: $titleString,
-                      prompt: Text("Milk Tea, Movie Tickets, etc...").foregroundStyle(Color.text.opacity(0.7))
+                      prompt: Text("Milk Tea, Movie Tickets, etc...").foregroundStyle(Color.text.opacity(.opacityTextFieldPrompt))
             )
             .textFieldSmall()
             .autocapitalization(.words)
@@ -347,7 +347,7 @@ struct AddTransactionView: View {
             }
             TextField("Location",
                       text: $locationString,
-                      prompt: Text(Transaction.Location.sample.value).foregroundStyle(Color.text.opacity(0.7))
+                      prompt: Text(Transaction.Location.sample.value).foregroundStyle(Color.text.opacity(.opacityTextFieldPrompt))
             )
             .textFieldSmall()
             .accessibilityIdentifier("AddTransactionView.LocationField.TextField")
@@ -369,7 +369,7 @@ struct AddTransactionView: View {
             HStack {
                 TextField("Tags",
                           text: $newTagString,
-                          prompt: Text(Transaction.Tag.sample.value).foregroundStyle(Color.text.opacity(0.7))
+                          prompt: Text(Transaction.Tag.sample.value).foregroundStyle(Color.text.opacity(.opacityTextFieldPrompt))
                 )
                 .textFieldSmall()
                 .textInputAutocapitalization(.words)

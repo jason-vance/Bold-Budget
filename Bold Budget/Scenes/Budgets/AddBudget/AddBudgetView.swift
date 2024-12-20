@@ -152,7 +152,7 @@ struct AddBudgetView: View {
             }
             TextField("Name",
                       text: $nameString,
-                      prompt: Text("Family Budget, etc...").foregroundStyle(Color.text.opacity(0.7))
+                      prompt: Text("Family Budget, etc...").foregroundStyle(Color.text.opacity(.opacityTextFieldPrompt))
             )
             .textFieldSmall()
             .autocapitalization(.words)

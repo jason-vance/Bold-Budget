@@ -118,7 +118,7 @@ struct UserFeedbackView: View {
             }
             TextField("Feedback",
                       text: $feedbackString,
-                      prompt: Text("What do you think about Bold Budget?").foregroundStyle(Color.text.opacity(0.7)),
+                      prompt: Text("What do you think about Bold Budget?").foregroundStyle(Color.text.opacity(.opacityTextFieldPrompt)),
                       axis: .vertical
             )
             .textFieldSmall()

@@ -195,7 +195,7 @@ struct TransactionsFilterMenu: View {
             }
             TextField("Description Contains Text",
                       text: $transactionsFilter.descriptionContainsText,
-                      prompt: Text("Milk Tea, Movie Tickets, etc...").foregroundStyle(Color.text.opacity(0.7))
+                      prompt: Text("Milk Tea, Movie Tickets, etc...").foregroundStyle(Color.text.opacity(.opacityTextFieldPrompt))
             )
             .overlay(alignment: .trailing) {
                 Button {
