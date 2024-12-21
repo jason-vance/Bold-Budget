@@ -23,7 +23,7 @@ struct EditTransactionView: View {
     private var onTransactionEditComplete: ((Transaction) -> Void)?
     
     @State private var screenTitle: String = String(localized: "Add Transaction")
-    @State private var category: Transaction.Category? = nil
+    @State private var categoryId: Transaction.Category.Id? = nil
     @State private var amountDouble: Double = 0
     @State private var transactionDate: Date = .now
     @State private var titleString: String = ""
@@ -70,7 +70,7 @@ struct EditTransactionView: View {
     }
     
     private var transaction: Transaction? {
-        guard let category = category else { return nil }
+        guard let categoryId = categoryId else { return nil }
         guard let amount = Money(amountDouble) else { return nil }
         guard let date = SimpleDate(date: transactionDate) else { return nil }
         
@@ -91,7 +91,7 @@ struct EditTransactionView: View {
             title: title,
             amount: amount,
             date: date,
-            category: category,
+            categoryId: categoryId,
             location: location,
             tags: tags
         )
@@ -102,7 +102,7 @@ struct EditTransactionView: View {
     private var isFormComplete: Bool { transaction != nil }
     
     private var hasFormChanged: Bool {
-        category != nil ||
+        categoryId != nil ||
         amountDouble != 0 ||
         !titleString.isEmpty
     }
@@ -157,7 +157,7 @@ struct EditTransactionView: View {
     private func populateFields(_ transaction: OptionalTransaction) {
         guard let transaction = transaction.transaction else { return }
         screenTitle = String(localized: "Edit Transaction")
-        category = transaction.category
+        categoryId = transaction.categoryId
         amountDouble = transaction.amount.amount
         transactionDate = transaction.date.toDate() ?? .now
         titleString = transaction.title?.value ?? ""
@@ -274,7 +274,7 @@ struct EditTransactionView: View {
         NavigationLink {
             TransactionCategoryPickerView(
                 budget: budget,
-                selectedCategory: $category
+                selectedCategoryId: $categoryId
             )
             .pickerMode(.pickerAndEditor)
         } label: {
@@ -282,14 +282,15 @@ struct EditTransactionView: View {
                 Text("Category")
                     .foregroundStyle(Color.text)
                 Spacer(minLength: 0)
-                if let category = category {
+                if let categoryId = categoryId {
+                    let category = budget.getCategoryBy(id: categoryId)
                     HStack {
                         Image(systemName: category.sfSymbol.value)
                         Text(category.name.value)
                     }
                     .buttonLabelSmall()
                 } else {
-                    Text(category?.name.value ?? "N/A")
+                    Text("N/A")
                         .buttonLabelSmall()
                 }
             }

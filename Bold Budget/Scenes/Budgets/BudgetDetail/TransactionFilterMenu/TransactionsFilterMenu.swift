@@ -11,31 +11,31 @@ struct TransactionsFilter {
     
     static let none: TransactionsFilter = .init(
         descriptionContainsText: "",
-        category: nil,
+        categoryId: nil,
         tags: []
     )
     
     var descriptionContainsText: String
-    var category: Transaction.Category?
+    var categoryId: Transaction.Category.Id?
     var tags: Set<Transaction.Tag>
     
     var count: Int {
         var rv: Int = 0
         
         if !descriptionContainsText.isEmpty { rv += 1 }
-        if category != nil { rv += 1 }
+        if categoryId != nil { rv += 1 }
         rv += tags.count
         
         return rv
     }
     
-    func shouldInclude(_ transaction: Transaction) -> Bool {
+    @MainActor func shouldInclude(_ transaction: Transaction, from budget: Budget) -> Bool {
         let descriptionContainsText = descriptionContainsText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        if !descriptionContainsText.isEmpty, !transaction.description.lowercased().contains(descriptionContainsText) {
+        if !descriptionContainsText.isEmpty, !budget.description(of: transaction).lowercased().contains(descriptionContainsText) {
             return false
         }
         
-        if let category = category, category != transaction.category {
+        if let categoryId = categoryId, categoryId != transaction.categoryId {
             return false
         }
         
@@ -152,7 +152,7 @@ struct TransactionsFilterMenu: View {
         NavigationLink {
             TransactionCategoryPickerView(
                 budget: budget,
-                selectedCategory: $transactionsFilter.category
+                selectedCategoryId: $transactionsFilter.categoryId
             )
             .pickerMode(.picker)
         } label: {
@@ -160,7 +160,8 @@ struct TransactionsFilterMenu: View {
                 Text("Category")
                     .foregroundStyle(Color.text)
                 Spacer(minLength: 0)
-                if let category = transactionsFilter.category {
+                if let categoryId = transactionsFilter.categoryId {
+                    let category = budget.getCategoryBy(id: categoryId)
                     HStack {
                         HStack {
                             Image(systemName: category.sfSymbol.value)
@@ -170,7 +171,7 @@ struct TransactionsFilterMenu: View {
                         ClearCategoryButton() // Inside the other button's label to allow two buttons in one form row
                     }
                 } else {
-                    Text(transactionsFilter.category?.name.value ?? "N/A")
+                    Text("N/A")
                         .buttonLabelSmall()
                 }
             }
@@ -182,7 +183,7 @@ struct TransactionsFilterMenu: View {
         Image(systemName: "xmark")
             .buttonSymbolCircleSmall()
             .onTapGesture {
-                withAnimation(.snappy) { transactionsFilter.category = nil }
+                withAnimation(.snappy) { transactionsFilter.categoryId = nil }
             }
     }
     

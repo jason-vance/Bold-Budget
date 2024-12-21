@@ -13,18 +13,16 @@ struct Transaction: Identifiable {
     let title: Transaction.Title?
     let amount: Money
     let date: SimpleDate
-    let category: Transaction.Category
+    let categoryId: Transaction.Category.Id
     let location: Transaction.Location?
     let tags: Set<Transaction.Tag>
-    
-    var description: String { title?.value ?? category.name.value }
     
     init(
         id: Id,
         title: Transaction.Title? = nil,
         amount: Money,
         date: SimpleDate,
-        category: Transaction.Category,
+        categoryId: Transaction.Category.Id,
         location: Transaction.Location? = nil,
         tags: Set<Transaction.Tag> = []
     ) {
@@ -32,7 +30,7 @@ struct Transaction: Identifiable {
         self.title = title
         self.amount = amount
         self.date = date
-        self.category = category
+        self.categoryId = categoryId
         self.location = location
         self.tags = tags
     }
@@ -53,7 +51,7 @@ extension Transaction {
             title: .sample,
             amount: .sampleRandom,
             date: .now,
-            category: Category.samples[.random(in: 0..<Category.samples.count)],
+            categoryId: Category.samples[.random(in: 0..<Category.samples.count)].id,
             location: .sample
         )
     }
@@ -63,7 +61,7 @@ extension Transaction {
             id: Id(),
             amount: Money(10)!,
             date: .now,
-            category: .sampleGroceries,
+            categoryId: Transaction.Category.sampleGroceries.id,
             tags: [.sample]
         )
     }
@@ -80,7 +78,7 @@ extension Transaction {
                 title: t.title,
                 amount: t.amount,
                 date: t.date,
-                category: .sampleGroceries,
+                categoryId: Transaction.Category.sampleGroceries.id,
                 location: t.location,
                 tags: t.tags
             )
@@ -93,7 +91,7 @@ extension Transaction {
             title: .init("Movie Tickets")!,
             amount: .init(47.52)!,
             date: .now,
-            category: .sampleEntertainment,
+            categoryId: Transaction.Category.sampleEntertainment.id,
             location: .init("Redmond, WA")
         ),
         .init(
@@ -101,7 +99,7 @@ extension Transaction {
             title: .init("Walmart")!,
             amount: .init(87.63)!,
             date: .now,
-            category: .sampleGroceries,
+            categoryId: Transaction.Category.sampleGroceries.id,
             location: .init("Seattle, WA")
         ),
         .init(
@@ -109,21 +107,21 @@ extension Transaction {
             title: .init("Rent"),
             amount: .init(750)!,
             date: .now,
-            category: .sampleHousing
+            categoryId: Transaction.Category.sampleHousing.id
         ),
         .init(
             id: Id(),
             title: .init("Paycheck")!,
             amount: .init(1084.62)!,
             date: .now,
-            category: .samplePaycheck
+            categoryId: Transaction.Category.samplePaycheck.id
         ),
         .init(
             id: Id(),
             title: .init("Gas"),
             amount: .init(57.30)!,
             date: .now,
-            category: .sampleVehicle,
+            categoryId: Transaction.Category.sampleVehicle.id,
             location: .init("Redmond, WA")
         ),
         .init(
@@ -131,7 +129,7 @@ extension Transaction {
             title: .init("Walmart")!,
             amount: .init(65.24)!,
             date: .startOfMonth(containing: .now),
-            category: .sampleGroceries,
+            categoryId: Transaction.Category.sampleGroceries.id,
             location: .init("Seattle, WA")
         ),
     ]

@@ -56,7 +56,7 @@ struct BudgetDetailView: View {
             .filter {
                 $0.date >= timeFrame.start &&
                 $0.date <= timeFrame.end &&
-                transactionsFilter.shouldInclude($0)
+                transactionsFilter.shouldInclude($0, from: budget)
             }
     }
     
@@ -76,14 +76,17 @@ struct BudgetDetailView: View {
     }
     
     private var pieSlices: [PieChart.Slice] {
-        var sliceDict = [Transaction.Category:Money]()
+        var sliceDict = [Transaction.Category.Id:Money]()
         
         for transaction in filteredTransactions {
-            sliceDict[transaction.category] = sliceDict[transaction.category, default: .zero] + transaction.amount
+            sliceDict[transaction.categoryId] = sliceDict[transaction.categoryId, default: .zero] + transaction.amount
         }
         
         return sliceDict.map { key, value in
-            PieChart.Slice(value: value.amount, category: key)
+            PieChart.Slice(
+                value: value.amount,
+                category: budget.getCategoryBy(id: key)
+            )
         }
     }
     
@@ -311,7 +314,7 @@ struct BudgetDetailView: View {
     @ViewBuilder func TransactionList() -> some View {
         ForEach(transactionGroups) { transactionGroup in
             Section {
-                let transactions = transactionGroup.transactions.sorted { $0.description < $1.description }
+                let transactions = transactionGroup.transactions.sorted { budget.description(of: $0) < budget.description(of: $1) }
                 ForEach(transactions) { transaction in
                     TransactionRow(transaction)
                 }
@@ -348,7 +351,11 @@ struct BudgetDetailView: View {
                 transaction: transaction
             )
         } label: {
-            TransactionRowView(transaction: transaction)
+            TransactionRowView(
+                budget: budget,
+                transaction: transaction,
+                category: budget.getCategoryBy(id: transaction.categoryId)
+            )
         }
         .dashboardTransactionRow()
     }

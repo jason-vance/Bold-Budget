@@ -50,6 +50,13 @@ extension Transaction.Category: Hashable { }
 
 extension Transaction.Category {
     
+    static let unknown = Transaction.Category(
+        id: Id(),
+        kind: .expense,
+        name: .init("Unknown")!,
+        sfSymbol: .init("questionmark.circle.fill")!
+    )
+    
     static let sampleEntertainment = Transaction.Category(
         id: Id(),
         kind: .expense,

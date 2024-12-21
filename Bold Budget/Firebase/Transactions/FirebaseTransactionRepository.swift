@@ -36,15 +36,10 @@ extension FirebaseTransactionRepository: TransactionFetcher {
     func fetchTransactions(
         in budget: BudgetInfo
     ) async throws -> [Transaction] {
-        let categoryDict = try await {
-            let categoryRepo = FirebaseTransactionCategoryRepository()
-            let categories = try await categoryRepo.fetchTransactionCategories(in: budget)
-            return Dictionary(uniqueKeysWithValues: categories.map { ($0.id, $0) })
-        }()
         return try await transactionsCollection(in: budget)
             .getDocuments()
             .documents
-            .compactMap { try? $0.data(as: FirebaseTransactionDoc.self).toTransaction(categoryDict: categoryDict) }
+            .compactMap { try? $0.data(as: FirebaseTransactionDoc.self).toTransaction() }
     }
 }
 

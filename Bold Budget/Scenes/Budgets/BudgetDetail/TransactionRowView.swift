@@ -9,7 +9,9 @@ import SwiftUI
 
 struct TransactionRowView: View {
     
+    var budget: Budget
     var transaction: Transaction
+    var category: Transaction.Category
     
     var body: some View {
         HStack {
@@ -20,7 +22,7 @@ struct TransactionRowView: View {
     }
     
     @ViewBuilder func CategoryIcon() -> some View {
-        Image(systemName: transaction.category.sfSymbol.value)
+        Image(systemName: category.sfSymbol.value)
             .padding(.padding)
             .frame(width: 48, height: 48)
             .background {
@@ -56,7 +58,7 @@ struct TransactionRowView: View {
     
     @ViewBuilder func Description() -> some View {
         HStack {
-            Text(transaction.description)
+            Text(budget.description(of: transaction))
                 .font(.body.bold())
                 .lineLimit(1)
             Spacer(minLength: 0)
@@ -67,7 +69,11 @@ struct TransactionRowView: View {
 }
 
 #Preview {
-    TransactionRowView(transaction: .sampleRandomBasic)
-        .padding(.padding)
-        .background(Color.background)
+    TransactionRowView(
+        budget: .init(info: .sample),
+        transaction: .sampleRandomBasic,
+        category: .unknown
+    )
+    .padding(.padding)
+    .background(Color.background)
 }

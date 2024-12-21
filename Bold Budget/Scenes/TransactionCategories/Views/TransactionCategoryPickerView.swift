@@ -20,7 +20,7 @@ struct TransactionCategoryPickerView: View {
     @Environment(\.dismiss) private var dismiss
     
     @StateObject public var budget: Budget
-    @Binding public var selectedCategory: Transaction.Category?
+    @Binding public var selectedCategoryId: Transaction.Category.Id?
     
     @State private var mode: Mode? = nil
     @State private var searchText: String = ""
@@ -40,10 +40,10 @@ struct TransactionCategoryPickerView: View {
     
     init(
         budget: Budget,
-        selectedCategory: Binding<Transaction.Category?>
+        selectedCategoryId: Binding<Transaction.Category.Id?>
     ) {
         self._budget = .init(wrappedValue: budget)
-        self._selectedCategory = selectedCategory
+        self._selectedCategoryId = selectedCategoryId
     }
     
     private var filteredCategories: [Transaction.Category] {
@@ -58,7 +58,7 @@ struct TransactionCategoryPickerView: View {
     }
     
     private func select(category: Transaction.Category) {
-        selectedCategory = category
+        selectedCategoryId = category.id
         dismiss()
     }
     
@@ -238,7 +238,7 @@ struct TransactionCategoryPickerView: View {
     NavigationStack {
         TransactionCategoryPickerView(
             budget: Budget(info: .sample),
-            selectedCategory: .constant(nil)
+            selectedCategoryId: .constant(nil)
         )
         .pickerMode(.picker)
     }
@@ -248,7 +248,7 @@ struct TransactionCategoryPickerView: View {
     NavigationStack {
         TransactionCategoryPickerView(
             budget: Budget(info: .sample),
-            selectedCategory: .constant(nil)
+            selectedCategoryId: .constant(nil)
         )
         .pickerMode(.pickerAndEditor)
     }

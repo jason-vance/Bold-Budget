@@ -14,6 +14,7 @@ struct TransactionDetailView: View {
     
     @StateObject var budget: Budget
     @State var transaction: Transaction
+    var category: Transaction.Category { budget.getCategoryBy(id: transaction.categoryId) }
     
     @State private var showDeleteDialog: Bool = false
     @State private var showAlert: Bool = false
@@ -161,15 +162,15 @@ struct TransactionDetailView: View {
                 }
                 HStack {
                     Spacer(minLength: 0)
-                    Image(systemName: transaction.category.sfSymbol.value)
-                    Text(transaction.category.name.value)
+                    Image(systemName: category.sfSymbol.value)
+                    Text(category.name.value)
                     Spacer(minLength: 0)
                 }
                 .font(.body.weight(.semibold))
                 .foregroundStyle(Color.text)
                 HStack {
                     Spacer(minLength: 0)
-                    Text(transaction.category.kind.name)
+                    Text(category.kind.name)
                         .font(.body.weight(.light))
                         .foregroundStyle(Color.text)
                         .multilineTextAlignment(.center)

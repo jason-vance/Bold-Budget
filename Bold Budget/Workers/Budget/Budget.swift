@@ -136,4 +136,12 @@ class Budget: ObservableObject {
             }
         }
     }
+    
+    func getCategoryBy(id: Transaction.Category.Id) -> Transaction.Category {
+        transactionCategories[id] ?? .unknown
+    }
+    
+    func description(of transaction: Transaction) -> String {
+        transaction.title?.value ?? getCategoryBy(id: transaction.categoryId).name.value
+    }
 }
