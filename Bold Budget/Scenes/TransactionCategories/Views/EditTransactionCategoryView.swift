@@ -1,5 +1,5 @@
 //
-//  AddTransactionCategoryView.swift
+//  EditTransactionCategoryView.swift
 //  Bold Budget
 //
 //  Created by Jason Vance on 10/2/24.
@@ -8,7 +8,7 @@
 import SwiftUI
 import SwinjectAutoregistration
 
-struct AddTransactionCategoryView: View {
+struct EditTransactionCategoryView: View {
     
     private struct OptionalCategory: Equatable {
         let category: Transaction.Category?
@@ -34,7 +34,7 @@ struct AddTransactionCategoryView: View {
         self._budget = .init(wrappedValue: budget)
     }
     
-    public func editing(_ category: Transaction.Category) -> AddTransactionCategoryView {
+    public func editing(_ category: Transaction.Category) -> EditTransactionCategoryView {
         var view = self
         view.categoryToEdit = .init(category: category)
         return view
@@ -57,7 +57,7 @@ struct AddTransactionCategoryView: View {
     
     private func saveCategory() {
         guard let category = category else { return }
-        budget.add(transactionCategory: category)
+        budget.save(transactionCategory: category)
         dismiss()
     }
     
@@ -71,6 +71,9 @@ struct AddTransactionCategoryView: View {
     
     private func populateFields(_ category: OptionalCategory) {
         guard let category = category.category else { return }
+        let isFormEmpty = symbolString == nil
+        guard isFormEmpty else { return }
+        
         screenTitle = String(localized: "Edit Category")
         kind = category.kind
         symbolString = category.sfSymbol.value
@@ -120,7 +123,7 @@ struct AddTransactionCategoryView: View {
         }
         .opacity(isFormComplete ? 1 : .opacityButtonBackground)
         .disabled(!isFormComplete)
-        .accessibilityIdentifier("AddTransactionCategoryView.Toolbar.SaveButton")
+        .accessibilityIdentifier("EditTransactionCategoryView.Toolbar.SaveButton")
     }
     
     @ViewBuilder func KindField() -> some View {
@@ -166,7 +169,7 @@ struct AddTransactionCategoryView: View {
             )
             .textFieldSmall()
             .autocapitalization(.words)
-            .accessibilityIdentifier("AddTransactionCategoryView.NameField.TextField")
+            .accessibilityIdentifier("EditTransactionCategoryView.NameField.TextField")
             HStack {
                 Spacer(minLength: 0)
                 Text(nameInstructions)
@@ -196,19 +199,19 @@ struct AddTransactionCategoryView: View {
             }
         }
         .formRow()
-        .accessibilityIdentifier("AddTransactionCategoryView.SymbolField.SelectSymbolButton")
+        .accessibilityIdentifier("EditTransactionCategoryView.SymbolField.SelectSymbolButton")
     }
 }
 
 #Preview("New") {
     NavigationStack {
-        AddTransactionCategoryView(budget: Budget(info: .sample))
+        EditTransactionCategoryView(budget: Budget(info: .sample))
     }
 }
 
 #Preview("Edit") {
     NavigationStack {
-        AddTransactionCategoryView(budget: Budget(info: .sample))
+        EditTransactionCategoryView(budget: Budget(info: .sample))
             .editing(.init(
                 id: Transaction.Category.Id(),
                 kind: .income,

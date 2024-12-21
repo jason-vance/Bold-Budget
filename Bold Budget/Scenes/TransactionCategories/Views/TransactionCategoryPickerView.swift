@@ -123,7 +123,7 @@ struct TransactionCategoryPickerView: View {
     @ViewBuilder func CategoryButton(_ category: Transaction.Category) -> some View {
         if isEditing {
             NavigationLink {
-                AddTransactionCategoryView(budget: budget)
+                EditTransactionCategoryView(budget: budget)
                     .editing(category)
             } label: {
                 CategoryButtonLabel(category)
@@ -205,7 +205,7 @@ struct TransactionCategoryPickerView: View {
     
     @ViewBuilder func AddCategoryButton() -> some View {
         NavigationLink {
-            AddTransactionCategoryView(budget: budget)
+            EditTransactionCategoryView(budget: budget)
         } label: {
             Image(systemName: "plus")
                 .foregroundStyle(Color.background)

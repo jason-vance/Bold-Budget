@@ -26,7 +26,7 @@ final class SfSymbolPickerTests: XCTestCase {
         _ = collectionViewsQuery.buttons["EditTransactionView.CategoryField.SelectCategoryButton"].waitForExistence(timeout: 2)
         collectionViewsQuery.buttons["EditTransactionView.CategoryField.SelectCategoryButton"].tap()
         app.buttons["TransactionCategoryPickerView.AddCategoryButton"].tap()
-        collectionViewsQuery.buttons["AddTransactionCategoryView.SymbolField.SelectSymbolButton"].tap()
+        collectionViewsQuery.buttons["EditTransactionCategoryView.SymbolField.SelectSymbolButton"].tap()
         
         app.textFields["SfSymbolPickerView.SearchArea"].tap()
         app.textFields["SfSymbolPickerView.SearchArea"].clearAndEnterText("iPhone")

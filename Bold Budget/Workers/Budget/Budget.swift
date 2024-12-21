@@ -125,7 +125,7 @@ class Budget: ObservableObject {
         }
     }
     
-    func add(transactionCategory: Transaction.Category) {
+    func save(transactionCategory: Transaction.Category) {
         let tmp = transactionCategories.updateValue(transactionCategory, forKey: transactionCategory.id)
         Task {
             do {
