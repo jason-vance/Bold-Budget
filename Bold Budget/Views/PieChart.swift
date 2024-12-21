@@ -238,7 +238,10 @@ struct PieChart: View {
         }
         .padding(lineWidth / 2)
         .aspectRatio(1, contentMode: .fit)
-        .onChange(of: slices, initial: true) { _, slices in slicesState = slices }
+        .onChange(of: slices, initial: true) { _, slices in
+            slicesState = slices
+            selectedSlice = nil
+        }
     }
     
     private var textLabelString: String {
