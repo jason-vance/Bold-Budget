@@ -274,7 +274,7 @@ struct BudgetDetailView: View {
     
     @ViewBuilder func AddTransactionButton() -> some View {
         NavigationLink {
-            AddTransactionView(budget: budget)
+            EditTransactionView(budget: budget)
         } label: {
             Image(systemName: "plus")
                 .foregroundStyle(Color.background)
@@ -348,7 +348,7 @@ struct BudgetDetailView: View {
                 transaction: transaction
             )
         } label: {
-            TransactionRowView(transaction)
+            TransactionRowView(transaction: transaction)
         }
         .dashboardTransactionRow()
     }

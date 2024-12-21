@@ -102,8 +102,7 @@ class Budget: ObservableObject {
     }
     
     func save(transaction: Transaction) {
-        let tmp = transactions[transaction.id]
-        transactions[transaction.id] = transaction
+        let tmp = transactions.updateValue(transaction, forKey: transaction.id)
         Task {
             do {
                 try await transactionSaver.save(transaction: transaction, to: info)
@@ -115,8 +114,7 @@ class Budget: ObservableObject {
     }
     
     func remove(transaction: Transaction) {
-        let tmp = transactions[transaction.id]
-        transactions.removeValue(forKey: transaction.id)
+        let tmp = transactions.removeValue(forKey: transaction.id)
         Task {
             do {
                 try await transactionDeleter.delete(transaction: transaction, from: info)
@@ -128,8 +126,7 @@ class Budget: ObservableObject {
     }
     
     func add(transactionCategory: Transaction.Category) {
-        let tmp = transactionCategories[transactionCategory.id]
-        transactionCategories[transactionCategory.id] = transactionCategory
+        let tmp = transactionCategories.updateValue(transactionCategory, forKey: transactionCategory.id)
         Task {
             do {
                 try await categorySaver.save(category: transactionCategory, to: info)

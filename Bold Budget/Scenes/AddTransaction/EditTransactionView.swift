@@ -1,5 +1,5 @@
 //
-//  AddTransactionView.swift
+//  EditTransactionView.swift
 //  Bold Budget
 //
 //  Created by Jason Vance on 10/1/24.
@@ -8,12 +8,21 @@
 import SwiftUI
 import SwinjectAutoregistration
 
-struct AddTransactionView: View {
+struct EditTransactionView: View {
+    
+    private struct OptionalTransaction: Equatable {
+        let transaction: Transaction?
+        static let none: OptionalTransaction = .init(transaction: nil)
+    }
     
     @Environment(\.dismiss) private var dismiss
     
     @StateObject var budget: Budget
     
+    private var transactionToEdit: OptionalTransaction = .none
+    private var onTransactionEditComplete: ((Transaction) -> Void)?
+    
+    @State private var screenTitle: String = String(localized: "Add Transaction")
     @State private var category: Transaction.Category? = nil
     @State private var amountDouble: Double = 0
     @State private var transactionDate: Date = .now
@@ -48,6 +57,18 @@ struct AddTransactionView: View {
         self.subscriptionManager = subscriptionManager
     }
     
+    public func editing(_ transaction: Transaction) -> EditTransactionView {
+        var view = self
+        view.transactionToEdit = .init(transaction: transaction)
+        return view
+    }
+    
+    public func onTransactionSaved(perform action: @escaping (Transaction) -> Void) -> EditTransactionView {
+        var view = self
+        view.onTransactionEditComplete = action
+        return view
+    }
+    
     private var transaction: Transaction? {
         guard let category = category else { return nil }
         guard let amount = Money(amountDouble) else { return nil }
@@ -66,7 +87,7 @@ struct AddTransactionView: View {
         }
         
         return .init(
-            id: Transaction.Id(),
+            id: transactionToEdit.transaction?.id ?? Transaction.Id(),
             title: title,
             amount: amount,
             date: date,
@@ -75,6 +96,8 @@ struct AddTransactionView: View {
             tags: tags
         )
     }
+    
+    private var isEditing: Bool { transactionToEdit.transaction != nil }
     
     private var isFormComplete: Bool { transaction != nil }
     
@@ -127,7 +150,19 @@ struct AddTransactionView: View {
     private func saveTransaction() {
         guard let transaction = transaction else { return }
         budget.save(transaction: transaction)
+        onTransactionEditComplete?(transaction)
         dismiss()
+    }
+    
+    private func populateFields(_ transaction: OptionalTransaction) {
+        guard let transaction = transaction.transaction else { return }
+        screenTitle = String(localized: "Edit Transaction")
+        category = transaction.category
+        amountDouble = transaction.amount.amount
+        transactionDate = transaction.date.toDate() ?? .now
+        titleString = transaction.title?.value ?? ""
+        locationString = transaction.location?.value ?? ""
+        tags = transaction.tags
     }
     
     private func show(alert: String) {
@@ -164,10 +199,11 @@ struct AddTransactionView: View {
         }
         .toolbar { Toolbar() }
         .navigationBarTitleDisplayMode(.inline)
-        .navigationTitle("Add Transaction")
+        .navigationTitle(screenTitle)
         .navigationBarBackButtonHidden()
         .foregroundStyle(Color.text)
         .background(Color.background)
+        .onChange(of: transactionToEdit, initial: true) { _, transaction in populateFields(transaction) }
         .onChange(of: titleString) { _, titleString in setTitleInstructions(titleString) }
         .onChange(of: locationString) { _, locationString in setLocationInstructions(locationString) }
         .onChange(of: newTagString) { _, newTagString in setNewTagInstructions(newTagString) }
@@ -193,8 +229,8 @@ struct AddTransactionView: View {
         } label: {
             Image(systemName: "chevron.backward")
         }
-        .accessibilityIdentifier("AddTransactionView.Toolbar.DismissButton")
-        .confirmationDialog("Discard this transaction?", isPresented: $showDiscardDialog, titleVisibility: .visible) {
+        .accessibilityIdentifier("EditTransactionView.Toolbar.DismissButton")
+        .confirmationDialog(isEditing ? "Discard changes to this transaction?" : "Discard this transaction?", isPresented: $showDiscardDialog, titleVisibility: .visible) {
             DiscardButton()
             CancelDiscardButton()
         }
@@ -223,7 +259,7 @@ struct AddTransactionView: View {
         }
         .opacity(isFormComplete ? 1 : .opacityButtonBackground)
         .disabled(!isFormComplete)
-        .accessibilityIdentifier("AddTransactionView.Toolbar.SaveButton")
+        .accessibilityIdentifier("EditTransactionView.Toolbar.SaveButton")
     }
     
     @ViewBuilder func AdSection() -> some View {
@@ -259,7 +295,7 @@ struct AddTransactionView: View {
             }
         }
         .formRow()
-        .accessibilityIdentifier("AddTransactionView.CategoryField.SelectCategoryButton")
+        .accessibilityIdentifier("EditTransactionView.CategoryField.SelectCategoryButton")
     }
     
     @ViewBuilder func AmountField() -> some View {
@@ -276,7 +312,7 @@ struct AddTransactionView: View {
             .keyboardType(.decimalPad)
             .textFieldSmall()
             .frame(width: 128)
-            .accessibilityIdentifier("AddTransactionView.AmountField.TextField")
+            .accessibilityIdentifier("EditTransactionView.AmountField.TextField")
         }
         .formRow()
     }
@@ -329,7 +365,7 @@ struct AddTransactionView: View {
             )
             .textFieldSmall()
             .autocapitalization(.words)
-            .accessibilityIdentifier("AddTransactionView.TitleField.TextField")
+            .accessibilityIdentifier("EditTransactionView.TitleField.TextField")
         }
         .formRow()
     }
@@ -350,7 +386,7 @@ struct AddTransactionView: View {
                       prompt: Text(Transaction.Location.sample.value).foregroundStyle(Color.text.opacity(.opacityTextFieldPrompt))
             )
             .textFieldSmall()
-            .accessibilityIdentifier("AddTransactionView.LocationField.TextField")
+            .accessibilityIdentifier("EditTransactionView.LocationField.TextField")
         }
         .formRow()
     }
@@ -373,7 +409,7 @@ struct AddTransactionView: View {
                 )
                 .textFieldSmall()
                 .textInputAutocapitalization(.words)
-                .accessibilityIdentifier("AddTransactionView.TagsField.TextField")
+                .accessibilityIdentifier("EditTransactionView.TagsField.TextField")
                 SaveNewTagButton()
             }
         }
@@ -390,7 +426,7 @@ struct AddTransactionView: View {
             Text("Add")
                 .buttonLabelMedium()
         }
-        .accessibilityIdentifier("AddTransactionView.TagsField.SaveNewTagButton")
+        .accessibilityIdentifier("EditTransactionView.TagsField.SaveNewTagButton")
     }
     
     @ViewBuilder func TagRow(_ tag: Transaction.Tag) -> some View {
@@ -408,6 +444,6 @@ struct AddTransactionView: View {
 
 #Preview {
     NavigationStack {
-        AddTransactionView(budget: Budget(info: .sample))
+        EditTransactionView(budget: Budget(info: .sample))
     }
 }

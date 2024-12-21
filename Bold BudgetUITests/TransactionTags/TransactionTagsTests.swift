@@ -26,12 +26,12 @@ final class TransactionTagsTests: XCTestCase {
         app.buttons["DashboardView.AddTransactionButton"].tap()
 
         // Add Transaction
-        app.collectionViews.textFields["AddTransactionView.AmountField.TextField"].tap()
-        app.collectionViews.textFields["AddTransactionView.AmountField.TextField"].typeText("1")
+        app.collectionViews.textFields["EditTransactionView.AmountField.TextField"].tap()
+        app.collectionViews.textFields["EditTransactionView.AmountField.TextField"].typeText("1")
         
-        app.collectionViews.textFields["AddTransactionView.TagsField.TextField"].tap()
-        app.collectionViews.textFields["AddTransactionView.TagsField.TextField"].clearAndEnterText("Test Tag")
-        app.collectionViews.buttons["AddTransactionView.TagsField.SaveNewTagButton"].tap()
+        app.collectionViews.textFields["EditTransactionView.TagsField.TextField"].tap()
+        app.collectionViews.textFields["EditTransactionView.TagsField.TextField"].clearAndEnterText("Test Tag")
+        app.collectionViews.buttons["EditTransactionView.TagsField.SaveNewTagButton"].tap()
         
         XCTAssertTrue(app.collectionViews/*@START_MENU_TOKEN@*/.staticTexts["Test Tag"]/*[[".cells.staticTexts[\"Test Tag\"]",".staticTexts[\"Test Tag\"]"],[[[-1,1],[-1,0]]],[0]]@END_MENU_TOKEN@*/.exists)
     }

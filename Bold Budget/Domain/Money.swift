@@ -37,6 +37,12 @@ extension Money: Equatable {
     }
 }
 
+extension Money: Hashable {
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(amount)
+    }
+}
+
 extension Money {
     static var sampleRandom: Money {
         .init(.random(in: 1...250))!

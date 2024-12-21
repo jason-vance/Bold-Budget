@@ -8,7 +8,7 @@
 import Foundation
 
 extension Transaction.Category {
-    class Name: Equatable {
+    class Name {
         
         static let minTextLength: Int = 3
         static let maxTextLength: Int = 20
@@ -30,10 +30,18 @@ extension Transaction.Category {
             self.value = trimmedText
         }
         
-        static func == (lhs: Name, rhs: Name) -> Bool {
-            lhs.value == rhs.value
-        }
-        
         static let sample: Transaction.Category.Name = .init("Groceries")!
+    }
+}
+
+extension Transaction.Category.Name: Equatable {
+    static func == (lhs: Transaction.Category.Name, rhs: Transaction.Category.Name) -> Bool {
+        lhs.value == rhs.value
+    }
+}
+
+extension Transaction.Category.Name: Hashable {
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(value)
     }
 }

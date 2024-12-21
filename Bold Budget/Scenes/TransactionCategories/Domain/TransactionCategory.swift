@@ -44,17 +44,9 @@ extension Transaction.Category {
 
 extension Transaction.Category: Identifiable {}
 
-extension Transaction.Category: Equatable {
-    static func == (lhs: Transaction.Category, rhs: Transaction.Category) -> Bool {
-        lhs.id == rhs.id
-    }
-}
+extension Transaction.Category: Equatable { }
 
-extension Transaction.Category: Hashable {
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-    }
-}
+extension Transaction.Category: Hashable { }
 
 extension Transaction.Category {
     

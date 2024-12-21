@@ -42,6 +42,10 @@ extension Transaction {
     typealias Id = UUID
 }
 
+extension Transaction: Equatable { }
+
+extension Transaction: Hashable { }
+
 extension Transaction {
     static var sampleRandomBasic: Transaction {
         .init(

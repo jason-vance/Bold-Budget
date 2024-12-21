@@ -37,3 +37,15 @@ extension Transaction {
         static let sample: Transaction.Location = .init("Cupertino, CA")!
     }
 }
+
+extension Transaction.Location: Equatable {
+    static func == (lhs: Transaction.Location, rhs: Transaction.Location) -> Bool {
+        lhs.value == rhs.value
+    }
+}
+
+extension Transaction.Location: Hashable {
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(value)
+    }
+}

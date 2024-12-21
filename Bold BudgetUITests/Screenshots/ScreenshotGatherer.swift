@@ -62,16 +62,16 @@ final class ScreenshotGatherer: XCTestCase {
         app.buttons["DashboardView.AddTransactionButton"].tap()
 
         // AddTransaction
-        app.collectionViews.buttons["AddTransactionView.CategoryField.SelectCategoryButton"].tap()
+        app.collectionViews.buttons["EditTransactionView.CategoryField.SelectCategoryButton"].tap()
 
         // CategoryPicker
         app.collectionViews/*@START_MENU_TOKEN@*/.staticTexts["Groceries"]/*[[".buttons[\"Groceries\"].staticTexts[\"Groceries\"]",".staticTexts[\"Groceries\"]"],[[[-1,1],[-1,0]]],[0]]@END_MENU_TOKEN@*/.tap()
 
         // AddTransaction
-        app.collectionViews.textFields["AddTransactionView.AmountField.TextField"].tap()
-        app.collectionViews.textFields["AddTransactionView.AmountField.TextField"].clearAndEnterText("$87.63")
-        app.collectionViews.textFields["AddTransactionView.TitleField.TextField"].tap()
-        app.collectionViews.textFields["AddTransactionView.TitleField.TextField"].typeText("Walmart")
+        app.collectionViews.textFields["EditTransactionView.AmountField.TextField"].tap()
+        app.collectionViews.textFields["EditTransactionView.AmountField.TextField"].clearAndEnterText("$87.63")
+        app.collectionViews.textFields["EditTransactionView.TitleField.TextField"].tap()
+        app.collectionViews.textFields["EditTransactionView.TitleField.TextField"].typeText("Walmart")
         
         let attachment = XCTAttachment(screenshot: app.screenshot())
         attachment.name = "BoldBudget.AddTransaction"

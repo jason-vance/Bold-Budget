@@ -71,7 +71,6 @@ struct AddTransactionCategoryView: View {
     
     private func populateFields(_ category: OptionalCategory) {
         guard let category = category.category else { return }
-        print("populating fields")
         screenTitle = String(localized: "Edit Category")
         kind = category.kind
         symbolString = category.sfSymbol.value

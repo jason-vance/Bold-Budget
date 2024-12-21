@@ -23,8 +23,8 @@ final class SfSymbolPickerTests: XCTestCase {
         _ = app.buttons["DashboardView.AddTransactionButton"].waitForExistence(timeout: 2)
         app.buttons["DashboardView.AddTransactionButton"].tap()
         let collectionViewsQuery = app.collectionViews
-        _ = collectionViewsQuery.buttons["AddTransactionView.CategoryField.SelectCategoryButton"].waitForExistence(timeout: 2)
-        collectionViewsQuery.buttons["AddTransactionView.CategoryField.SelectCategoryButton"].tap()
+        _ = collectionViewsQuery.buttons["EditTransactionView.CategoryField.SelectCategoryButton"].waitForExistence(timeout: 2)
+        collectionViewsQuery.buttons["EditTransactionView.CategoryField.SelectCategoryButton"].tap()
         app.buttons["TransactionCategoryPickerView.AddCategoryButton"].tap()
         collectionViewsQuery.buttons["AddTransactionCategoryView.SymbolField.SelectSymbolButton"].tap()
         

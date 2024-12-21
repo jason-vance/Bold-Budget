@@ -33,3 +33,15 @@ extension Transaction {
         static let sample: Transaction.Title = .init("Lorem ipsum dolor sit amet, consectetur adipiscing")!
     }
 }
+
+extension Transaction.Title: Equatable {
+    static func == (lhs: Transaction.Title, rhs: Transaction.Title) -> Bool {
+        lhs.value == rhs.value
+    }
+}
+
+extension Transaction.Title: Hashable {
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(value)
+    }
+}

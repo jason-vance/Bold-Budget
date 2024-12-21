@@ -75,7 +75,7 @@ struct TransactionDetailView: View {
             CloseButton()
         }
         ToolbarItemGroup(placement: .topBarTrailing) {
-            DeleteButton()
+            ToolbarMenu()
         }
     }
     
@@ -88,11 +88,32 @@ struct TransactionDetailView: View {
         .accessibilityIdentifier("TransactionDetailView.Toolbar.DismissButton")
     }
     
+    @ViewBuilder private func ToolbarMenu() -> some View {
+        Menu {
+            EditButton()
+            DeleteButton()
+        } label: {
+            Image(systemName: "ellipsis")
+        }
+    }
+    
+    @ViewBuilder private func EditButton() -> some View {
+        NavigationLink {
+            EditTransactionView(budget: budget)
+                .editing(transaction)
+                .onTransactionSaved { transaction in
+                    self.transaction = transaction
+                }
+        } label: {
+            Label("Edit", systemImage: "pencil")
+        }
+    }
+    
     @ViewBuilder private func DeleteButton() -> some View {
         Button {
             showDeleteDialog = true
         } label: {
-            Image(systemName: "trash.fill")
+            Label("Delete", systemImage: "trash.fill")
         }
         .confirmationDialog(
             "Are you sure you want to delete this transaction?",

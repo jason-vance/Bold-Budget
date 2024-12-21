@@ -8,11 +8,7 @@
 import Foundation
 
 extension Transaction.Category {
-    class SfSymbol: Equatable {
-        
-        static func == (lhs: SfSymbol, rhs: SfSymbol) -> Bool {
-            lhs.value == rhs.value
-        }
+    class SfSymbol {
         
         let value: String
         
@@ -24,3 +20,16 @@ extension Transaction.Category {
         }
     }
 }
+
+extension Transaction.Category.SfSymbol: Equatable {
+    static func == (lhs: Transaction.Category.SfSymbol, rhs: Transaction.Category.SfSymbol) -> Bool {
+        lhs.value == rhs.value
+    }
+}
+
+extension Transaction.Category.SfSymbol: Hashable {
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(value)
+    }
+}
+

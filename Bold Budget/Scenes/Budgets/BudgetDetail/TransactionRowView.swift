@@ -9,11 +9,7 @@ import SwiftUI
 
 struct TransactionRowView: View {
     
-    @State private var transaction: Transaction
-    
-    init(_ transaction: Transaction) {
-        self.transaction = transaction
-    }
+    var transaction: Transaction
     
     var body: some View {
         HStack {
@@ -71,7 +67,7 @@ struct TransactionRowView: View {
 }
 
 #Preview {
-    TransactionRowView(.sampleRandomBasic)
+    TransactionRowView(transaction: .sampleRandomBasic)
         .padding(.padding)
         .background(Color.background)
 }
