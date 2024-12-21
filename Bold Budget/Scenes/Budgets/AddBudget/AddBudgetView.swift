@@ -78,28 +78,25 @@ struct AddBudgetView: View {
     }
     
     var body: some View {
-        //TODO: I should probably take off this NavigationStack?
-        NavigationStack {
-            Form {
-                AdSection()
-                Section {
-                    NameField()
-                }
+        Form {
+            AdSection()
+            Section {
+                NameField()
             }
-            .scrollDismissesKeyboard(.immediately)
-            .formStyle(.grouped)
-            .scrollContentBackground(.hidden)
-            .safeAreaInset(edge: .bottom) { //this will push the view farther when the keyboard is shown
-                Color.clear.frame(height: 100)
-            }
-            .toolbar { Toolbar() }
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationTitle("Add a Budget")
-            .navigationBarBackButtonHidden()
-            .foregroundStyle(Color.text)
-            .background(Color.background)
-            .alert(alertMessage, isPresented: $showAlert) {}
         }
+        .scrollDismissesKeyboard(.immediately)
+        .formStyle(.grouped)
+        .scrollContentBackground(.hidden)
+        .safeAreaInset(edge: .bottom) { //this will push the view farther when the keyboard is shown
+            Color.clear.frame(height: 100)
+        }
+        .toolbar { Toolbar() }
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationTitle("Add a Budget")
+        .navigationBarBackButtonHidden()
+        .foregroundStyle(Color.text)
+        .background(Color.background)
+        .alert(alertMessage, isPresented: $showAlert) {}
     }
     
     @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
