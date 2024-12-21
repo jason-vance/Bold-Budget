@@ -73,6 +73,7 @@ struct BudgetsListView: View {
                     .listRowNoChrome()
             }
         }
+        .animation(.snappy, value: budgets)
         .refreshable { fetchBudgets() }
         .safeAreaInset(edge: .bottom, alignment: .trailing) { AddBudgetButton() }
         .listStyle(.insetGrouped)
