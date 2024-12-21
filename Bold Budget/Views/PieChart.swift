@@ -251,11 +251,30 @@ struct PieChart: View {
         return String(localized: "Net Total")
     }
     
+    private var selectedSliceSymbol: String {
+        if (slices.reduce(into: Set<Transaction.Category>()) { set, slice in set.insert(slice.category) }).count == 1 {
+            return slices.first!.category.name.value
+        }
+        if let selectedSlice = selectedSlice {
+            return selectedSlice.sfSymbol.value
+        }
+        return ""
+    }
+    
     @ViewBuilder private func Labels() -> some View {
         VStack {
-            Text("Total")
-                .font(.title2.weight(.semibold))
-                .opacity(0)
+            if selectedSliceSymbol.isEmpty {
+                Text(textLabelString)
+                    .font(.title2.weight(.semibold))
+                    .multilineTextAlignment(.center)
+                    .opacity(0)
+                    .frame(width: 20, height: 16)
+            } else {
+                Image(systemName: selectedSliceSymbol)
+                    .font(.title2.weight(.semibold))
+                    .frame(width: 20, height: 16)
+                    .transition(.symbolEffect)
+            }
             Text("\(formatValue(selectedSlice == nil ? netTotal : selectedSlice!.value))")
                 .font(.largeTitle.weight(.bold))
                 .contentTransition(.numericText())
@@ -293,7 +312,7 @@ struct PieChart: View {
                 }
             }
             .overlay {
-                SliceIconView(slice, radius: radius)
+                SliceIconView(slice, radius: radius, isDimmed: false)
                     .rotationEffect(.degrees(180))
             }
             .rotationEffect(.degrees(-90))
@@ -327,13 +346,13 @@ struct PieChart: View {
                 }
             }
             .overlay {
-                SliceIconView(slice, radius: radius)
+                SliceIconView(slice, radius: radius, isDimmed: isEnsmalled)
             }
             .rotationEffect(.degrees(-90))
             .accessibilityIdentifier("PieChart.SliceView.\(slice.name)")
     }
     
-    @ViewBuilder private func SliceIconView(_ slice: _Slice, radius: CGFloat) -> some View {
+    @ViewBuilder private func SliceIconView(_ slice: _Slice, radius: CGFloat, isDimmed: Bool) -> some View {
         let degrees: Double = {
             let fraction = slice.from + ((slice.to - slice.from) / 2)
             return fraction * 360
@@ -344,6 +363,8 @@ struct PieChart: View {
             .bold()
             .foregroundStyle(slice.kind == .expense ? Color.text : Color.background)
             .frame(width: lineWidth, height: lineWidth)
+            .scaleEffect(isDimmed ? 0.75 : 1)
+            .opacity(isDimmed ? 0.5 : 1)
             .rotationEffect(.degrees(90))
             .offset(x: radius)
             .rotationEffect(.degrees(degrees))
