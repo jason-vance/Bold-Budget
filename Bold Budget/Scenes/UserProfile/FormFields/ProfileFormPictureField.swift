@@ -74,6 +74,7 @@ struct ProfileFormPictureField: View {
         } didCancel: {
             showImagePicker = false
         }
+        .background(Color.background)
     }
 }
 
