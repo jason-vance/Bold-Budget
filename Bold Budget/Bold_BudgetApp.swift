@@ -79,10 +79,16 @@ struct Bold_BudgetApp: App {
     
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     
+    private func trackAppLaunch() {
+        guard let reviewPrompter = iocContainer.resolve(ReviewPrompter.self) else { return }
+        reviewPrompter.trackAppLaunch()
+    }
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .accentColor(Color.accent)
+                .onAppear { trackAppLaunch() }
         }
     }
 }

@@ -22,6 +22,8 @@ struct BudgetDetailView: View {
         var transactions: [Transaction]
     }
     
+    @Environment(\.requestReview) var requestReview
+    
     @StateObject var budget: Budget
     
     @State private var currentUserData: UserData? = nil
@@ -118,6 +120,11 @@ struct BudgetDetailView: View {
         }
     }
     
+    private func promptForReview() {
+        guard let reviewPrompter = iocContainer.resolve(ReviewPrompter.self) else { return }
+        reviewPrompter.promptForReviewIfAppropriate(promptForReview: requestReview)
+    }
+    
     private func show(alert: String) {
         showAlert = true
         alertMessage = alert
@@ -154,6 +161,7 @@ struct BudgetDetailView: View {
         .background(Color.background)
         .alert(alertMessage, isPresented: $showAlert) {}
         .animation(.snappy, value: budget.isLoading)
+        .onAppear { promptForReview() }
     }
     
     @ViewBuilder private func NewBudgetDialogSheet() -> some View {

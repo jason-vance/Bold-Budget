@@ -16,6 +16,7 @@ func setup(iocContainer: Container) {
     iocContainer.autoregister(UserDataProvider.self, initializer: getUserDataProvider)
     iocContainer.autoregister(UserDataFetcher.self, initializer: getUserDataFetcher)
     iocContainer.autoregister(SubscriptionLevelProvider.self, initializer: { StoreKitSubscriptionLevelProvider.instance })
+    registerReviewPrompter()
     
     // Authentication
     iocContainer.autoregister(AuthenticationProvider.self, initializer: getAuthenticationProvider)
@@ -75,6 +76,10 @@ fileprivate func getUserDataFetcher() -> UserDataFetcher {
         return mock
     }
     return FirebaseUserRepository()
+}
+
+fileprivate func registerReviewPrompter() {
+    iocContainer.autoregister(ReviewPrompter.self, initializer: ReviewPrompter.init)
 }
 
 //MARK: Authentication
