@@ -19,7 +19,7 @@ import GoogleMobileAds
 
 class NativeAdViewModel: NSObject, ObservableObject, GADNativeAdLoaderDelegate {
     
-    private let adUnitId = "ca-app-pub-1475400719226569~5653312234"
+    private let adUnitId = "ca-app-pub-1475400719226569/1223322061"
     private let testAdUnitId = "ca-app-pub-3940256099942544/3986624511"
     
   @Published var nativeAd: GADNativeAd?
