@@ -30,6 +30,7 @@ struct BudgetDetailView: View {
     @State private var timeFrame: TimeFrame = .init(period: .month, containing: .now)
     @State private var transactionsFilter: TransactionsFilter = .none
     
+    @State private var subscriptionLevel: SubscriptionLevel? = nil
     @State private var showTimeFramePicker: Bool = false
     @State private var showFilterTransactionsOptions: Bool = false
     
@@ -162,6 +163,7 @@ struct BudgetDetailView: View {
         .alert(alertMessage, isPresented: $showAlert) {}
         .animation(.snappy, value: budget.isLoading)
         .onAppear { promptForReview() }
+        .onReceive(subscriptionManager.subscriptionLevelPublisher) { subscriptionLevel = $0 }
     }
     
     @ViewBuilder private func NewBudgetDialogSheet() -> some View {
@@ -369,7 +371,7 @@ struct BudgetDetailView: View {
     }
     
     @ViewBuilder func AdSection() -> some View {
-        if subscriptionManager.subscriptionLevel == .none {
+        if subscriptionLevel == SubscriptionLevel.none {
             Section {
                 SimpleBannerAdView()
             }

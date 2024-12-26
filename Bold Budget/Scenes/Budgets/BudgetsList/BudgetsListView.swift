@@ -12,6 +12,7 @@ struct BudgetsListView: View {
     
     @State private var budgets: [BudgetInfo]? = nil
     
+    @State private var subscriptionLevel: SubscriptionLevel? = nil
     @State private var showMarketingView: Bool = false
     
     @State private var showAlert: Bool = false
@@ -85,6 +86,7 @@ struct BudgetsListView: View {
         .background(Color.background)
         .alert(alertMessage, isPresented: $showAlert) {}
         .onAppear { fetchBudgets() }
+        .onReceive(subscriptionManager.subscriptionLevelPublisher) { subscriptionLevel = $0 }
     }
     
     @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
@@ -123,7 +125,7 @@ struct BudgetsListView: View {
     }
     
     @ViewBuilder private func AdSection() -> some View {
-        if let budgets = budgets, subscriptionManager.subscriptionLevel == .none {
+        if let budgets = budgets, subscriptionLevel == SubscriptionLevel.none {
             Section {
                 if budgets.isEmpty {
                     SimpleNativeAdView(size: .small)
@@ -161,7 +163,7 @@ struct BudgetsListView: View {
     
     @ViewBuilder func AddBudgetButton() -> some View {
         if let count = budgets?.count {
-            if count == 0 || subscriptionManager.subscriptionLevel == .boldBudgetPlus {
+            if count == 0 || subscriptionLevel == .boldBudgetPlus {
                 NavigationLink {
                     AddBudgetView()
                 } label: {

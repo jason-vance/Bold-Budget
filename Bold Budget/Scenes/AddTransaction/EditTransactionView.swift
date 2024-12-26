@@ -34,6 +34,7 @@ struct EditTransactionView: View {
     @State private var newTagInstructions: String = ""
     @State private var tags: Set<Transaction.Tag> = []
 
+    @State private var subscriptionLevel: SubscriptionLevel? = nil
     @State private var showDiscardDialog: Bool = false
     @State private var showTransactionDatePicker: Bool = false
     
@@ -208,6 +209,7 @@ struct EditTransactionView: View {
         .onChange(of: locationString) { _, locationString in setLocationInstructions(locationString) }
         .onChange(of: newTagString) { _, newTagString in setNewTagInstructions(newTagString) }
         .alert(alertMessage, isPresented: $showAlert) {}
+        .onReceive(subscriptionManager.subscriptionLevelPublisher) { subscriptionLevel = $0 }
     }
     
     @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
@@ -263,7 +265,7 @@ struct EditTransactionView: View {
     }
     
     @ViewBuilder func AdSection() -> some View {
-        if subscriptionManager.subscriptionLevel == .none {
+        if subscriptionLevel == SubscriptionLevel.none {
             Section {
                 SimpleBannerAdView()
             }

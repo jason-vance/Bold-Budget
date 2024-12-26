@@ -16,6 +16,7 @@ enum SubscriptionLevel: String {
 protocol SubscriptionLevelProvider {
     var subscriptionGroupId: String { get }
     var subscriptionLevel: SubscriptionLevel { get }
+    var subscriptionLevelPublisher: Published<SubscriptionLevel>.Publisher { get }
     
     func handle(transactionUpdate verificationResult: VerificationResult<StoreKit.Transaction>)
 }
@@ -23,7 +24,8 @@ protocol SubscriptionLevelProvider {
 class MockSubscriptionLevelProvider: SubscriptionLevelProvider {
     
     let subscriptionGroupId = "21548808"
-    private(set) var subscriptionLevel: SubscriptionLevel
+    @Published private(set) var subscriptionLevel: SubscriptionLevel
+    var subscriptionLevelPublisher: Published<SubscriptionLevel>.Publisher { $subscriptionLevel }
     
     init(level: SubscriptionLevel) {
         subscriptionLevel = level
@@ -59,7 +61,7 @@ class StoreKitSubscriptionLevelProvider: SubscriptionLevelProvider {
     
     private var updates: Task<Void, Never>? = nil
     
-    @Published public private(set) var subscriptionLevel: SubscriptionLevel = .none
+    @Published private(set) var subscriptionLevel: SubscriptionLevel = .none
     var subscriptionLevelPublisher: Published<SubscriptionLevel>.Publisher { $subscriptionLevel }
     
     public static let instance: StoreKitSubscriptionLevelProvider = {

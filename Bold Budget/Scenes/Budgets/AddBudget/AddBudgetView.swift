@@ -16,6 +16,8 @@ struct AddBudgetView: View {
     @State private var nameInstructions: String = ""
     //TODO: set the instructions for the budget name
     
+    @State private var subscriptionLevel: SubscriptionLevel? = nil
+    
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
     
@@ -97,6 +99,7 @@ struct AddBudgetView: View {
         .foregroundStyle(Color.text)
         .background(Color.background)
         .alert(alertMessage, isPresented: $showAlert) {}
+        .onReceive(subscriptionManager.subscriptionLevelPublisher) { subscriptionLevel = $0 }
     }
     
     @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
@@ -129,7 +132,7 @@ struct AddBudgetView: View {
     }
     
     @ViewBuilder func AdSection() -> some View {
-        if subscriptionManager.subscriptionLevel == .none {
+        if subscriptionLevel == SubscriptionLevel.none {
             Section {
                 SimpleBannerAdView()
             }

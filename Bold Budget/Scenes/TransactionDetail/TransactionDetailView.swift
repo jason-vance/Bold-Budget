@@ -16,6 +16,7 @@ struct TransactionDetailView: View {
     @State var transaction: Transaction
     var category: Transaction.Category { budget.getCategoryBy(id: transaction.categoryId) }
     
+    @State private var subscriptionLevel: SubscriptionLevel? = nil
     @State private var showDeleteDialog: Bool = false
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
@@ -69,6 +70,7 @@ struct TransactionDetailView: View {
         .foregroundStyle(Color.text)
         .background(Color.background)
         .alert(alertMessage, isPresented: $showAlert) {}
+        .onReceive(subscriptionManager.subscriptionLevelPublisher) { subscriptionLevel = $0 }
     }
     
     @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
@@ -142,7 +144,7 @@ struct TransactionDetailView: View {
     }
     
     @ViewBuilder func AdSection() -> some View {
-        if subscriptionManager.subscriptionLevel == .none {
+        if subscriptionLevel == SubscriptionLevel.none {
             Section {
                 SimpleBannerAdView()
             }
