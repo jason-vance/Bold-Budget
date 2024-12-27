@@ -13,8 +13,6 @@ struct AddBudgetView: View {
     @Environment(\.dismiss) private var dismiss: DismissAction
     
     @State private var nameString: String = ""
-    @State private var nameInstructions: String = ""
-    //TODO: set the instructions for the budget name
     
     @State private var subscriptionLevel: SubscriptionLevel? = nil
     
@@ -74,6 +72,13 @@ struct AddBudgetView: View {
         }
     }
     
+    private var nameInstructions: String {
+        if nameString.isEmpty { return "" }
+        if nameString.count < BudgetInfo.Name.minTextLength { return "Too short" }
+        if nameString.count > BudgetInfo.Name.maxTextLength { return "Too long" }
+        return "\(nameString.count)/\(BudgetInfo.Name.maxTextLength)"
+    }
+    
     private func show(alert: String) {
         showAlert = true
         alertMessage = alert
@@ -100,6 +105,7 @@ struct AddBudgetView: View {
         .background(Color.background)
         .alert(alertMessage, isPresented: $showAlert) {}
         .onReceive(subscriptionManager.subscriptionLevelPublisher) { subscriptionLevel = $0 }
+        .animation(.snappy, value: nameInstructions)
     }
     
     @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {

@@ -25,8 +25,8 @@ extension BudgetInfo: Equatable {}
 extension BudgetInfo {
     struct Name: Equatable {
         
-        private static let minTextLength = 3
-        private static let maxTextLength = 32
+        static let minTextLength = 3
+        static let maxTextLength = 32
 
         let value: String
         
