@@ -53,7 +53,20 @@ class MockSubscriptionLevelProvider: SubscriptionLevelProvider {
     }
 }
 
-//TODO: Add ability to mock MockSubscriptionLevelProvider in UI tests
+extension MockSubscriptionLevelProvider {
+    private static let envKey_TestSubscriptionLevel: String = "MockSubscriptionLevelProvider.envKey_TestSubscriptionLevel"
+    
+    public static func test(subscriptionLevel: SubscriptionLevel, in environment: inout [String:String]) {
+        environment[envKey_TestSubscriptionLevel] = String(describing: subscriptionLevel)
+    }
+    
+    static func getTestInstance() -> MockSubscriptionLevelProvider? {
+        guard let subscriptionLevelString = ProcessInfo.processInfo.environment[envKey_TestSubscriptionLevel] else { return nil }
+        guard let subscriptionLevel = SubscriptionLevel(rawValue: subscriptionLevelString) else { return nil }
+        
+        return MockSubscriptionLevelProvider(level: subscriptionLevel)
+    }
+}
 
 class StoreKitSubscriptionLevelProvider: SubscriptionLevelProvider {
     
