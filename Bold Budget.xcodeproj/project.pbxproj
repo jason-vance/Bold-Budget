@@ -94,6 +94,7 @@
 				Utils/ReviewPrompter.swift,
 				Utils/TextError.swift,
 				Views/Gestures/TouchWithLocation.swift,
+				Workers/Admin/IsAdminChecker.swift,
 				Workers/Authentication/AuthenticationProvider.swift,
 				Workers/Authentication/UserAccountDeleter.swift,
 				Workers/Authentication/UserSignOutService.swift,

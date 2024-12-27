@@ -17,6 +17,7 @@ func setup(iocContainer: Container) {
     iocContainer.autoregister(UserDataFetcher.self, initializer: getUserDataFetcher)
     iocContainer.autoregister(SubscriptionLevelProvider.self, initializer: { StoreKitSubscriptionLevelProvider.instance })
     registerReviewPrompter()
+    registerIsAdminChecker()
     
     // Authentication
     iocContainer.autoregister(AuthenticationProvider.self, initializer: getAuthenticationProvider)
@@ -80,6 +81,14 @@ fileprivate func getUserDataFetcher() -> UserDataFetcher {
 
 fileprivate func registerReviewPrompter() {
     iocContainer.autoregister(ReviewPrompter.self, initializer: ReviewPrompter.init)
+}
+
+fileprivate func registerIsAdminChecker() {
+    var service: IsAdminChecker = FirebaseAdminRepository()
+    if let mock = MockIsAdminChecker.getTestInstance() {
+        service = mock
+    }
+    iocContainer.autoregister(IsAdminChecker.self, initializer: { service })
 }
 
 //MARK: Authentication

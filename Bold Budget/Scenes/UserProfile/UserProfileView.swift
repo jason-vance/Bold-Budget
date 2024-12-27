@@ -16,6 +16,9 @@ struct UserProfileView: View {
     @State private var userId: UserId?
     @State private var userData: UserData?
     
+    @State private var showAdminControls: Bool = false
+    @State private var subscriptionLevel: SubscriptionLevel = .none
+    
     @State private var showEditUserProfile: Bool = false
     @State private var showSignOutDialog: Bool = false
     @State private var showDeleteAccountDialog: Bool = false
@@ -27,37 +30,25 @@ struct UserProfileView: View {
     private let __userId: UserId
     
     private let currentUserIdProvider: CurrentUserIdProvider
+    private let isAdminChecker: IsAdminChecker
+    private let subscriptionLevelProvider: SubscriptionLevelProvider
     private let userDataProvider: UserDataProvider
     private let signOutService: UserSignOutService
     private let accountDeleter: UserAccountDeleter
-
-    init(
-        userId: UserId
-    ) {
-        self.init(
-            userId: userId,
-            currentUserIdProvider: iocContainer~>CurrentUserIdProvider.self,
-            userDataProvider: iocContainer~>UserDataProvider.self,
-            signOutService: iocContainer~>UserSignOutService.self,
-            accountDeleter: iocContainer~>UserAccountDeleter.self
-        )
-    }
-    
-    init(
-        userId: UserId,
-        currentUserIdProvider: CurrentUserIdProvider,
-        userDataProvider: UserDataProvider,
-        signOutService: UserSignOutService,
-        accountDeleter: UserAccountDeleter
-    ) {
-        self.__userId = userId
-        self.currentUserIdProvider = currentUserIdProvider
-        self.userDataProvider = userDataProvider
-        self.signOutService = signOutService
-        self.accountDeleter = accountDeleter
-    }
     
     private var isMe: Bool { currentUserIdProvider.currentUserId == userId }
+    
+    private func checkIsAdmin() {
+        guard let userId = currentUserIdProvider.currentUserId else { return }
+        
+        Task {
+            do {
+                showAdminControls = try await isAdminChecker.isAdmin(userId: userId)
+            } catch {
+                print("Could not check if user is admin. \(error.localizedDescription)")
+            }
+        }
+    }
     
     private func confirmedSignOut() {
         do {
@@ -94,6 +85,38 @@ struct UserProfileView: View {
         alertMessage = alert
     }
     
+    init(
+        userId: UserId
+    ) {
+        self.init(
+            userId: userId,
+            currentUserIdProvider: iocContainer~>CurrentUserIdProvider.self,
+            isAdminChecker: iocContainer~>IsAdminChecker.self,
+            subscriptionLevelProvider: iocContainer~>SubscriptionLevelProvider.self,
+            userDataProvider: iocContainer~>UserDataProvider.self,
+            signOutService: iocContainer~>UserSignOutService.self,
+            accountDeleter: iocContainer~>UserAccountDeleter.self
+        )
+    }
+    
+    init(
+        userId: UserId,
+        currentUserIdProvider: CurrentUserIdProvider,
+        isAdminChecker: IsAdminChecker,
+        subscriptionLevelProvider: SubscriptionLevelProvider,
+        userDataProvider: UserDataProvider,
+        signOutService: UserSignOutService,
+        accountDeleter: UserAccountDeleter
+    ) {
+        self.__userId = userId
+        self.currentUserIdProvider = currentUserIdProvider
+        self.isAdminChecker = isAdminChecker
+        self.subscriptionLevelProvider = subscriptionLevelProvider
+        self.userDataProvider = userDataProvider
+        self.signOutService = signOutService
+        self.accountDeleter = accountDeleter
+    }
+    
     var body: some View {
         List {
             ProfileImageSection()
@@ -116,6 +139,8 @@ struct UserProfileView: View {
         .onReceive(userDataProvider.userDataPublisher) { userData = $0 }
         .alert(alertMessage, isPresented: $showAlert) {}
         .onDisappear { userDataProvider.stopListeningToUser() }
+        .onReceive(subscriptionLevelProvider.subscriptionLevelPublisher) { subscriptionLevel = $0 }
+        .onAppear { checkIsAdmin() }
     }
     
     @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
@@ -149,6 +174,9 @@ struct UserProfileView: View {
         if isMe {
             Section {
                 EditUserProfileButton()
+                if showAdminControls {
+                    ChangeSubscriptionLevelButton()
+                }
             }
         }
     }
@@ -170,6 +198,34 @@ struct UserProfileView: View {
                 EditUserProfileView(mode: .editProfile)
             }
         }
+    }
+    
+    @ViewBuilder private func ChangeSubscriptionLevelButton() -> some View {
+        HStack {
+            Image(systemName: "dollarsign")
+                .listRowIcon()
+            Text("Subscription Level")
+            Spacer()
+            Menu {
+                Button("None") {
+                    subscriptionLevelProvider.set(subscriptionLevel: .none)
+                }
+                Button("Bold Budget+") {
+                    subscriptionLevelProvider.set(subscriptionLevel: .boldBudgetPlus)
+                }
+            } label: {
+                Text(String(describing: subscriptionLevel))
+                    .foregroundStyle(Color.text)
+                    .padding(.horizontal, .paddingHorizontalButtonXSmall)
+                    .padding(.vertical, .paddingVerticalButtonXSmall)
+                    .background {
+                        RoundedRectangle(cornerRadius: .cornerRadiusSmall, style: .continuous)
+                            .foregroundStyle(Color.text)
+                            .opacity(.opacityButtonBackground)
+                    }
+            }
+        }
+        .listRow()
     }
     
     @ViewBuilder private func FeedbackSection() -> some View {
@@ -342,6 +398,8 @@ struct UserProfileView: View {
         UserProfileView(
             userId: .sample,
             currentUserIdProvider: MockCurrentUserIdProvider(),
+            isAdminChecker: MockIsAdminChecker(),
+            subscriptionLevelProvider: MockSubscriptionLevelProvider(level: .none),
             userDataProvider: MockUserDataProvider(),
             signOutService: MockUserSignOutService(),
             accountDeleter: MockUserAccountDeleter()
@@ -354,6 +412,8 @@ struct UserProfileView: View {
         UserProfileView(
             userId: .init(UUID().uuidString)!,
             currentUserIdProvider: MockCurrentUserIdProvider(),
+            isAdminChecker: MockIsAdminChecker(),
+            subscriptionLevelProvider: MockSubscriptionLevelProvider(level: .none),
             userDataProvider: MockUserDataProvider(),
             signOutService: MockUserSignOutService(),
             accountDeleter: MockUserAccountDeleter()

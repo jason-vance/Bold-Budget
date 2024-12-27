@@ -19,6 +19,7 @@ protocol SubscriptionLevelProvider {
     var subscriptionLevelPublisher: Published<SubscriptionLevel>.Publisher { get }
     
     func handle(transactionUpdate verificationResult: VerificationResult<StoreKit.Transaction>)
+    func set(subscriptionLevel: SubscriptionLevel)
 }
 
 class MockSubscriptionLevelProvider: SubscriptionLevelProvider {
@@ -45,6 +46,10 @@ class MockSubscriptionLevelProvider: SubscriptionLevelProvider {
         } else {
             subscriptionLevel = .boldBudgetPlus
         }
+    }
+    
+    func set(subscriptionLevel: SubscriptionLevel) {
+        self.subscriptionLevel = subscriptionLevel
     }
 }
 
