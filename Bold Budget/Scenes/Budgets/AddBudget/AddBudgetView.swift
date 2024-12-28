@@ -94,9 +94,6 @@ struct AddBudgetView: View {
         .scrollDismissesKeyboard(.immediately)
         .formStyle(.grouped)
         .scrollContentBackground(.hidden)
-        .safeAreaInset(edge: .bottom) { //this will push the view farther when the keyboard is shown
-            Color.clear.frame(height: 100)
-        }
         .toolbar { Toolbar() }
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle("Add a Budget")

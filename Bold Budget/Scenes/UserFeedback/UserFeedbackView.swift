@@ -94,9 +94,6 @@ struct UserFeedbackView: View {
         .scrollDismissesKeyboard(.immediately)
         .formStyle(.grouped)
         .scrollContentBackground(.hidden)
-        .safeAreaInset(edge: .bottom) { //this will push the view farther when the keyboard is shown
-            Color.clear.frame(height: 100)
-        }
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle("Submit Feedback")
         .foregroundStyle(Color.text)

@@ -10,6 +10,13 @@ import SwinjectAutoregistration
 
 struct EditTransactionView: View {
     
+    enum Focus {
+        case amount
+        case title
+        case location
+        case tags
+    }
+    
     private struct OptionalTransaction: Equatable {
         let transaction: Transaction?
         static let none: OptionalTransaction = .init(transaction: nil)
@@ -21,6 +28,8 @@ struct EditTransactionView: View {
     
     private var transactionToEdit: OptionalTransaction = .none
     private var onTransactionEditComplete: ((Transaction) -> Void)?
+    
+    @FocusState private var focus: Focus?
     
     @State private var screenTitle: String = String(localized: "Add Transaction")
     @State private var categoryId: Transaction.Category.Id? = nil
@@ -172,32 +181,32 @@ struct EditTransactionView: View {
     }
 
     var body: some View {
-        Form {
-            AdSection()
-            Section {
-                CategoryField()
-                AmountField()
-                TransactionDateField()
-                TransactionDatePicker()
-            } header: {
-                Text("Required")
-                    .foregroundStyle(Color.text)
+        ScrollViewReader { scrollview in
+            Form {
+                AdSection()
+                Section {
+                    CategoryField()
+                    AmountField()
+                    TransactionDateField()
+                    TransactionDatePicker()
+                } header: {
+                    Text("Required")
+                        .foregroundStyle(Color.text)
+                }
+                Section {
+                    TitleField()
+                    LocationField()
+                    TagsField()
+                } header: {
+                    Text("Optional")
+                        .foregroundStyle(Color.text)
+                }
             }
-            Section {
-                TitleField()
-                LocationField()
-                TagsField()
-            } header: {
-                Text("Optional")
-                    .foregroundStyle(Color.text)
-            }
+            .onChange(of: focus) { _, newFocus in scrollview.scrollTo(newFocus, anchor: .top) }
         }
         .scrollDismissesKeyboard(.immediately)
         .formStyle(.grouped)
         .scrollContentBackground(.hidden)
-        .safeAreaInset(edge: .bottom) { //this will push the view farther when the keyboard is shown
-            Color.clear.frame(height: 100)
-        }
         .toolbar { Toolbar() }
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle(screenTitle)
@@ -311,6 +320,7 @@ struct EditTransactionView: View {
                       format: .currency(code: "USD"),
                       prompt: Text(Money(0)?.formatted() ?? "$0.00")
             )
+            .focused($focus, equals: Focus.amount)
             .multilineTextAlignment(.trailing)
             .keyboardType(.decimalPad)
             .textFieldSmall()
@@ -318,6 +328,7 @@ struct EditTransactionView: View {
             .accessibilityIdentifier("EditTransactionView.AmountField.TextField")
         }
         .formRow()
+        .id(Focus.amount)
     }
     
     @ViewBuilder func TransactionDateField() -> some View {
@@ -366,11 +377,13 @@ struct EditTransactionView: View {
                       text: $titleString,
                       prompt: Text("Milk Tea, Movie Tickets, etc...").foregroundStyle(Color.text.opacity(.opacityTextFieldPrompt))
             )
+            .focused($focus, equals: Focus.title)
             .textFieldSmall()
             .autocapitalization(.words)
             .accessibilityIdentifier("EditTransactionView.TitleField.TextField")
         }
         .formRow()
+        .id(Focus.title)
     }
     
     @ViewBuilder func LocationField() -> some View {
@@ -388,10 +401,12 @@ struct EditTransactionView: View {
                       text: $locationString,
                       prompt: Text(Transaction.Location.sample.value).foregroundStyle(Color.text.opacity(.opacityTextFieldPrompt))
             )
+            .focused($focus, equals: Focus.location)
             .textFieldSmall()
             .accessibilityIdentifier("EditTransactionView.LocationField.TextField")
         }
         .formRow()
+        .id(Focus.location)
     }
     
     @ViewBuilder func TagsField() -> some View {
@@ -410,6 +425,7 @@ struct EditTransactionView: View {
                           text: $newTagString,
                           prompt: Text(Transaction.Tag.sample.value).foregroundStyle(Color.text.opacity(.opacityTextFieldPrompt))
                 )
+                .focused($focus, equals: Focus.tags)
                 .textFieldSmall()
                 .textInputAutocapitalization(.words)
                 .accessibilityIdentifier("EditTransactionView.TagsField.TextField")
@@ -417,6 +433,7 @@ struct EditTransactionView: View {
             }
         }
         .formRow()
+        .id(Focus.tags)
         ForEach(tags.sorted { $0.value < $1.value }) { tag in
             TagRow(tag)
         }

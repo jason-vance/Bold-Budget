@@ -76,7 +76,7 @@ struct BudgetsListView: View {
         }
         .animation(.snappy, value: budgets)
         .refreshable { fetchBudgets() }
-        .safeAreaInset(edge: .bottom, alignment: .trailing) { AddBudgetButton() }
+        .overlay(alignment: .bottomTrailing) { AddBudgetButton() }
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
         .toolbar { Toolbar() }

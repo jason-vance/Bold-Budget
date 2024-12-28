@@ -143,7 +143,7 @@ struct BudgetDetailView: View {
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
             .scrollIndicators(.hidden)
-            .safeAreaInset(edge: .bottom, alignment: .trailing) { AddTransactionButton() }
+            .overlay(alignment: .bottomTrailing) { AddTransactionButton() }
             .overlay(alignment: .top) {
                 Rectangle()
                     .opacity(0)
