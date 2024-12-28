@@ -22,6 +22,18 @@ extension View {
             }
     }
     
+    func buttonLabelXSmall(isProminent: Bool = false) -> some View {
+        self
+            .foregroundStyle(isProminent ? Color.background : Color.text)
+            .padding(.horizontal, .paddingHorizontalButtonXSmall)
+            .padding(.vertical, .paddingVerticalButtonXSmall)
+            .background {
+                RoundedRectangle(cornerRadius: .cornerRadiusSmall, style: .continuous)
+                    .foregroundStyle(Color.text)
+                    .opacity(isProminent ? 1 : Double.opacityButtonBackground)
+            }
+    }
+    
     func buttonLabelSmall(isProminent: Bool = false) -> some View {
         self
             .foregroundStyle(isProminent ? Color.background : Color.text)

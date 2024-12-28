@@ -228,6 +228,12 @@ struct EditTransactionView: View {
         ToolbarItemGroup(placement: .topBarTrailing) {
             SaveButton()
         }
+        ToolbarItemGroup(placement: .keyboard) {
+            HStack {
+                Spacer()
+                DoneTypingButton()
+            }
+        }
     }
     
     @ViewBuilder func CloseButton() -> some View {
@@ -271,6 +277,16 @@ struct EditTransactionView: View {
         .opacity(isFormComplete ? 1 : .opacityButtonBackground)
         .disabled(!isFormComplete)
         .accessibilityIdentifier("EditTransactionView.Toolbar.SaveButton")
+    }
+    
+    @ViewBuilder func DoneTypingButton() -> some View {
+        Button {
+            focus = nil
+        } label: {
+            Text("DONE")
+                .font(.footnote.bold())
+                .buttonLabelXSmall(isProminent: true)
+        }
     }
     
     @ViewBuilder func AdSection() -> some View {
