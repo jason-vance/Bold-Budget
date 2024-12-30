@@ -34,6 +34,7 @@ struct EditTransactionView: View {
     @State private var screenTitle: String = String(localized: "Add Transaction")
     @State private var categoryId: Transaction.Category.Id? = nil
     @State private var amountDouble: Double = 0
+    @State private var showAmountEntryView: Bool = false
     @State private var transactionDate: Date = .now
     @State private var titleString: String = ""
     @State private var showTitleEntryView: Bool = false
@@ -119,13 +120,13 @@ struct EditTransactionView: View {
     
     private var transactionTitleInstructions: String {
         if titleString.isEmpty { return "" }
-        if let title = Transaction.Title(titleString) { return "" }
+        if let _ = Transaction.Title(titleString) { return "" }
         return "Invalid Title"
     }
     
     private var transactionLocationInstructions: String {
         if locationString.isEmpty { return "" }
-        if let title = Transaction.Location(locationString) { return "" }
+        if let _ = Transaction.Location(locationString) { return "" }
         return "Invalid Location"
     }
     
@@ -219,12 +220,6 @@ struct EditTransactionView: View {
         }
         ToolbarItemGroup(placement: .topBarTrailing) {
             SaveButton()
-        }
-        ToolbarItemGroup(placement: .keyboard) {
-            HStack {
-                Spacer()
-                DoneTypingButton()
-            }
         }
     }
     
@@ -323,20 +318,23 @@ struct EditTransactionView: View {
             Text("Amount")
                 .foregroundStyle(Color.text)
             Spacer(minLength: 0)
-            TextField(Money(0)?.formatted() ?? "$0.00",
-                      value: $amountDouble,
-                      format: .currency(code: "USD"),
-                      prompt: Text(Money(0)?.formatted() ?? "$0.00")
-            )
-            .focused($focus, equals: Focus.amount)
-            .multilineTextAlignment(.trailing)
-            .keyboardType(.decimalPad)
-            .textFieldSmall()
+            Button {
+                showAmountEntryView = true
+            } label: {
+                HStack {
+                    Spacer(minLength: 0)
+                    Text(Money(amountDouble)?.formatted() ?? "$0.00")
+                        .multilineTextAlignment(.trailing)
+                }
+            }
             .frame(width: 128)
+            .textFieldSmall()
             .accessibilityIdentifier("EditTransactionView.AmountField.TextField")
         }
         .formRow()
-        .id(Focus.amount)
+        .fullScreenCover(isPresented: $showAmountEntryView) {
+            AmountFieldEntryView(title: "Amount", amount: $amountDouble)
+        }
     }
     
     @ViewBuilder func TransactionDateField() -> some View {
