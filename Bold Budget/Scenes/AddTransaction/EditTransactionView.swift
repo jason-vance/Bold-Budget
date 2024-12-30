@@ -36,9 +36,9 @@ struct EditTransactionView: View {
     @State private var amountDouble: Double = 0
     @State private var transactionDate: Date = .now
     @State private var titleString: String = ""
-    @State private var titleInstructions: String = ""
+    @State private var showTitleEntryView: Bool = false
     @State private var locationString: String = ""
-    @State private var locationInstructions: String = ""
+    @State private var showLocationEntryView: Bool = false
     @State private var newTagString: String = ""
     @State private var newTagInstructions: String = ""
     @State private var tags: Set<Transaction.Tag> = []
@@ -117,22 +117,16 @@ struct EditTransactionView: View {
         !titleString.isEmpty
     }
     
-    private func setTitleInstructions(_ titleString: String) {
-        withAnimation(.snappy) {
-            if titleString.isEmpty { titleInstructions = ""; return }
-            if titleString.count < Transaction.Title.minTextLength { titleInstructions = "Too short"; return }
-            if titleString.count > Transaction.Title.maxTextLength { titleInstructions = "Too long"; return }
-            titleInstructions = "\(titleString.count)/\(Transaction.Title.maxTextLength)"
-        }
+    private var transactionTitleInstructions: String {
+        if titleString.isEmpty { return "" }
+        if let title = Transaction.Title(titleString) { return "" }
+        return "Invalid Title"
     }
     
-    private func setLocationInstructions(_ locationString: String) {
-        withAnimation(.snappy) {
-            if locationString.isEmpty { locationInstructions = ""; return }
-            if locationString.count < Transaction.Location.minTextLength { locationInstructions = "Too short"; return }
-            if locationString.count > Transaction.Location.maxTextLength { locationInstructions = "Too long"; return }
-            locationInstructions = "\(locationString.count)/\(Transaction.Location.maxTextLength)"
-        }
+    private var transactionLocationInstructions: String {
+        if locationString.isEmpty { return "" }
+        if let title = Transaction.Location(locationString) { return "" }
+        return "Invalid Location"
     }
     
     private func setNewTagInstructions(_ newTagString: String) {
@@ -214,8 +208,6 @@ struct EditTransactionView: View {
         .foregroundStyle(Color.text)
         .background(Color.background)
         .onChange(of: transactionToEdit, initial: true) { _, transaction in populateFields(transaction) }
-        .onChange(of: titleString) { _, titleString in setTitleInstructions(titleString) }
-        .onChange(of: locationString) { _, locationString in setLocationInstructions(locationString) }
         .onChange(of: newTagString) { _, newTagString in setNewTagInstructions(newTagString) }
         .alert(alertMessage, isPresented: $showAlert) {}
         .onReceive(subscriptionManager.subscriptionLevelPublisher) { subscriptionLevel = $0 }
@@ -384,22 +376,28 @@ struct EditTransactionView: View {
                 Text("Title")
                     .foregroundStyle(Color.text)
                 Spacer(minLength: 0)
-                Text(titleInstructions)
+                Text(transactionTitleInstructions)
                     .font(.caption2)
                     .foregroundStyle(Color.text.opacity(.opacityMutedText))
                     .padding(.horizontal, .paddingHorizontalButtonXSmall)
             }
-            TextField("Title",
-                      text: $titleString,
-                      prompt: Text("Milk Tea, Movie Tickets, etc...").foregroundStyle(Color.text.opacity(.opacityTextFieldPrompt))
-            )
-            .focused($focus, equals: Focus.title)
+            Button {
+                showTitleEntryView = true
+            } label: {
+                HStack {
+                    Text(titleString.isEmpty ? Transaction.Title.sample.value : titleString)
+                        .opacity(titleString.isEmpty ? .opacityTextFieldPrompt : 1)
+                        .multilineTextAlignment(.leading)
+                    Spacer()
+                }
+            }
             .textFieldSmall()
-            .autocapitalization(.words)
             .accessibilityIdentifier("EditTransactionView.TitleField.TextField")
         }
         .formRow()
-        .id(Focus.title)
+        .fullScreenCover(isPresented: $showTitleEntryView) {
+            TransactionTitleEntryView(titleString: $titleString)
+        }
     }
     
     @ViewBuilder func LocationField() -> some View {
@@ -408,21 +406,28 @@ struct EditTransactionView: View {
                 Text("Location")
                     .foregroundStyle(Color.text)
                 Spacer(minLength: 0)
-                Text(locationInstructions)
+                Text(transactionLocationInstructions)
                     .font(.caption2)
                     .foregroundStyle(Color.text.opacity(.opacityMutedText))
                     .padding(.horizontal, .paddingHorizontalButtonXSmall)
             }
-            TextField("Location",
-                      text: $locationString,
-                      prompt: Text(Transaction.Location.sample.value).foregroundStyle(Color.text.opacity(.opacityTextFieldPrompt))
-            )
-            .focused($focus, equals: Focus.location)
+            Button {
+                showLocationEntryView = true
+            } label: {
+                HStack {
+                    Text(locationString.isEmpty ? Transaction.Location.sample.value : locationString)
+                        .opacity(locationString.isEmpty ? .opacityTextFieldPrompt : 1)
+                        .multilineTextAlignment(.leading)
+                    Spacer()
+                }
+            }
             .textFieldSmall()
             .accessibilityIdentifier("EditTransactionView.LocationField.TextField")
         }
         .formRow()
-        .id(Focus.location)
+        .fullScreenCover(isPresented: $showLocationEntryView) {
+            TransactionLocationEntryView(locationString: $locationString)
+        }
     }
     
     @ViewBuilder func TagsField() -> some View {

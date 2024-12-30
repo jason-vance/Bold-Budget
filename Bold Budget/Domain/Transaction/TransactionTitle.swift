@@ -30,7 +30,7 @@ extension Transaction {
             self.value = trimmedText
         }
         
-        static let sample: Transaction.Title = .init("Lorem ipsum dolor sit amet, consectetur adipiscing")!
+        static let sample: Transaction.Title = .init("Milk Tea, Movie Tickets, etc...")!
     }
 }
 
