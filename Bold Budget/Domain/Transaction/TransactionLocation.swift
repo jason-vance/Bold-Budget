@@ -26,10 +26,6 @@ extension Transaction {
                 return nil
             }
             
-            // Starts and ends with a letter
-            guard let first = trimmedText.first, let last = trimmedText.last else { return nil }
-            guard first.isLetter, last.isLetter else { return nil }
-            
             // Convert to lowercase
             self.value = trimmedText
         }
