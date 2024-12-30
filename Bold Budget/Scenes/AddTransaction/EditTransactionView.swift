@@ -10,13 +10,6 @@ import SwinjectAutoregistration
 
 struct EditTransactionView: View {
     
-    enum Focus {
-        case amount
-        case title
-        case location
-        case tags
-    }
-    
     private struct OptionalTransaction: Equatable {
         let transaction: Transaction?
         static let none: OptionalTransaction = .init(transaction: nil)
@@ -29,8 +22,6 @@ struct EditTransactionView: View {
     private var transactionToEdit: OptionalTransaction = .none
     private var onTransactionEditComplete: ((Transaction) -> Void)?
     
-    @FocusState private var focus: Focus?
-    
     @State private var screenTitle: String = String(localized: "Add Transaction")
     @State private var categoryId: Transaction.Category.Id? = nil
     @State private var amountDouble: Double = 0
@@ -40,9 +31,8 @@ struct EditTransactionView: View {
     @State private var showTitleEntryView: Bool = false
     @State private var locationString: String = ""
     @State private var showLocationEntryView: Bool = false
-    @State private var newTagString: String = ""
-    @State private var newTagInstructions: String = ""
     @State private var tags: Set<Transaction.Tag> = []
+    @State private var showTagsEditorView: Bool = false
 
     @State private var subscriptionLevel: SubscriptionLevel? = nil
     @State private var showDiscardDialog: Bool = false
@@ -130,24 +120,6 @@ struct EditTransactionView: View {
         return "Invalid Location"
     }
     
-    private func setNewTagInstructions(_ newTagString: String) {
-        withAnimation(.snappy) {
-            if newTagString.isEmpty { newTagInstructions = ""; return }
-            if newTagString.count < Transaction.Tag.minTextLength { newTagInstructions = "Too short"; return }
-            if newTagString.count > Transaction.Tag.maxTextLength { newTagInstructions = "Too long"; return }
-            newTagInstructions = "\(newTagString.count)/\(Transaction.Tag.maxTextLength)"
-        }
-    }
-    
-    private func saveNewTag() {
-        if let tag = Transaction.Tag(newTagString) {
-            tags.insert(tag)
-            newTagString = ""
-        } else {
-            newTagInstructions = String(localized: "Invalid Tag")
-        }
-    }
-    
     private func remove(tag: Transaction.Tag) {
         tags.remove(tag)
     }
@@ -176,28 +148,25 @@ struct EditTransactionView: View {
     }
 
     var body: some View {
-        ScrollViewReader { scrollview in
-            Form {
-                AdSection()
-                Section {
-                    CategoryField()
-                    AmountField()
-                    TransactionDateField()
-                    TransactionDatePicker()
-                } header: {
-                    Text("Required")
-                        .foregroundStyle(Color.text)
-                }
-                Section {
-                    TitleField()
-                    LocationField()
-                    TagsField()
-                } header: {
-                    Text("Optional")
-                        .foregroundStyle(Color.text)
-                }
+        Form {
+            AdSection()
+            Section {
+                CategoryField()
+                AmountField()
+                TransactionDateField()
+                TransactionDatePicker()
+            } header: {
+                Text("Required")
+                    .foregroundStyle(Color.text)
             }
-            .onChange(of: focus) { _, newFocus in scrollview.scrollTo(newFocus, anchor: .top) }
+            Section {
+                TitleField()
+                LocationField()
+                TagsField()
+            } header: {
+                Text("Optional")
+                    .foregroundStyle(Color.text)
+            }
         }
         .scrollDismissesKeyboard(.immediately)
         .formStyle(.grouped)
@@ -209,7 +178,6 @@ struct EditTransactionView: View {
         .foregroundStyle(Color.text)
         .background(Color.background)
         .onChange(of: transactionToEdit, initial: true) { _, transaction in populateFields(transaction) }
-        .onChange(of: newTagString) { _, newTagString in setNewTagInstructions(newTagString) }
         .alert(alertMessage, isPresented: $showAlert) {}
         .onReceive(subscriptionManager.subscriptionLevelPublisher) { subscriptionLevel = $0 }
     }
@@ -264,16 +232,6 @@ struct EditTransactionView: View {
         .opacity(isFormComplete ? 1 : .opacityButtonBackground)
         .disabled(!isFormComplete)
         .accessibilityIdentifier("EditTransactionView.Toolbar.SaveButton")
-    }
-    
-    @ViewBuilder func DoneTypingButton() -> some View {
-        Button {
-            focus = nil
-        } label: {
-            Text("DONE")
-                .font(.footnote.bold())
-                .buttonLabelXSmall(isProminent: true)
-        }
     }
     
     @ViewBuilder func AdSection() -> some View {
@@ -434,38 +392,43 @@ struct EditTransactionView: View {
                 Text("Tags")
                     .foregroundStyle(Color.text)
                 Spacer(minLength: 0)
-                Text(newTagInstructions)
-                    .font(.caption2)
-                    .foregroundStyle(Color.text.opacity(.opacityMutedText))
-                    .padding(.horizontal, .paddingHorizontalButtonXSmall)
-            }
-            HStack {
-                TextField("Tags",
-                          text: $newTagString,
-                          prompt: Text(Transaction.Tag.sample.value).foregroundStyle(Color.text.opacity(.opacityTextFieldPrompt))
-                )
-                .focused($focus, equals: Focus.tags)
-                .textFieldSmall()
-                .textInputAutocapitalization(.words)
-                .accessibilityIdentifier("EditTransactionView.TagsField.TextField")
-                SaveNewTagButton()
+                AddTagsButton()
             }
         }
         .formRow()
-        .id(Focus.tags)
         ForEach(tags.sorted { $0.value < $1.value }) { tag in
             TagRow(tag)
         }
     }
     
-    @ViewBuilder func SaveNewTagButton() -> some View {
+    @ViewBuilder func AddTagsButton() -> some View {
         Button {
-            saveNewTag()
+            showTagsEditorView = true
         } label: {
-            Text("Add")
-                .buttonLabelMedium()
+            AddTagButtonLabel()
         }
-        .accessibilityIdentifier("EditTransactionView.TagsField.SaveNewTagButton")
+        .accessibilityIdentifier("EditTransactionView.TagsField.AddTagsButton")
+        .fullScreenCover(isPresented: $showTagsEditorView) {
+            TagsEditorView(tags: $tags, budget: budget)
+        }
+    }
+    
+    @ViewBuilder private func AddTagButtonLabel() -> some View {
+        HStack {
+            Image(systemName: "tag")
+                .overlay(alignment: .bottomTrailing) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 8))
+                        .bold()
+                        .foregroundStyle(Color.background)
+                        .padding(.borderWidthThin)
+                        .background {
+                            Circle()
+                                .foregroundStyle(Color.text)
+                        }
+                }
+        }
+        .buttonLabelSmall()
     }
     
     @ViewBuilder func TagRow(_ tag: Transaction.Tag) -> some View {

@@ -7,7 +7,6 @@
 
 import Combine
 import SwiftUI
-import SwiftUIFlowLayout
 import SwinjectAutoregistration
 
 struct TransactionCategoryPickerView: View {

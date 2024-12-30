@@ -18,7 +18,9 @@ class Budget: ObservableObject {
     
     var transactionTags: Set<Transaction.Tag> {
         transactions
-            .reduce(Set<Transaction.Tag>()) { tags, transaction in tags.union(transaction.value.tags) }
+            .map { $0.value }
+            .map(\.tags)
+            .reduce(into: Set()) { $0 = $0.union($1) }
     }
 
     let info: BudgetInfo
