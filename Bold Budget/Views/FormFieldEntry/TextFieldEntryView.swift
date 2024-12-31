@@ -15,8 +15,8 @@ struct TextFieldEntryView: View {
     @State private var title: LocalizedStringKey
     @State private var prompt: String
     @Binding private var value: String
-    @State private var suggestions: [String] = []
-    @State private var autocapitalization: UITextAutocapitalizationType = .none
+    @State private var suggestions: [String]
+    @State private var autocapitalization: UITextAutocapitalizationType
     @State private var instructionsGenerator: (String) -> String
     
     @State private var entryValue: String = ""

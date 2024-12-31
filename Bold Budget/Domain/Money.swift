@@ -31,6 +31,12 @@ class Money {
     }
 }
 
+extension Money: Comparable {
+    static func < (lhs: Money, rhs: Money) -> Bool {
+        lhs.amount < rhs.amount
+    }
+}
+
 extension Money: Equatable {
     static func == (lhs: Money, rhs: Money) -> Bool {
         lhs.amount == rhs.amount

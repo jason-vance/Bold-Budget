@@ -36,6 +36,13 @@ class Budget: ObservableObject {
             .compactMap(\.location)
             .reduce(into: Set()) { $0.insert($1) }
     }
+    
+    var transactionAmounts: Set<Money> {
+        transactions
+            .map { $0.value }
+            .compactMap(\.amount)
+            .reduce(into: Set()) { $0.insert($1) }
+    }
 
     let info: BudgetInfo
     

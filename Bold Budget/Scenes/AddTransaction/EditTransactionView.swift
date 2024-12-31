@@ -24,7 +24,7 @@ struct EditTransactionView: View {
     
     @State private var screenTitle: String = String(localized: "Add Transaction")
     @State private var categoryId: Transaction.Category.Id? = nil
-    @State private var amountDouble: Double = 0
+    @State private var amount: Money = .zero
     @State private var showAmountEntryView: Bool = false
     @State private var transactionDate: Date = .now
     @State private var titleString: String = ""
@@ -72,7 +72,6 @@ struct EditTransactionView: View {
     
     private var transaction: Transaction? {
         guard let categoryId = categoryId else { return nil }
-        guard let amount = Money(amountDouble) else { return nil }
         guard let date = SimpleDate(date: transactionDate) else { return nil }
         
         var title: Transaction.Title? = nil
@@ -104,7 +103,7 @@ struct EditTransactionView: View {
     
     private var hasFormChanged: Bool {
         categoryId != nil ||
-        amountDouble != 0 ||
+        amount != .zero ||
         !titleString.isEmpty
     }
     
@@ -135,7 +134,7 @@ struct EditTransactionView: View {
         guard let transaction = transaction.transaction else { return }
         screenTitle = String(localized: "Edit Transaction")
         categoryId = transaction.categoryId
-        amountDouble = transaction.amount.amount
+        amount = transaction.amount
         transactionDate = transaction.date.toDate() ?? .now
         titleString = transaction.title?.value ?? ""
         locationString = transaction.location?.value ?? ""
@@ -281,7 +280,7 @@ struct EditTransactionView: View {
             } label: {
                 HStack {
                     Spacer(minLength: 0)
-                    Text(Money(amountDouble)?.formatted() ?? "$0.00")
+                    Text(amount.formatted())
                         .multilineTextAlignment(.trailing)
                 }
             }
@@ -291,7 +290,10 @@ struct EditTransactionView: View {
         }
         .formRow()
         .fullScreenCover(isPresented: $showAmountEntryView) {
-            AmountFieldEntryView(title: "Amount", amount: $amountDouble)
+            TransactionAmountEntryView(
+                amount: $amount,
+                budget: budget
+            )
         }
     }
     
