@@ -352,7 +352,10 @@ struct EditTransactionView: View {
         }
         .formRow()
         .fullScreenCover(isPresented: $showTitleEntryView) {
-            TransactionTitleEntryView(titleString: $titleString)
+            TransactionTitleEntryView(
+                titleString: $titleString,
+                budget: budget
+            )
         }
     }
     
@@ -382,7 +385,10 @@ struct EditTransactionView: View {
         }
         .formRow()
         .fullScreenCover(isPresented: $showLocationEntryView) {
-            TransactionLocationEntryView(locationString: $locationString)
+            TransactionLocationEntryView(
+                locationString: $locationString,
+                budget: budget
+            )
         }
     }
     

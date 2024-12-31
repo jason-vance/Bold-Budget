@@ -10,6 +10,7 @@ import SwiftUI
 struct TransactionLocationEntryView: View {
     
     @Binding var locationString: String
+    var budget: Budget
     
     private func locationInstructions(_ locationString: String) -> String {
         if locationString.isEmpty { return "" }
@@ -23,6 +24,7 @@ struct TransactionLocationEntryView: View {
             title: "Location",
             prompt: Transaction.Location.sample.value,
             value: $locationString,
+            suggestions: budget.transactionLocations.map(\.value),
             autoCapitalization: .words,
             instructionsGenerator: { locationInstructions($0) }
         )
@@ -31,6 +33,9 @@ struct TransactionLocationEntryView: View {
 
 #Preview {
     StatefulPreviewContainer("") { location in
-        TransactionLocationEntryView(locationString: location)
+        TransactionLocationEntryView(
+            locationString: location,
+            budget: Budget(info: .sample)
+        )
     }
 }

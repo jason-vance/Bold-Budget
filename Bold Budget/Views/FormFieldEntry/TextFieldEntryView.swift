@@ -6,16 +6,18 @@
 //
 
 import SwiftUI
+import SwiftUIFlowLayout
 
 struct TextFieldEntryView: View {
     
     @Environment(\.dismiss) private var dismiss
     
-    @State var title: LocalizedStringKey
-    @State var prompt: String
-    @Binding var value: String
-    @State var autocapitalization: UITextAutocapitalizationType = .none
-    @State var instructionsGenerator: (String) -> String
+    @State private var title: LocalizedStringKey
+    @State private var prompt: String
+    @Binding private var value: String
+    @State private var suggestions: [String] = []
+    @State private var autocapitalization: UITextAutocapitalizationType = .none
+    @State private var instructionsGenerator: (String) -> String
     
     @State private var entryValue: String = ""
     
@@ -25,17 +27,25 @@ struct TextFieldEntryView: View {
         title: LocalizedStringKey,
         prompt: String,
         value: Binding<String>,
+        suggestions: [String] = [],
         autoCapitalization: UITextAutocapitalizationType = .none,
         instructionsGenerator: @escaping (String) -> String = { _ in "" }
     ) {
         self.title = title
         self.prompt = prompt
         self._value = value
+        self.suggestions = suggestions
         self.autocapitalization = autoCapitalization
         self.instructionsGenerator = instructionsGenerator
     }
     
     private var instructions: String { instructionsGenerator(entryValue) }
+    
+    private var filteredSuggestions: [String] {
+        suggestions
+            .filter { entryValue.isEmpty || $0.contains(entryValue) }
+            .sorted { $0 < $1 }
+    }
     
     var body: some View {
         NavigationStack {
@@ -58,6 +68,9 @@ struct TextFieldEntryView: View {
                     .textFieldSmall()
                     .autocapitalization(autocapitalization)
                     .accessibilityIdentifier("TextFieldEntryView.TextField")
+                    Suggestions()
+                        .animation(.snappy, value: entryValue)
+                        .padding(.top)
                 }
                 .padding()
             }
@@ -101,6 +114,35 @@ struct TextFieldEntryView: View {
             }
             .font(.footnote.bold())
             .buttonLabelSmall(isProminent: true)
+        }
+    }
+    
+    @ViewBuilder private func Suggestions() -> some View {
+        if !filteredSuggestions.isEmpty {
+            VStack {
+                HStack {
+                    Text("Suggestions:")
+                        .multilineTextAlignment(.leading)
+                    Spacer()
+                }
+                FlowLayout(
+                    mode: .scrollable,
+                    items: filteredSuggestions,
+                    itemSpacing: .paddingCircleButtonSmall
+                ) { suggestion in
+                    Suggestion(suggestion)
+                }
+            }
+        }
+    }
+    
+    @ViewBuilder private func Suggestion(_ text: String) -> some View {
+        Button {
+            value = text
+            dismiss()
+        } label: {
+            Text(text)
+                .buttonLabelSmall()
         }
     }
 }

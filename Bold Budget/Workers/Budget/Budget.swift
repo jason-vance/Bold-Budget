@@ -22,6 +22,20 @@ class Budget: ObservableObject {
             .map(\.tags)
             .reduce(into: Set()) { $0 = $0.union($1) }
     }
+    
+    var transactionTitles: Set<Transaction.Title> {
+        transactions
+            .map { $0.value }
+            .compactMap(\.title)
+            .reduce(into: Set()) { $0.insert($1) }
+    }
+    
+    var transactionLocations: Set<Transaction.Location> {
+        transactions
+            .map { $0.value }
+            .compactMap(\.location)
+            .reduce(into: Set()) { $0.insert($1) }
+    }
 
     let info: BudgetInfo
     

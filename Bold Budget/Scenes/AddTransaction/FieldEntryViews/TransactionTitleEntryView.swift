@@ -10,6 +10,7 @@ import SwiftUI
 struct TransactionTitleEntryView: View {
     
     @Binding var titleString: String
+    var budget: Budget
     
     private func titleInstructions(_ titleString: String) -> String {
         if titleString.isEmpty { return "" }
@@ -23,6 +24,7 @@ struct TransactionTitleEntryView: View {
             title: "Title",
             prompt: Transaction.Title.sample.value,
             value: $titleString,
+            suggestions: budget.transactionTitles.map(\.value),
             autoCapitalization: .words,
             instructionsGenerator: { titleInstructions($0) }
         )
@@ -31,6 +33,9 @@ struct TransactionTitleEntryView: View {
 
 #Preview {
     StatefulPreviewContainer("") { title in
-        TransactionTitleEntryView(titleString: title)
+        TransactionTitleEntryView(
+            titleString: title,
+            budget: Budget(info: .sample)
+        )
     }
 }
