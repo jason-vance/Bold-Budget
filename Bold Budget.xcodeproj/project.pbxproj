@@ -79,6 +79,8 @@
 				Scenes/Budgets/BudgetDetail/TimeFrame.swift,
 				Scenes/Budgets/Domain/BudgetInfo.swift,
 				Scenes/Budgets/Workers/BudgetFetcher/BudgetFetcher.swift,
+				Scenes/EditTransaction/PartialTransaction.swift,
+				Scenes/EditTransaction/TransactionPropertySuggestions.swift,
 				Scenes/TransactionCategories/Domain/TransactionCategory.swift,
 				Scenes/TransactionCategories/Domain/TransactionCategoryName.swift,
 				Scenes/TransactionCategories/Domain/TransactionCategorySfSymbol.swift,
