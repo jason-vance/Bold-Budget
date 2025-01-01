@@ -19,6 +19,8 @@ struct TransactionPropertySuggestions {
     )
 }
 
+extension TransactionPropertySuggestions: Equatable { }
+
 extension TransactionPropertySuggestions {
     
     static func from(

@@ -14,3 +14,5 @@ struct PartialTransaction {
     let location: Transaction.Location?
     let tags: Set<Transaction.Tag>
 }
+
+extension PartialTransaction: Equatable { }

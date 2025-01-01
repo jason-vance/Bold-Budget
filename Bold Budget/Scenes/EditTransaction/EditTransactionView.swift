@@ -33,6 +33,8 @@ struct EditTransactionView: View {
     @State private var showLocationEntryView: Bool = false
     @State private var tags: Set<Transaction.Tag> = []
     @State private var showTagsEditorView: Bool = false
+    
+    @State private var suggestions: TransactionPropertySuggestions = .empty
 
     @State private var subscriptionLevel: SubscriptionLevel? = nil
     @State private var showDiscardDialog: Bool = false
@@ -68,6 +70,16 @@ struct EditTransactionView: View {
         var view = self
         view.onTransactionEditComplete = action
         return view
+    }
+    
+    private var partialTransaction: PartialTransaction {
+        PartialTransaction(
+            title: Transaction.Title(titleString),
+            amount: amount == .zero ? nil : amount,
+            categoryId: categoryId,
+            location: Transaction.Location(locationString),
+            tags: tags
+        )
     }
     
     private var transaction: Transaction? {
@@ -141,6 +153,20 @@ struct EditTransactionView: View {
         tags = transaction.tags
     }
     
+    private func getSuggestions(for partialTransaction: PartialTransaction) {
+        Task {
+            let suggestions = TransactionPropertySuggestions.from(
+                partialTransaction: partialTransaction,
+                historicalTransactions: budget.transactions.map(\.value)
+            )
+            print("suggestions.categoryIds.count: \(suggestions.categoryIds.count)")
+            
+            await MainActor.run {
+                self.suggestions = suggestions
+            }
+        }
+    }
+    
     private func show(alert: String) {
         showAlert = true
         alertMessage = alert
@@ -167,6 +193,8 @@ struct EditTransactionView: View {
                     .foregroundStyle(Color.text)
             }
         }
+        .animation(.snappy, value: suggestions)
+        .animation(.snappy, value: partialTransaction)
         .scrollDismissesKeyboard(.immediately)
         .formStyle(.grouped)
         .scrollContentBackground(.hidden)
@@ -177,6 +205,7 @@ struct EditTransactionView: View {
         .foregroundStyle(Color.text)
         .background(Color.background)
         .onChange(of: transactionToEdit, initial: true) { _, transaction in populateFields(transaction) }
+        .onChange(of: partialTransaction, initial: true) { old, new in getSuggestions(for: new) }
         .alert(alertMessage, isPresented: $showAlert) {}
         .onReceive(subscriptionManager.subscriptionLevelPublisher) { subscriptionLevel = $0 }
     }
@@ -253,21 +282,64 @@ struct EditTransactionView: View {
                 Text("Category")
                     .foregroundStyle(Color.text)
                 Spacer(minLength: 0)
-                if let categoryId = categoryId {
-                    let category = budget.getCategoryBy(id: categoryId)
-                    HStack {
-                        Image(systemName: category.sfSymbol.value)
-                        Text(category.name.value)
-                    }
-                    .buttonLabelSmall()
-                } else {
-                    Text("N/A")
-                        .buttonLabelSmall()
-                }
+                CategoryButtonLabel(categoryId)
             }
         }
         .formRow()
+        .listRowSeparator(categoryId == nil ? .hidden : .visible)
         .accessibilityIdentifier("EditTransactionView.CategoryField.SelectCategoryButton")
+        if categoryId == nil && !suggestions.categoryIds.isEmpty {
+            let categories = suggestions.categoryIds.map { budget.getCategoryBy(id: $0) }
+            HorizontalScrollingSuggestions(items: categories) { category in
+                Button {
+                    self.categoryId = category.id
+                } label: {
+                    CategoryButtonLabel(category.id)
+                }
+            }
+        }
+    }
+    
+    @ViewBuilder private func CategoryButtonLabel(_ categoryId: Transaction.Category.Id?) -> some View {
+        if let categoryId = categoryId {
+            let category = budget.getCategoryBy(id: categoryId)
+            HStack {
+                Image(systemName: category.sfSymbol.value)
+                Text(category.name.value)
+            }
+            .buttonLabelSmall()
+        } else {
+            Text("N/A")
+                .buttonLabelSmall()
+        }
+    }
+    
+    @ViewBuilder private func HorizontalScrollingSuggestions<Item: Identifiable, Content: View>(
+        items: [Item],
+        @ViewBuilder content: @escaping (Item) -> Content
+    ) -> some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            LazyHStack {
+                ForEach(items) { item in
+                    content(item)
+                        .overlay(alignment: .topLeading) {
+                            Image(systemName: "lightbulb.fill")
+                                .foregroundStyle(Color.text)
+                                .font(.footnote)
+                                .offset(x: -.paddingVerticalButtonXSmall/2, y: -.paddingVerticalButtonXSmall)
+                                .rotationEffect(.degrees(-25))
+                        }
+                }
+            }
+            .padding(.horizontal, .paddingHorizontalButtonMedium)
+            .padding(.vertical, .paddingVerticalButtonXSmall)
+        }
+        .listRowBackground(Color.text.opacity(.opacityButtonBackground))
+        .listRowSeparatorTint(Color.text.opacity(.opacityButtonBackground))
+        .listRowInsets(.init(top: .paddingVerticalButtonXSmall,
+                             leading: 0,
+                             bottom: .paddingVerticalButtonXSmall,
+                             trailing: 0))
     }
     
     @ViewBuilder func AmountField() -> some View {
@@ -289,11 +361,22 @@ struct EditTransactionView: View {
             .accessibilityIdentifier("EditTransactionView.AmountField.TextField")
         }
         .formRow()
+        .listRowSeparator(amount.amount == .zero ? .hidden : .visible)
         .fullScreenCover(isPresented: $showAmountEntryView) {
             TransactionAmountEntryView(
                 amount: $amount,
                 budget: budget
             )
+        }
+        if amount.amount == .zero && !suggestions.amounts.isEmpty {
+            HorizontalScrollingSuggestions(items: suggestions.amounts) { amount in
+                Button {
+                    self.amount = amount
+                } label: {
+                    Text(amount.formatted())
+                        .buttonLabelSmall()
+                }
+            }
         }
     }
     
@@ -353,11 +436,22 @@ struct EditTransactionView: View {
             .accessibilityIdentifier("EditTransactionView.TitleField.TextField")
         }
         .formRow()
+        .listRowSeparator(titleString.isEmpty ? .hidden : .visible)
         .fullScreenCover(isPresented: $showTitleEntryView) {
             TransactionTitleEntryView(
                 titleString: $titleString,
                 budget: budget
             )
+        }
+        if titleString.isEmpty && !suggestions.titles.isEmpty {
+            HorizontalScrollingSuggestions(items: suggestions.titles) { title in
+                Button {
+                    self.titleString = title.value
+                } label: {
+                    Text(title.value)
+                        .buttonLabelSmall()
+                }
+            }
         }
     }
     
@@ -386,15 +480,27 @@ struct EditTransactionView: View {
             .accessibilityIdentifier("EditTransactionView.LocationField.TextField")
         }
         .formRow()
+        .listRowSeparator(locationString.isEmpty ? .hidden : .visible)
         .fullScreenCover(isPresented: $showLocationEntryView) {
             TransactionLocationEntryView(
                 locationString: $locationString,
                 budget: budget
             )
         }
+        if locationString.isEmpty && !suggestions.locations.isEmpty {
+            HorizontalScrollingSuggestions(items: suggestions.locations) { location in
+                Button {
+                    self.locationString = location.value
+                } label: {
+                    Text(location.value)
+                        .buttonLabelSmall()
+                }
+            }
+        }
     }
     
     @ViewBuilder func TagsField() -> some View {
+        let suggestedTags = suggestions.tags.filter { !tags.contains($0) }
         VStack {
             HStack {
                 Text("Tags")
@@ -404,6 +510,16 @@ struct EditTransactionView: View {
             }
         }
         .formRow()
+        .listRowSeparator(!suggestedTags.isEmpty ? .hidden : .visible)
+        if !suggestedTags.isEmpty {
+            HorizontalScrollingSuggestions(items: suggestedTags) { tag in
+                Button {
+                    tags.insert(tag)
+                } label: {
+                    TransactionTagView(tag)
+                }
+            }
+        }
         ForEach(tags.sorted { $0.value < $1.value }) { tag in
             TagRow(tag)
         }

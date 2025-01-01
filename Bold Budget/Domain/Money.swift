@@ -37,6 +37,10 @@ extension Money: Comparable {
     }
 }
 
+extension Money: Identifiable {
+    var id: Double { amount }
+}
+
 extension Money: Equatable {
     static func == (lhs: Money, rhs: Money) -> Bool {
         lhs.amount == rhs.amount

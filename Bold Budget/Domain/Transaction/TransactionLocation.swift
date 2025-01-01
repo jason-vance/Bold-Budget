@@ -34,6 +34,10 @@ extension Transaction {
     }
 }
 
+extension Transaction.Location: Identifiable {
+    var id: String { value }
+}
+
 extension Transaction.Location: Equatable {
     static func == (lhs: Transaction.Location, rhs: Transaction.Location) -> Bool {
         lhs.value == rhs.value

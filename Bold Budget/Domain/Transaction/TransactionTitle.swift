@@ -34,6 +34,10 @@ extension Transaction {
     }
 }
 
+extension Transaction.Title: Identifiable {
+    var id: String { value }
+}
+
 extension Transaction.Title: Equatable {
     static func == (lhs: Transaction.Title, rhs: Transaction.Title) -> Bool {
         lhs.value == rhs.value
