@@ -71,6 +71,14 @@ struct TransactionDetailView: View {
         .background(Color.background)
         .alert(alertMessage, isPresented: $showAlert) {}
         .onReceive(subscriptionManager.subscriptionLevelPublisher) { subscriptionLevel = $0 }
+        .confirmationDialog(
+            "Are you sure you want to delete this transaction?",
+            isPresented: $showDeleteDialog,
+            titleVisibility: .visible
+        ) {
+            ConfirmDeleteTransactionButton()
+            CancelDeleteTransactionButton()
+        }
     }
     
     @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
@@ -117,14 +125,6 @@ struct TransactionDetailView: View {
             showDeleteDialog = true
         } label: {
             Label("Delete", systemImage: "trash.fill")
-        }
-        .confirmationDialog(
-            "Are you sure you want to delete this transaction?",
-            isPresented: $showDeleteDialog,
-            titleVisibility: .visible
-        ) {
-            ConfirmDeleteTransactionButton()
-            CancelDeleteTransactionButton()
         }
     }
     
