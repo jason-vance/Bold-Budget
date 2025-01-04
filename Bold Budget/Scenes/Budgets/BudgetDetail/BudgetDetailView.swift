@@ -373,7 +373,8 @@ struct BudgetDetailView: View {
     @ViewBuilder func AdSection() -> some View {
         if subscriptionLevel == SubscriptionLevel.none {
             Section {
-                SimpleBannerAdView()
+                SimpleNativeAdView(size: .small)
+                    .listRow()
             }
         }
     }
