@@ -73,6 +73,7 @@ struct BudgetSettingsView: View {
     
     var body: some View {
         List {
+            CategoriesSection()
             UsersSection()
         }
         .listStyle(.insetGrouped)
@@ -82,6 +83,21 @@ struct BudgetSettingsView: View {
         .background(Color.background)
         .onAppear { fetchUsers() }
         .onAppear { fetchUserRoles() }
+    }
+    
+    @ViewBuilder private func CategoriesSection() -> some View {
+        Section {
+            NavigationLink {
+                TransactionCategoryPickerView(
+                    budget: budget,
+                    selectedCategoryId: .init(get: { .none }, set: { _ in })
+                )
+                .pickerMode(.editor)
+            } label: {
+                Text("Transaction Categories")
+            }
+            .listRow()
+        }
     }
     
     @ViewBuilder private func UsersSection() -> some View {

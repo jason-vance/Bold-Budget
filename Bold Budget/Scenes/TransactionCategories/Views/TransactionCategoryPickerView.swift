@@ -14,6 +14,7 @@ struct TransactionCategoryPickerView: View {
     enum Mode {
         case picker
         case pickerAndEditor
+        case editor
     }
     
     @Environment(\.dismiss) private var dismiss
@@ -56,6 +57,14 @@ struct TransactionCategoryPickerView: View {
             .filter { $0.name.value.contains(searchText) }
     }
     
+    private func set(mode: Mode?) {
+        self.mode = mode
+        
+        if mode == .editor {
+            isEditing = true
+        }
+    }
+    
     private func select(category: Transaction.Category) {
         selectedCategoryId = category.id
         dismiss()
@@ -94,7 +103,7 @@ struct TransactionCategoryPickerView: View {
         .navigationBarBackButtonHidden()
         .foregroundStyle(Color.text)
         .background(Color.background)
-        .onChange(of: __mode, initial: true) { _, mode in self.mode = mode }
+        .onChange(of: __mode, initial: true) { _, mode in set(mode: mode) }
         .alert(alertMessage, isPresented: $showAlert) {}
     }
     
@@ -180,7 +189,9 @@ struct TransactionCategoryPickerView: View {
             CloseButton()
         }
         ToolbarItemGroup(placement: .topBarTrailing) {
-            EditButton()
+            if mode != .editor {
+                EditButton()
+            }
         }
     }
     
@@ -216,7 +227,6 @@ struct TransactionCategoryPickerView: View {
                         .shadow(color: Color.background, radius: .padding)
                 }
         }
-        .opacity(mode == .pickerAndEditor && isEditing == false ? 1 : 0)
         .padding()
         .accessibilityIdentifier("TransactionCategoryPickerView.AddCategoryButton")
     }
