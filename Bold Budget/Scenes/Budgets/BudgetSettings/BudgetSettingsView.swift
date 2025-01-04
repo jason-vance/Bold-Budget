@@ -13,22 +13,27 @@ struct BudgetSettingsView: View {
     @StateObject var budget: Budget
 
     @State private var users: [UserData] = []
+    @State private var budgetUsers: [UserId:Budget.User] = [:]
     
     private let userDataFetcher: UserDataFetcher
-    
+    private let budgetUserFetcher: BudgetUserFetcher
+
     init(budget: StateObject<Budget>) {
         self.init(
             budget: budget,
-            userDataFetcher: iocContainer~>UserDataFetcher.self
+            userDataFetcher: iocContainer~>UserDataFetcher.self,
+            budgetUserFetcher: iocContainer~>BudgetUserFetcher.self
         )
     }
 
     init(
         budget: StateObject<Budget>,
-        userDataFetcher: UserDataFetcher
+        userDataFetcher: UserDataFetcher,
+        budgetUserFetcher: BudgetUserFetcher
     ) {
         self._budget = budget
         self.userDataFetcher = userDataFetcher
+        self.budgetUserFetcher = budgetUserFetcher
     }
     
     private func fetchUsers() {
@@ -50,7 +55,18 @@ struct BudgetSettingsView: View {
                     return allUsers.sorted { $0.username?.value ?? "" > $1.username?.value ?? "" }
                 }
             } catch {
-                print("Failed to fetch users")
+                print("Failed to fetch users. \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    private func fetchUserRoles() {
+        Task {
+            do {
+                let users = try await budgetUserFetcher.fetchUsers(in: budget.info)
+                budgetUsers = .init(uniqueKeysWithValues: users.map { ($0.id, $0) })
+            } catch {
+                print("Failed to fetch users' roles. \(error.localizedDescription)")
             }
         }
     }
@@ -65,6 +81,7 @@ struct BudgetSettingsView: View {
         .foregroundStyle(Color.text)
         .background(Color.background)
         .onAppear { fetchUsers() }
+        .onAppear { fetchUserRoles() }
     }
     
     @ViewBuilder private func UsersSection() -> some View {
@@ -90,6 +107,9 @@ struct BudgetSettingsView: View {
                 Text(username.value)
             }
             Spacer(minLength: 0)
+            if let role = budgetUsers[user.id]?.role {
+                Text("(\(role))")
+            }
         }
         .listRow()
     }
@@ -97,6 +117,10 @@ struct BudgetSettingsView: View {
 
 #Preview {
     NavigationStack {
-        BudgetSettingsView(budget: .init(wrappedValue: Budget(info: .sample)))
+        BudgetSettingsView(
+            budget: .init(wrappedValue: Budget(info: .sample)),
+            userDataFetcher: MockUserDataFetcher(),
+            budgetUserFetcher: MockBudgetUserFetcher()
+        )
     }
 }

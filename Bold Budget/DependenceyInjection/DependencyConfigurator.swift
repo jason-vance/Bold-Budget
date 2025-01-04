@@ -35,6 +35,7 @@ func setup(iocContainer: Container) {
     // Budgets
     registerBudgetCreator()
     registerBudgetFetcher()
+    registerBudgetUserFetcher()
 
     // TransactionCategories
     registerTransactionCategoryFetcher()
@@ -147,6 +148,14 @@ fileprivate func registerBudgetFetcher() {
         service = mock
     }
     iocContainer.autoregister(BudgetFetcher.self, initializer: { service })
+}
+
+fileprivate func registerBudgetUserFetcher() {
+    var service: BudgetUserFetcher = FirebaseBudgetUserRepository()
+    if let mock = MockBudgetUserFetcher.getTestInstance() {
+        service = mock
+    }
+    iocContainer.autoregister(BudgetUserFetcher.self, initializer: { service })
 }
 
 //MARK: TransactionCategories

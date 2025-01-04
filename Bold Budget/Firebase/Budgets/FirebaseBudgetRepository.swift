@@ -32,7 +32,7 @@ extension FirebaseBudgetRepository: BudgetFetcher {
 
 extension FirebaseBudgetRepository: BudgetCreator {
     func create(budget: BudgetInfo, ownedBy userId: UserId) async throws {
-        let usersRepo = FirebaseBudgetUsersRepository()
+        let usersRepo = FirebaseBudgetUserRepository()
         try await usersRepo.add(user: userId, as: .owner, to: budget)
         
         let doc = FirebaseBudgetDoc.from(budget)
