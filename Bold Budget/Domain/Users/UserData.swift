@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct UserData {
+struct UserData: Identifiable {
     var id: UserId
     var username: Username?
     var profileImageUrl: URL?

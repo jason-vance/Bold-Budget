@@ -30,6 +30,8 @@ struct UserId {
 
 extension UserId: Equatable { }
 
+extension UserId: Hashable { }
+
 extension String.StringInterpolation {
     mutating func appendInterpolation(_ value: UserId) {
         appendInterpolation(value.value)

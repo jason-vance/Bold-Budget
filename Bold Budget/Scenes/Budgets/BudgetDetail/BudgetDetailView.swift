@@ -158,12 +158,28 @@ struct BudgetDetailView: View {
         }
         .navigationTitle(budget.info.name.value)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar { Toolbar() }
         .foregroundStyle(Color.text)
         .background(Color.background)
         .alert(alertMessage, isPresented: $showAlert) {}
         .animation(.snappy, value: budget.isLoading)
         .onAppear { promptForReview() }
         .onReceive(subscriptionManager.subscriptionLevelPublisher) { subscriptionLevel = $0 }
+    }
+    
+    @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            SettingsButton()
+        }
+    }
+    
+    @ViewBuilder private func SettingsButton() -> some View {
+        NavigationLink {
+            BudgetSettingsView(budget: _budget)
+        } label: {
+            Image(systemName: "gearshape")
+        }
+        .accessibilityIdentifier("BudgetDetailView.SettingsButton")
     }
     
     @ViewBuilder private func NewBudgetDialogSheet() -> some View {
