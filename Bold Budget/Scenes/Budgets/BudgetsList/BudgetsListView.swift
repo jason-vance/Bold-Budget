@@ -165,7 +165,7 @@ struct BudgetsListView: View {
         if let count = budgets?.count {
             if count == 0 || subscriptionLevel == .boldBudgetPlus {
                 NavigationLink {
-                    AddBudgetView()
+                    EditBudgetView()
                 } label: {
                     AddBudgetButtonLabel()
                 }

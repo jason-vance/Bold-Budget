@@ -183,7 +183,7 @@ struct BudgetDetailView: View {
     }
     
     @ViewBuilder private func NewBudgetDialogSheet() -> some View {
-        AddBudgetView()
+        EditBudgetView()
             .presentationBackground(Color.background)
             .presentationDragIndicator(.visible)
             .presentationDetents([.large])

@@ -1,5 +1,5 @@
 //
-//  AddBudgetView.swift
+//  EditBudgetView.swift
 //  Bold Budget
 //
 //  Created by Jason Vance on 10/22/24.
@@ -8,7 +8,7 @@
 import SwiftUI
 import SwinjectAutoregistration
 
-struct AddBudgetView: View {
+struct EditBudgetView: View {
     
     @Environment(\.dismiss) private var dismiss: DismissAction
     
@@ -120,7 +120,7 @@ struct AddBudgetView: View {
         } label: {
             Image(systemName: "xmark")
         }
-        .accessibilityIdentifier("AddBudgetView.Toolbar.DismissButton")
+        .accessibilityIdentifier("EditBudgetView.Toolbar.DismissButton")
     }
     
     @ViewBuilder func SaveButton() -> some View {
@@ -131,7 +131,7 @@ struct AddBudgetView: View {
         }
         .opacity(isFormComplete ? 1 : .opacityButtonBackground)
         .disabled(!isFormComplete)
-        .accessibilityIdentifier("AddBudgetView.Toolbar.SaveButton")
+        .accessibilityIdentifier("EditBudgetView.Toolbar.SaveButton")
     }
     
     @ViewBuilder func AdSection() -> some View {
@@ -160,12 +160,12 @@ struct AddBudgetView: View {
             )
             .textFieldSmall()
             .autocapitalization(.words)
-            .accessibilityIdentifier("AddBudgetView.NameField.TextField")
+            .accessibilityIdentifier("EditBudgetView.NameField.TextField")
         }
         .formRow()
     }
 }
 
 #Preview {
-    AddBudgetView()
+    EditBudgetView()
 }
