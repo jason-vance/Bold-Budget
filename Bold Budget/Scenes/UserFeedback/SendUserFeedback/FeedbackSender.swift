@@ -8,12 +8,12 @@
 import Foundation
 
 protocol FeedbackSender {
-    func send(feedback: Feedback) async throws
+    func send(feedback: UserFeedback) async throws
 }
 
 class MockFeedbackSender: FeedbackSender {
     var willThrow: Bool = false
-    func send(feedback: Feedback) async throws {
+    func send(feedback: UserFeedback) async throws {
         if willThrow {
             throw TextError("MockFeedbackSender.WiilThrowError")
         }

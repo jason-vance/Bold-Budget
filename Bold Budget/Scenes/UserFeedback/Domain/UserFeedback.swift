@@ -1,5 +1,5 @@
 //
-//  Feedback.swift
+//  UserFeedback.swift
 //  Bold Budget
 //
 //  Created by Jason Vance on 12/19/24.
@@ -7,14 +7,29 @@
 
 import Foundation
 
-struct Feedback {
+struct UserFeedback: Identifiable {
+    let id: UUID
     let date: Date
     let userId: UserId
     let content: Content
     let appVersion: String
+    
+    static let sample: UserFeedback = .init(
+        id: UUID(),
+        date: Date(),
+        userId: .sample,
+        content: .sample,
+        appVersion: "0.0.0"
+    )
 }
 
-extension Feedback {
+extension UserFeedback: Equatable {
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.id == rhs.id
+    }
+}
+
+extension UserFeedback {
     class Content {
         
         static let minTextLength: Int = 3
@@ -37,6 +52,6 @@ extension Feedback {
             self.value = trimmedText
         }
         
-        static let sample: Feedback.Content = .init("Lorem ipsum dolor sit amet, consectetur adipiscing")!
+        static let sample: UserFeedback.Content = .init("Lorem ipsum dolor sit amet, consectetur adipiscing")!
     }
 }

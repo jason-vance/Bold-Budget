@@ -1,5 +1,5 @@
 //
-//  UserFeedbackView.swift
+//  SendUserFeedbackView.swift
 //  Bold Budget
 //
 //  Created by Jason Vance on 12/17/24.
@@ -9,7 +9,7 @@ import SwiftUI
 import MessageUI
 import SwinjectAutoregistration
 
-struct UserFeedbackView: View {
+struct SendUserFeedbackView: View {
     
     @Environment(\.dismiss) private var dismiss: DismissAction
     
@@ -44,11 +44,12 @@ struct UserFeedbackView: View {
     
     private var isFormComplete: Bool { feedback != nil }
     
-    private var feedback: Feedback? {
+    private var feedback: UserFeedback? {
         guard let userId = currentUserId else { return nil }
-        guard let content = Feedback.Content.init(feedbackString) else { return nil }
+        guard let content = UserFeedback.Content.init(feedbackString) else { return nil }
         
         return .init(
+            id: UUID(),
             date: .now,
             userId: userId,
             content: content,
@@ -77,9 +78,9 @@ struct UserFeedbackView: View {
     
     private var feedbackInstructions: String {
         if feedbackString.isEmpty { return "" }
-        if feedbackString.count < Feedback.Content.minTextLength { return "Too short" }
-        if feedbackString.count > Feedback.Content.maxTextLength { return "Too long" }
-        return "\(feedbackString.count)/\(Feedback.Content.maxTextLength)"
+        if feedbackString.count < UserFeedback.Content.minTextLength { return "Too short" }
+        if feedbackString.count > UserFeedback.Content.maxTextLength { return "Too long" }
+        return "\(feedbackString.count)/\(UserFeedback.Content.maxTextLength)"
     }
     
     var body: some View {
@@ -120,7 +121,7 @@ struct UserFeedbackView: View {
             )
             .textFieldSmall()
             .autocapitalization(.sentences)
-            .accessibilityIdentifier("UserFeedbackView.FeedbackContentField.TextField")
+            .accessibilityIdentifier("SendUserFeedbackView.FeedbackContentField.TextField")
         }
         .formRow()
     }
@@ -143,7 +144,7 @@ struct UserFeedbackView: View {
 }
 
 #Preview {
-    UserFeedbackView(
+    SendUserFeedbackView(
         currentUserIdProvider: MockCurrentUserIdProvider(),
         feedbackSender: MockFeedbackSender()
     )

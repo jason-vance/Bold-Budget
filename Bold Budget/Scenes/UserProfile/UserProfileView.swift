@@ -120,6 +120,7 @@ struct UserProfileView: View {
     var body: some View {
         List {
             ProfileImageSection()
+            AdminSection()
             EditUserProfileSection()
             FeedbackSection()
             SignOutDeleteAccountSection()
@@ -141,6 +142,7 @@ struct UserProfileView: View {
         .onDisappear { userDataProvider.stopListeningToUser() }
         .onReceive(subscriptionLevelProvider.subscriptionLevelPublisher) { subscriptionLevel = $0 }
         .onAppear { checkIsAdmin() }
+        .animation(.snappy, value: showAdminControls)
     }
     
     @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
@@ -170,32 +172,13 @@ struct UserProfileView: View {
         .listRowSeparator(.hidden)
     }
     
-    @ViewBuilder private func EditUserProfileSection() -> some View {
-        if isMe {
+    @ViewBuilder private func AdminSection() -> some View {
+        if showAdminControls {
             Section {
-                EditUserProfileButton()
-                if showAdminControls {
-                    ChangeSubscriptionLevelButton()
-                }
-            }
-        }
-    }
-    
-    @ViewBuilder private func EditUserProfileButton() -> some View {
-        Button {
-            showEditUserProfile = true
-        } label: {
-            HStack {
-                Image(systemName: "person")
-                    .listRowIcon()
-                Text("Edit User Profile")
-                Spacer(minLength: 0)
-            }
-        }
-        .listRow()
-        .fullScreenCover(isPresented: $showEditUserProfile) {
-            NavigationStack {
-                EditUserProfileView(mode: .editProfile)
+                ChangeSubscriptionLevelButton()
+                ViewUserFeedbackButton()
+            } header: {
+                Text("Admin")
             }
         }
     }
@@ -228,6 +211,48 @@ struct UserProfileView: View {
         .listRow()
     }
     
+    @ViewBuilder private func ViewUserFeedbackButton() -> some View {
+        NavigationLink {
+            UserFeedbackListView()
+        } label: {
+            HStack {
+                Image(systemName: "envelope")
+                    .listRowIcon()
+                Text("View User Feedback")
+                Spacer(minLength: 0)
+            }
+        }
+        .listRow()
+        .accessibilityIdentifier("UserProfileView.ViewUserFeedbackButton")
+    }
+    
+    @ViewBuilder private func EditUserProfileSection() -> some View {
+        if isMe {
+            Section {
+                EditUserProfileButton()
+            }
+        }
+    }
+    
+    @ViewBuilder private func EditUserProfileButton() -> some View {
+        Button {
+            showEditUserProfile = true
+        } label: {
+            HStack {
+                Image(systemName: "person")
+                    .listRowIcon()
+                Text("Edit User Profile")
+                Spacer(minLength: 0)
+            }
+        }
+        .listRow()
+        .fullScreenCover(isPresented: $showEditUserProfile) {
+            NavigationStack {
+                EditUserProfileView(mode: .editProfile)
+            }
+        }
+    }
+    
     @ViewBuilder private func FeedbackSection() -> some View {
         Section {
             SubmitFeedbackButton()
@@ -236,7 +261,7 @@ struct UserProfileView: View {
     
     @ViewBuilder private func SubmitFeedbackButton() -> some View {
         NavigationLink {
-            UserFeedbackView()
+            SendUserFeedbackView()
         } label: {
             HStack {
                 Image(systemName: "envelope")

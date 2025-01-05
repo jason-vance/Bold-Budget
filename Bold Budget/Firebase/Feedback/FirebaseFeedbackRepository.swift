@@ -17,21 +17,20 @@ class FirebaseFeedbackRepository {
 }
 
 extension FirebaseFeedbackRepository: FeedbackSender {
-    func send(feedback: Feedback) async throws {
-        try await withCheckedThrowingContinuation { (continuation:CheckedContinuation<Void, Error>) in
-            do {
-                let doc = FirebaseFeedbackDoc.from(feedback)
-                try feedbackCollection.addDocument(from: doc) { error in
-                    if let error = error {
-                        continuation.resume(throwing: error)
-                    } else {
-                        continuation.resume()
-                    }
-                }
-            } catch {
-                continuation.resume(throwing: error)
-            }
-        }
+    func send(feedback: UserFeedback) async throws {
+        let doc = FirebaseFeedbackDoc.from(feedback)
+        try await feedbackCollection
+            .document(feedback.id.uuidString)
+            .setData(from: doc)
+    }
+}
+
+extension FirebaseFeedbackRepository: UserFeedbackFetcher {
+    func fetchUnresolvedUserFeedback() async throws -> [UserFeedback] {
+        try await feedbackCollection
+            .getDocuments()
+            .documents
+            .compactMap { try? $0.data(as: FirebaseFeedbackDoc.self).toUserFeedback() }
     }
 }
 

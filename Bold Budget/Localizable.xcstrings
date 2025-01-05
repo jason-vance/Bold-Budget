@@ -53,6 +53,9 @@
     "Add Transaction" : {
 
     },
+    "Admin" : {
+
+    },
     "Albums" : {
       "comment" : "Photo Albums"
     },
@@ -224,6 +227,9 @@
     "No Transactions" : {
 
     },
+    "No User Feedback" : {
+
+    },
     "None" : {
 
     },
@@ -318,6 +324,9 @@
     "There are no transactions in this time period" : {
 
     },
+    "There is currently no unresolved user feedback" : {
+
+    },
     "Title" : {
 
     },
@@ -325,6 +334,9 @@
 
     },
     "Transaction Categories" : {
+
+    },
+    "User Feedback" : {
 
     },
     "Username" : {
@@ -337,6 +349,9 @@
 
     },
     "Version:" : {
+
+    },
+    "View User Feedback" : {
 
     },
     "What do you think about Bold Budget?" : {
