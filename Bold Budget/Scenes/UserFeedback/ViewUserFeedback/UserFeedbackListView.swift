@@ -90,7 +90,7 @@ struct UserFeedbackListView: View {
     
     @ViewBuilder private func FeedbackRow(_ feedback: UserFeedback) -> some View {
         NavigationLink {
-            //TODO: UserFeedbackDetailView(feedback)
+            UserFeedbackDetailView(feedback: feedback)
         } label: {
             VStack {
                 HStack {
