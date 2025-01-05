@@ -12,7 +12,16 @@ import Combine
 @MainActor
 class Budget: ObservableObject {
     
+    let id: String
+    
     @Published var isLoading: Bool = false
+    @Published var info: BudgetInfo {
+        willSet {
+            if id != info.id {
+                assertionFailure("Budget ids don't match")
+            }
+        }
+    }
     @Published var transactions: [Transaction.Id:Transaction] = [:]
     @Published var transactionCategories: [Transaction.Category.Id:Transaction.Category] = [:]
     
@@ -43,9 +52,9 @@ class Budget: ObservableObject {
             .compactMap(\.amount)
             .reduce(into: Set()) { $0.insert($1) }
     }
-
-    let info: BudgetInfo
     
+    let budgetRenamer: BudgetRenamer
+
     let transactionFetcher: TransactionFetcher
     let transactionSaver: TransactionSaver
     let transactionDeleter: TransactionDeleter
@@ -58,6 +67,7 @@ class Budget: ObservableObject {
     ) {
         self.init(
             info: info,
+            budgetRenamer: iocContainer~>BudgetRenamer.self,
             transactionFetcher: iocContainer~>TransactionFetcher.self,
             transactionSaver: iocContainer~>TransactionSaver.self,
             transactionDeleter: iocContainer~>TransactionDeleter.self,
@@ -68,13 +78,16 @@ class Budget: ObservableObject {
     
     init(
         info: BudgetInfo,
+        budgetRenamer: BudgetRenamer,
         transactionFetcher: TransactionFetcher,
         transactionSaver: TransactionSaver,
         transactionDeleter: TransactionDeleter,
         categoryFetcher: TransactionCategoryFetcher,
         categorySaver: TransactionCategorySaver
     ) {
+        self.id = info.id
         self.info = info
+        self.budgetRenamer = budgetRenamer
         self.transactionFetcher = transactionFetcher
         self.transactionSaver = transactionSaver
         self.transactionDeleter = transactionDeleter
@@ -166,5 +179,24 @@ class Budget: ObservableObject {
     
     func description(of transaction: Transaction) -> String {
         transaction.title?.value ?? getCategoryBy(id: transaction.categoryId).name.value
+    }
+    
+    func set(name: BudgetInfo.Name) {
+        let prevInfo = info
+        info = .init(id: info.id, name: name, users: info.users)
+        Task {
+            do {
+                try await budgetRenamer.rename(budget: self, to: name)
+            } catch {
+                print("Failed to rename budget on backend. \(error.localizedDescription)")
+                info = prevInfo
+            }
+        }
+    }
+}
+
+extension Budget: Equatable {
+    nonisolated public static func == (lhs: Budget, rhs: Budget) -> Bool {
+        lhs.id == rhs.id
     }
 }

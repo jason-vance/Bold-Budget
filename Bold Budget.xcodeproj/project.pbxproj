@@ -80,6 +80,7 @@
 				Scenes/Budgets/Domain/BudgetUser.swift,
 				Scenes/Budgets/EditBudget/Workers/BudgetCreator.swift,
 				Scenes/Budgets/Workers/BudgetFetcher/BudgetFetcher.swift,
+				Scenes/Budgets/Workers/BudgetRenamer/BudgetRenamer.swift,
 				Scenes/Budgets/Workers/BudgetUserFetcher/BudgetUserFetcher.swift,
 				Scenes/EditTransaction/PartialTransaction.swift,
 				Scenes/EditTransaction/TransactionPropertySuggestions.swift,

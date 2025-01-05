@@ -73,6 +73,7 @@ struct BudgetSettingsView: View {
     
     var body: some View {
         List {
+            RenameBudgetSection()
             CategoriesSection()
             UsersSection()
         }
@@ -83,6 +84,18 @@ struct BudgetSettingsView: View {
         .background(Color.background)
         .onAppear { fetchUsers() }
         .onAppear { fetchUserRoles() }
+    }
+    
+    @ViewBuilder private func RenameBudgetSection() -> some View {
+        Section {
+            NavigationLink {
+                EditBudgetView()
+                    .editing(budget)
+            } label: {
+                Text("Rename Budget")
+            }
+            .listRow()
+        }
     }
     
     @ViewBuilder private func CategoriesSection() -> some View {

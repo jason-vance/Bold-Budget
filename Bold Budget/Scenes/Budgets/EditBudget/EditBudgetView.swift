@@ -10,8 +10,16 @@ import SwinjectAutoregistration
 
 struct EditBudgetView: View {
     
+    private struct OptionalBudget: Equatable {
+        let budget: Budget?
+        static let none: OptionalBudget = .init(budget: nil)
+    }
+    
     @Environment(\.dismiss) private var dismiss: DismissAction
     
+    private var budgetToEdit: OptionalBudget = .none
+    
+    @State private var screenTitle: String = String(localized: "Add a Budget")
     @State private var nameString: String = ""
     
     @State private var subscriptionLevel: SubscriptionLevel? = nil
@@ -41,11 +49,17 @@ struct EditBudgetView: View {
         self.subscriptionManager = subscriptionManager
     }
     
+    public func editing(_ budget: Budget) -> EditBudgetView {
+        var view = self
+        view.budgetToEdit = .init(budget: budget)
+        return view
+    }
+    
     private var currentUserId: UserId? { currentUserIdProvider.currentUserId }
     
-    private var isFormComplete: Bool { budget != nil }
+    private var isFormComplete: Bool { budgetInfo != nil }
     
-    private var budget: BudgetInfo? {
+    private var budgetInfo: BudgetInfo? {
         guard let userId = currentUserId else { return nil }
         guard let name = BudgetInfo.Name(nameString) else { return nil }
 
@@ -59,10 +73,14 @@ struct EditBudgetView: View {
     private func saveBudget() {
         Task {
             do {
-                guard let budget = budget else { throw TextError("Invalid Budget") }
+                guard let budgetInfo = budgetInfo else { throw TextError("Invalid Budget") }
                 guard let userId = currentUserId else { throw TextError("Invalid User Id") }
                 
-                try await budgetCreator.create(budget: budget, ownedBy: userId)
+                if let budget = budgetToEdit.budget {
+                    budget.set(name: budgetInfo.name)
+                } else {
+                    try await budgetCreator.create(budget: budgetInfo, ownedBy: userId)
+                }
                 dismiss()
             } catch {
                 let errorMsg = "Error saving budget. \(error.localizedDescription)"
@@ -77,6 +95,15 @@ struct EditBudgetView: View {
         if nameString.count < BudgetInfo.Name.minTextLength { return "Too short" }
         if nameString.count > BudgetInfo.Name.maxTextLength { return "Too long" }
         return "\(nameString.count)/\(BudgetInfo.Name.maxTextLength)"
+    }
+    
+    private func populateFields(_ budget: OptionalBudget) {
+        guard let budget = budget.budget else { return }
+        let isFormEmpty = nameString.isEmpty
+        guard isFormEmpty else { return }
+        
+        screenTitle = String(localized: "Rename Budget")
+        nameString = budget.info.name.value
     }
     
     private func show(alert: String) {
@@ -96,11 +123,12 @@ struct EditBudgetView: View {
         .scrollContentBackground(.hidden)
         .toolbar { Toolbar() }
         .navigationBarTitleDisplayMode(.inline)
-        .navigationTitle("Add a Budget")
+        .navigationTitle(screenTitle)
         .navigationBarBackButtonHidden()
         .foregroundStyle(Color.text)
         .background(Color.background)
         .alert(alertMessage, isPresented: $showAlert) {}
+        .onChange(of: budgetToEdit, initial: true) { _, budget in populateFields(budget) }
         .onReceive(subscriptionManager.subscriptionLevelPublisher) { subscriptionLevel = $0 }
         .animation(.snappy, value: nameInstructions)
     }

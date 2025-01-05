@@ -39,3 +39,11 @@ extension FirebaseBudgetRepository: BudgetCreator {
         try await budgetsCollection.document(budget.id).setData(from: doc)
     }
 }
+
+extension FirebaseBudgetRepository: BudgetRenamer {
+    func rename(budget: Budget, to name: BudgetInfo.Name) async throws {
+        try await budgetsCollection.document(budget.id).updateData([
+            FirebaseBudgetDoc.CodingKeys.name.rawValue: name.value
+        ])
+    }
+}
