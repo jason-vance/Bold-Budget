@@ -84,6 +84,8 @@ struct BudgetSettingsView: View {
         .background(Color.background)
         .onAppear { fetchUsers() }
         .onAppear { fetchUserRoles() }
+        .animation(.snappy, value: users)
+        .animation(.snappy, value: budgetUsers)
     }
     
     @ViewBuilder private func RenameBudgetSection() -> some View {

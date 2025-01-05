@@ -20,3 +20,9 @@ extension Budget {
         static let sample: User = .init(id: .sample, role: .owner)
     }
 }
+
+extension Budget.User: Equatable {
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.id == rhs.id && lhs.role == rhs.role
+    }
+}

@@ -31,3 +31,9 @@ extension UserData {
         privacyPolicyAcceptance: .now
     )
 }
+
+extension UserData: Equatable {
+    static func == (lhs: UserData, rhs: UserData) -> Bool {
+        lhs.id == rhs.id
+    }
+}
