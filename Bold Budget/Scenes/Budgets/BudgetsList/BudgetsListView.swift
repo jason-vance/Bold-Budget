@@ -15,16 +15,22 @@ struct BudgetsListView: View {
     @State private var subscriptionLevel: SubscriptionLevel? = nil
     @State private var showMarketingView: Bool = false
     
+    @State private var budgetToDelete: BudgetInfo? = nil
+    @State private var showFirstDeleteBudgetDialog: Bool = false
+    @State private var showSecondDeleteBudgetDialog: Bool = false
+    
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
     
     private let budgetFetcher: BudgetFetcher
+    private let budgetDeleter: BudgetDeleter
     private let currentUserIdProvider: CurrentUserIdProvider
     private let subscriptionManager: SubscriptionLevelProvider
     
     init() {
         self.init(
             budgetFetcher: iocContainer~>BudgetFetcher.self,
+            budgetDeleter: iocContainer~>BudgetDeleter.self,
             currentUserIdProvider: iocContainer~>CurrentUserIdProvider.self,
             subscriptionManager: iocContainer~>SubscriptionLevelProvider.self
         )
@@ -32,10 +38,12 @@ struct BudgetsListView: View {
     
     init(
         budgetFetcher: BudgetFetcher,
+        budgetDeleter: BudgetDeleter,
         currentUserIdProvider: CurrentUserIdProvider,
         subscriptionManager: SubscriptionLevelProvider
     ) {
         self.budgetFetcher = budgetFetcher
+        self.budgetDeleter = budgetDeleter
         self.currentUserIdProvider = currentUserIdProvider
         self.subscriptionManager = subscriptionManager
     }
@@ -51,6 +59,19 @@ struct BudgetsListView: View {
                 let message = "Failed to fetch budgets. \(error.localizedDescription)"
                 show(alert: message)
                 print(message)
+            }
+        }
+    }
+    
+    private func delete(budget: BudgetInfo?) {
+        guard let budget else { return }
+        
+        Task {
+            do {
+                try await budgetDeleter.delete(budget: budget)
+                budgets = budgets?.filter { $0 != budget }
+            } catch {
+                print("Failed to delete budget. \(error.localizedDescription)")
             }
         }
     }
@@ -87,6 +108,26 @@ struct BudgetsListView: View {
         .alert(alertMessage, isPresented: $showAlert) {}
         .onAppear { fetchBudgets() }
         .onReceive(subscriptionManager.subscriptionLevelPublisher) { subscriptionLevel = $0 }
+        .confirmationDialog(
+            "\(budgetToDelete?.name.value ?? "")\nAre you sure you want to delete this budget? It will no longer be accessible by you or anyone else. All of its transaction data will also be deleted. It will not be recoverable.",
+            isPresented: $showFirstDeleteBudgetDialog,
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) {
+                showSecondDeleteBudgetDialog = true
+            }
+            Button("Cancel", role: .cancel) { }
+        }
+        .confirmationDialog(
+            "Are you REALLY sure you want to delete this budget?",
+            isPresented: $showSecondDeleteBudgetDialog,
+            titleVisibility: .visible
+        ) {
+            Button("Delete It!", role: .destructive) {
+                delete(budget: budgetToDelete)
+            }
+            Button("Nevermind", role: .cancel) { }
+        }
     }
     
     @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
@@ -119,6 +160,15 @@ struct BudgetsListView: View {
             BudgetDetailView(budget: Budget(info: budget))
         } label: {
             Text(budget.name.value)
+        }
+        .swipeActions(allowsFullSwipe: false) {
+            Button {
+                budgetToDelete = budget
+                showFirstDeleteBudgetDialog = true
+            } label: {
+                Image(systemName: "trash")
+            }
+            .tint(Color.background)
         }
         .listRow()
         .accessibilityIdentifier("BudgetsListView.BudgetRow.\(budget.name.value)")
@@ -203,6 +253,7 @@ struct BudgetsListView: View {
     NavigationStack {
         BudgetsListView(
             budgetFetcher: MockBudgetFetcher(),
+            budgetDeleter: MockBudgetDeleter(),
             currentUserIdProvider: MockCurrentUserIdProvider(),
             subscriptionManager: MockSubscriptionLevelProvider(level: .none)
         )
@@ -213,6 +264,7 @@ struct BudgetsListView: View {
     NavigationStack {
         BudgetsListView(
             budgetFetcher: MockBudgetFetcher(budgets: []),
+            budgetDeleter: MockBudgetDeleter(),
             currentUserIdProvider: MockCurrentUserIdProvider(),
             subscriptionManager: MockSubscriptionLevelProvider(level: .none)
         )

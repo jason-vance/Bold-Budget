@@ -47,3 +47,9 @@ extension FirebaseBudgetRepository: BudgetRenamer {
         ])
     }
 }
+
+extension FirebaseBudgetRepository: BudgetDeleter {
+    func delete(budget: BudgetInfo) async throws {
+        try await budgetsCollection.document(budget.id).delete()
+    }
+}

@@ -37,6 +37,7 @@ func setup(iocContainer: Container) {
     registerBudgetFetcher()
     registerBudgetUserFetcher()
     registerBudgetRenamer()
+    registerBudgetDeleter()
 
     // TransactionCategories
     registerTransactionCategoryFetcher()
@@ -165,6 +166,14 @@ fileprivate func registerBudgetRenamer() {
         service = mock
     }
     iocContainer.autoregister(BudgetRenamer.self, initializer: { service })
+}
+
+fileprivate func registerBudgetDeleter() {
+    var service: BudgetDeleter = FirebaseBudgetRepository()
+    if let mock = MockBudgetDeleter.getTestInstance() {
+        service = mock
+    }
+    iocContainer.autoregister(BudgetDeleter.self, initializer: { service })
 }
 
 //MARK: TransactionCategories
