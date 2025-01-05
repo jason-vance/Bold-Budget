@@ -155,7 +155,7 @@ class StoreKitSubscriptionLevelProvider: SubscriptionLevelProvider {
     }
     
     func set(subscriptionLevel: SubscriptionLevel) {
-        self.subscriptionLevel = subscriptionLevel
+        RunLoop.main.perform { self.subscriptionLevel = subscriptionLevel }
         UserDefaults.standard.set(subscriptionLevel.rawValue, forKey: subscriptionLevelKey)
     }
 }
