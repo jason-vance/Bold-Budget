@@ -50,6 +50,7 @@ struct SendUserFeedbackView: View {
         
         return .init(
             id: UUID(),
+            status: .unresolved,
             date: .now,
             userId: userId,
             content: content,

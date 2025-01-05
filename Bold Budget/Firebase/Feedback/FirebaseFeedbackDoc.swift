@@ -11,6 +11,7 @@ import FirebaseFirestore
 struct FirebaseFeedbackDoc: Codable {
     
     @DocumentID var id: String?
+    var status: String?
     var date: Date?
     var userId: String?
     var content: String?
@@ -18,6 +19,7 @@ struct FirebaseFeedbackDoc: Codable {
 
     enum CodingKeys: String, CodingKey {
         case id
+        case status
         case date
         case userId
         case content
@@ -27,6 +29,7 @@ struct FirebaseFeedbackDoc: Codable {
     static func from(_ feedback: UserFeedback) -> FirebaseFeedbackDoc {
         FirebaseFeedbackDoc(
             id: feedback.id.uuidString,
+            status: feedback.status.rawValue,
             date: feedback.date,
             userId: feedback.userId.value,
             content: feedback.content.value,
@@ -36,6 +39,7 @@ struct FirebaseFeedbackDoc: Codable {
     
     func toUserFeedback() -> UserFeedback? {
         guard let id = UUID(uuidString: id ?? "") else { return nil }
+        let status = UserFeedback.Status(rawValue: status ?? "") ?? UserFeedback.Status.unresolved
         guard let date else { return nil }
         guard let userId = UserId(userId) else { return nil }
         guard let content = UserFeedback.Content(content) else { return nil }
@@ -43,6 +47,7 @@ struct FirebaseFeedbackDoc: Codable {
         
         return UserFeedback(
             id: id,
+            status: status,
             date: date,
             userId: userId,
             content: content,

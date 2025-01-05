@@ -51,6 +51,7 @@ func setup(iocContainer: Container) {
     // UserFeedback
     registerFeedbackSender()
     registerFeedbackFetcher()
+    registerFeedbackResolver()
 }
 
 //MARK: Misc
@@ -239,4 +240,12 @@ fileprivate func registerFeedbackFetcher() {
         service = mock
     }
     iocContainer.autoregister(UserFeedbackFetcher.self, initializer: { service })
+}
+
+fileprivate func registerFeedbackResolver() {
+    var service: UserFeedbackResolver = FirebaseFeedbackRepository()
+    if let mock = MockUserFeedbackResolver.getTestInstance() {
+        service = mock
+    }
+    iocContainer.autoregister(UserFeedbackResolver.self, initializer: { service })
 }

@@ -28,9 +28,19 @@ extension FirebaseFeedbackRepository: FeedbackSender {
 extension FirebaseFeedbackRepository: UserFeedbackFetcher {
     func fetchUnresolvedUserFeedback() async throws -> [UserFeedback] {
         try await feedbackCollection
+            .whereField(FirebaseFeedbackDoc.CodingKeys.status.rawValue, isNotEqualTo: UserFeedback.Status.resolved.rawValue)
             .getDocuments()
             .documents
             .compactMap { try? $0.data(as: FirebaseFeedbackDoc.self).toUserFeedback() }
     }
 }
 
+extension FirebaseFeedbackRepository: UserFeedbackResolver {
+    func updateStatus(of feedback: UserFeedback) async throws {
+        try await feedbackCollection
+            .document(feedback.id.uuidString)
+            .updateData([
+                FirebaseFeedbackDoc.CodingKeys.status.rawValue: feedback.status.rawValue
+            ])
+    }
+}

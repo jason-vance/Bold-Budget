@@ -96,6 +96,7 @@
 				Scenes/UserFeedback/ViewUserFeedback/UserFeedbackDetailView.swift,
 				Scenes/UserFeedback/ViewUserFeedback/UserFeedbackFetcher.swift,
 				Scenes/UserFeedback/ViewUserFeedback/UserFeedbackListView.swift,
+				Scenes/UserFeedback/ViewUserFeedback/UserFeedbackResolver.swift,
 				Scenes/UserProfile/Workers/ProfileImageUploader.swift,
 				Utils/AppInfo.swift,
 				Utils/Cache.swift,

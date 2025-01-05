@@ -13,24 +13,30 @@ struct UserFeedbackDetailView: View {
     @State private var feedback: UserFeedback
     @State private var userData: UserData?
     
+    @State private var isUpdatingStatus: Bool = false
+    
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
     
     let userDataFetcher: UserDataFetcher
+    let feedbackResolver: UserFeedbackResolver
     
     init(feedback: UserFeedback) {
         self.init(
             feedback: feedback,
-            userDataFetcher: iocContainer~>UserDataFetcher.self
+            userDataFetcher: iocContainer~>UserDataFetcher.self,
+            feedbackResolver: iocContainer~>UserFeedbackResolver.self
         )
     }
     
     init(
         feedback: UserFeedback,
-        userDataFetcher: UserDataFetcher
+        userDataFetcher: UserDataFetcher,
+        feedbackResolver: UserFeedbackResolver
     ) {
         self.feedback = feedback
         self.userDataFetcher = userDataFetcher
+        self.feedbackResolver = feedbackResolver
     }
     
     private func fetchUserData() {
@@ -40,6 +46,22 @@ struct UserFeedbackDetailView: View {
             } catch {
                 show(alert: "UserData could not be fetched. \(error.localizedDescription)")
             }
+        }
+    }
+    
+    private func update(status: UserFeedback.Status) {
+        isUpdatingStatus = true
+        
+        Task {
+            do {
+                let updatedFeedback = feedback.with(status: status)
+                try await feedbackResolver.updateStatus(of: updatedFeedback)
+                feedback = updatedFeedback
+            } catch {
+                show(alert: "Failed to update status of feedback: \(error.localizedDescription)")
+            }
+            
+            isUpdatingStatus = false
         }
     }
     
@@ -55,6 +77,7 @@ struct UserFeedbackDetailView: View {
             ContentSection()
         }
         .animation(.snappy, value: userData)
+        .animation(.snappy, value: isUpdatingStatus)
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
         .navigationBarTitleDisplayMode(.inline)
@@ -92,6 +115,7 @@ struct UserFeedbackDetailView: View {
     
     @ViewBuilder private func MetadataSection() -> some View {
         Section {
+            StatusRow()
             HStack {
                 Text("Date:")
                 Spacer()
@@ -109,6 +133,40 @@ struct UserFeedbackDetailView: View {
         }
     }
     
+    @ViewBuilder private func StatusRow() -> some View {
+        HStack {
+            Text("Status:")
+            Spacer()
+            StatusMenu()
+        }
+        .listRow()
+    }
+    
+    @ViewBuilder private func StatusMenu() -> some View {
+        if isUpdatingStatus {
+            ProgressView()
+                .progressViewStyle(.circular)
+        } else {
+            Menu {
+                ForEach(UserFeedback.Status.allCases, id: \.self) { status in
+                    Button() {
+                        update(status: status)
+                    } label: {
+                        HStack {
+                            Text(status.rawValue)
+                            if status == feedback.status {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                }
+            } label: {
+                Text(feedback.status.rawValue)
+                    .buttonLabelSmall()
+            }
+        }
+    }
+    
     @ViewBuilder private func ContentSection() -> some View {
         Section {
             Text(feedback.content.value)
@@ -122,6 +180,7 @@ struct UserFeedbackDetailView: View {
 #Preview {
     UserFeedbackDetailView(
         feedback: .sample,
-        userDataFetcher: MockUserDataFetcher()
+        userDataFetcher: MockUserDataFetcher(),
+        feedbackResolver: MockUserFeedbackResolver()
     )
 }

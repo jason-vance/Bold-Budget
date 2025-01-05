@@ -17,6 +17,11 @@ struct UserFeedbackListView: View {
     
     private let feedbackFetcher: UserFeedbackFetcher
     
+    private var sortedFeedback: [UserFeedback] {
+        guard let userFeedbacks else { return [] }
+        return userFeedbacks.sorted { $0.date < $1.date }
+    }
+    
     init() {
         self.init(
             feedbackFetcher: iocContainer~>UserFeedbackFetcher.self
@@ -50,7 +55,7 @@ struct UserFeedbackListView: View {
                 if userFeedbacks.isEmpty {
                     NoFeedbackSection()
                 } else {
-                    FeedbackSection(userFeedbacks)
+                    FeedbackSection()
                 }
             } else {
                 BlockingSpinnerView()
@@ -80,9 +85,9 @@ struct UserFeedbackListView: View {
         }
     }
     
-    @ViewBuilder private func FeedbackSection(_ feedbacks: [UserFeedback]) -> some View {
+    @ViewBuilder private func FeedbackSection() -> some View {
         Section {
-            ForEach(feedbacks) { feedback in
+            ForEach(sortedFeedback) { feedback in
                 FeedbackRow(feedback)
             }
         }

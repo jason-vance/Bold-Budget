@@ -9,13 +9,19 @@ import Foundation
 
 struct UserFeedback: Identifiable {
     let id: UUID
+    let status: Status
     let date: Date
     let userId: UserId
     let content: Content
     let appVersion: String
     
+    func with(status: Status) -> Self {
+        Self(id: id, status: status, date: date, userId: userId, content: content, appVersion: appVersion)
+    }
+    
     static let sample: UserFeedback = .init(
         id: UUID(),
+        status: .unresolved,
         date: Date(),
         userId: .sample,
         content: .sample,
@@ -23,11 +29,14 @@ struct UserFeedback: Identifiable {
     )
 }
 
-extension UserFeedback: Equatable {
-    static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.id == rhs.id
+extension UserFeedback {
+    enum Status: String, CaseIterable {
+        case unresolved
+        case resolved
     }
 }
+
+extension UserFeedback: Equatable { }
 
 extension UserFeedback {
     class Content {
@@ -53,5 +62,11 @@ extension UserFeedback {
         }
         
         static let sample: UserFeedback.Content = .init("Lorem ipsum dolor sit amet, consectetur adipiscing")!
+    }
+}
+
+extension UserFeedback.Content: Equatable {
+    static func == (lhs: UserFeedback.Content, rhs: UserFeedback.Content) -> Bool {
+        lhs.value == rhs.value
     }
 }
