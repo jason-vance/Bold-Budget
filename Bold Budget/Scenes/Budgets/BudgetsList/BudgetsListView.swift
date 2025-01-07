@@ -184,8 +184,8 @@ struct BudgetsListView: View {
                     SimpleNativeAdView(size: .medium)
                         .listRow()
                 }
-            } footer: {
-                RemoveAdsButton()
+//            } footer: {
+//                RemoveAdsButton()
             }
         }
     }
@@ -213,7 +213,7 @@ struct BudgetsListView: View {
     
     @ViewBuilder func AddBudgetButton() -> some View {
         if let count = budgets?.count {
-            if count == 0 || subscriptionLevel == .boldBudgetPlus {
+//            if count == 0 || subscriptionLevel == .boldBudgetPlus {
                 NavigationLink {
                     EditBudgetView()
                 } label: {
@@ -221,18 +221,18 @@ struct BudgetsListView: View {
                 }
                 .padding()
                 .accessibilityIdentifier("BudgetsListView.AddBudgetButton")
-            } else {
-                Button {
-                    showMarketingView = true
-                } label: {
-                    AddBudgetButtonLabel()
-                }
-                .padding()
-                .accessibilityIdentifier("BudgetsListView.AddBudgetButton")
-                .fullScreenCover(isPresented: $showMarketingView) {
-                    SubscriptionMarketingView()
-                }
-            }
+//            } else {
+//                Button {
+//                    showMarketingView = true
+//                } label: {
+//                    AddBudgetButtonLabel()
+//                }
+//                .padding()
+//                .accessibilityIdentifier("BudgetsListView.AddBudgetButton")
+//                .fullScreenCover(isPresented: $showMarketingView) {
+//                    SubscriptionMarketingView()
+//                }
+//            }
         }
     }
     
