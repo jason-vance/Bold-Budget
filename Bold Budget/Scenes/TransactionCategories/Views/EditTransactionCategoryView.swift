@@ -26,12 +26,28 @@ struct EditTransactionCategoryView: View {
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
     
+    @State private var subscriptionLevel: SubscriptionLevel = .none
+    private let subscriptionLevelProvider: SubscriptionLevelProvider
+    
     private var categoryToEdit: OptionalCategory = .none
     
     @StateObject var budget: Budget
     
-    init(budget: Budget) {
+    init(
+        budget: Budget
+    ) {
+        self.init(
+            budget: budget,
+            subscriptionLevelProvider: iocContainer~>SubscriptionLevelProvider.self
+        )
+    }
+    
+    init(
+        budget: Budget,
+        subscriptionLevelProvider: SubscriptionLevelProvider
+    ) {
         self._budget = .init(wrappedValue: budget)
+        self.subscriptionLevelProvider = subscriptionLevelProvider
     }
     
     public func editing(_ category: Transaction.Category) -> EditTransactionCategoryView {
@@ -87,6 +103,7 @@ struct EditTransactionCategoryView: View {
     
     var body: some View {
         Form {
+            AdSection()
             Section {
                 NameField()
                 KindField()
@@ -107,6 +124,7 @@ struct EditTransactionCategoryView: View {
         .alert(alertMessage, isPresented: $showAlert) {}
         .onChange(of: nameString) { _, nameString in setNameInstructions(nameString) }
         .onChange(of: categoryToEdit, initial: true) { _, category in populateFields(category) }
+        .onReceive(subscriptionLevelProvider.subscriptionLevelPublisher) { subscriptionLevel = $0 }
     }
     
     @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
@@ -124,6 +142,15 @@ struct EditTransactionCategoryView: View {
         .opacity(isFormComplete ? 1 : .opacityButtonBackground)
         .disabled(!isFormComplete)
         .accessibilityIdentifier("EditTransactionCategoryView.Toolbar.SaveButton")
+    }
+    
+    @ViewBuilder func AdSection() -> some View {
+        if subscriptionLevel == SubscriptionLevel.none {
+            Section {
+                SimpleNativeAdView(size: .small)
+                    .listRow()
+            }
+        }
     }
     
     @ViewBuilder func KindField() -> some View {
@@ -205,18 +232,24 @@ struct EditTransactionCategoryView: View {
 
 #Preview("New") {
     NavigationStack {
-        EditTransactionCategoryView(budget: Budget(info: .sample))
+        EditTransactionCategoryView(
+            budget: Budget(info: .sample),
+            subscriptionLevelProvider: MockSubscriptionLevelProvider(level: .boldBudgetPlus)
+        )
     }
 }
 
 #Preview("Edit") {
     NavigationStack {
-        EditTransactionCategoryView(budget: Budget(info: .sample))
-            .editing(.init(
-                id: Transaction.Category.Id(),
-                kind: .income,
-                name: .init("Category To Edit")!,
-                sfSymbol: .init("pencil.and.outline")!
-            ))
+        EditTransactionCategoryView(
+            budget: Budget(info: .sample),
+            subscriptionLevelProvider: MockSubscriptionLevelProvider(level: .boldBudgetPlus)
+        )
+        .editing(.init(
+            id: Transaction.Category.Id(),
+            kind: .income,
+            name: .init("Category To Edit")!,
+            sfSymbol: .init("pencil.and.outline")!
+        ))
     }
 }

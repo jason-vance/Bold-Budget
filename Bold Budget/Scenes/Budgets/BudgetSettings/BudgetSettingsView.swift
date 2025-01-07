@@ -15,6 +15,9 @@ struct BudgetSettingsView: View {
     @State private var users: [UserData] = []
     @State private var budgetUsers: [UserId:Budget.User] = [:]
     
+    @State private var subscriptionLevel: SubscriptionLevel = .none
+    private let subscriptionLevelProvider: SubscriptionLevelProvider
+    
     private let userDataFetcher: UserDataFetcher
     private let budgetUserFetcher: BudgetUserFetcher
 
@@ -22,18 +25,21 @@ struct BudgetSettingsView: View {
         self.init(
             budget: budget,
             userDataFetcher: iocContainer~>UserDataFetcher.self,
-            budgetUserFetcher: iocContainer~>BudgetUserFetcher.self
+            budgetUserFetcher: iocContainer~>BudgetUserFetcher.self,
+            subscriptionLevelProvider: iocContainer~>SubscriptionLevelProvider.self
         )
     }
 
     init(
         budget: StateObject<Budget>,
         userDataFetcher: UserDataFetcher,
-        budgetUserFetcher: BudgetUserFetcher
+        budgetUserFetcher: BudgetUserFetcher,
+        subscriptionLevelProvider: SubscriptionLevelProvider
     ) {
         self._budget = budget
         self.userDataFetcher = userDataFetcher
         self.budgetUserFetcher = budgetUserFetcher
+        self.subscriptionLevelProvider = subscriptionLevelProvider
     }
     
     private func fetchUsers() {
@@ -73,6 +79,7 @@ struct BudgetSettingsView: View {
     
     var body: some View {
         List {
+            AdSection()
             RenameBudgetSection()
             CategoriesSection()
             UsersSection()
@@ -86,6 +93,16 @@ struct BudgetSettingsView: View {
         .onAppear { fetchUserRoles() }
         .animation(.snappy, value: users)
         .animation(.snappy, value: budgetUsers)
+        .onReceive(subscriptionLevelProvider.subscriptionLevelPublisher) { subscriptionLevel = $0 }
+    }
+    
+    @ViewBuilder func AdSection() -> some View {
+        if subscriptionLevel == SubscriptionLevel.none {
+            Section {
+                SimpleNativeAdView(size: .small)
+                    .listRow()
+            }
+        }
     }
     
     @ViewBuilder private func RenameBudgetSection() -> some View {
@@ -151,7 +168,8 @@ struct BudgetSettingsView: View {
         BudgetSettingsView(
             budget: .init(wrappedValue: Budget(info: .sample)),
             userDataFetcher: MockUserDataFetcher(),
-            budgetUserFetcher: MockBudgetUserFetcher()
+            budgetUserFetcher: MockBudgetUserFetcher(),
+            subscriptionLevelProvider: MockSubscriptionLevelProvider(level: .boldBudgetPlus)
         )
     }
 }

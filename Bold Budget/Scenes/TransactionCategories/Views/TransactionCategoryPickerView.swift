@@ -30,6 +30,9 @@ struct TransactionCategoryPickerView: View {
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
     
+    @State private var subscriptionLevel: SubscriptionLevel = .none
+    private let subscriptionLevelProvider: SubscriptionLevelProvider
+    
     private var __mode: Mode?
 
     public func pickerMode(_ mode: Mode) -> TransactionCategoryPickerView {
@@ -42,8 +45,21 @@ struct TransactionCategoryPickerView: View {
         budget: Budget,
         selectedCategoryId: Binding<Transaction.Category.Id?>
     ) {
+        self.init(
+            budget: budget,
+            selectedCategoryId: selectedCategoryId,
+            subscriptionLevelProvider: iocContainer~>SubscriptionLevelProvider.self
+        )
+    }
+    
+    init(
+        budget: Budget,
+        selectedCategoryId: Binding<Transaction.Category.Id?>,
+        subscriptionLevelProvider: SubscriptionLevelProvider
+    ) {
         self._budget = .init(wrappedValue: budget)
         self._selectedCategoryId = selectedCategoryId
+        self.subscriptionLevelProvider = subscriptionLevelProvider
     }
     
     private var filteredCategories: [Transaction.Category] {
@@ -80,6 +96,7 @@ struct TransactionCategoryPickerView: View {
             SearchArea()
             BarDivider()
             List {
+                AdSection()
                 if budget.transactionCategories.isEmpty {
                     NoCategoriesView()
                 } else {
@@ -104,7 +121,17 @@ struct TransactionCategoryPickerView: View {
         .foregroundStyle(Color.text)
         .background(Color.background)
         .onChange(of: __mode, initial: true) { _, mode in set(mode: mode) }
+        .onReceive(subscriptionLevelProvider.subscriptionLevelPublisher) { subscriptionLevel = $0 }
         .alert(alertMessage, isPresented: $showAlert) {}
+    }
+    
+    @ViewBuilder func AdSection() -> some View {
+        if subscriptionLevel == SubscriptionLevel.none {
+            Section {
+                SimpleNativeAdView(size: .small)
+                    .listRow()
+            }
+        }
     }
     
     @ViewBuilder func NoCategoriesView() -> some View {
@@ -247,7 +274,8 @@ struct TransactionCategoryPickerView: View {
     NavigationStack {
         TransactionCategoryPickerView(
             budget: Budget(info: .sample),
-            selectedCategoryId: .constant(nil)
+            selectedCategoryId: .constant(nil),
+            subscriptionLevelProvider: MockSubscriptionLevelProvider(level: .boldBudgetPlus)
         )
         .pickerMode(.picker)
     }
@@ -257,7 +285,8 @@ struct TransactionCategoryPickerView: View {
     NavigationStack {
         TransactionCategoryPickerView(
             budget: Budget(info: .sample),
-            selectedCategoryId: .constant(nil)
+            selectedCategoryId: .constant(nil),
+            subscriptionLevelProvider: MockSubscriptionLevelProvider(level: .boldBudgetPlus)
         )
         .pickerMode(.pickerAndEditor)
     }

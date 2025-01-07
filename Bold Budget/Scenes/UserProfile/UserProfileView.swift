@@ -120,6 +120,7 @@ struct UserProfileView: View {
     var body: some View {
         List {
             ProfileImageSection()
+            AdSection()
             AdminSection()
             EditUserProfileSection()
             FeedbackSection()
@@ -170,6 +171,15 @@ struct UserProfileView: View {
         }
         .listRowBackground(Color.background)
         .listRowSeparator(.hidden)
+    }
+    
+    @ViewBuilder func AdSection() -> some View {
+        if subscriptionLevel == SubscriptionLevel.none {
+            Section {
+                SimpleNativeAdView(size: .small)
+                    .listRow()
+            }
+        }
     }
     
     @ViewBuilder private func AdminSection() -> some View {

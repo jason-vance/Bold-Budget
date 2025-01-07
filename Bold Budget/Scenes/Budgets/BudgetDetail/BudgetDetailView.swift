@@ -399,7 +399,8 @@ struct BudgetDetailView: View {
 #Preview {
     NavigationStack {
         BudgetDetailView(
-            budget: Budget(info: .sample)
+            budget: Budget(info: .sample),
+            subscriptionManager: MockSubscriptionLevelProvider(level: .boldBudgetPlus)
         )
     }
 }
