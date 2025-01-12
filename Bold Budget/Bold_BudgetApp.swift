@@ -86,9 +86,12 @@ struct Bold_BudgetApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .accentColor(Color.accent)
-                .onAppear { trackAppLaunch() }
+            ZStack {
+                ContentView()
+                    .accentColor(Color.accent)
+                    .onAppear { trackAppLaunch() }
+                PopupNotificationContainerView()
+            }
         }
     }
 }

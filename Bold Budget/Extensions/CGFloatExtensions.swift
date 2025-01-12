@@ -28,4 +28,6 @@ extension CGFloat {
     static let paddingVerticalButtonXSmall: CGFloat = 6
     static let paddingVerticalButtonSmall: CGFloat = 9
     static let paddingVerticalButtonMedium: CGFloat = 12
+    
+    static let popupNotificationImageSize: CGFloat = 44
 }

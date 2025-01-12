@@ -53,6 +53,10 @@ class Budget: ObservableObject {
             .reduce(into: Set()) { $0.insert($1) }
     }
     
+    var popupNotificationCenter: PopupNotificationCenter? {
+        iocContainer.resolve(PopupNotificationCenter.self)
+    }
+    
     let budgetRenamer: BudgetRenamer
 
     let transactionFetcher: TransactionFetcher
@@ -124,7 +128,7 @@ class Budget: ObservableObject {
             let categories = try await categoryFetcher.fetchTransactionCategories(in: info)
             transactionCategories = Dictionary(uniqueKeysWithValues: categories.map { ($0.id, $0) })
         } catch {
-            print("Failed to fetch transaction categories from backend. \(error.localizedDescription)")
+            onError("Failed to fetch transaction categories.", error: error)
         }
     }
     
@@ -133,7 +137,7 @@ class Budget: ObservableObject {
             let transactions = try await transactionFetcher.fetchTransactions(in: info)
             self.transactions = Dictionary(uniqueKeysWithValues: transactions.map { ($0.id, $0) })
         } catch {
-            print("Failed to fetch transactions from backend. \(error.localizedDescription)")
+            onError("Failed to fetch transactions.", error: error)
         }
     }
     
@@ -143,7 +147,8 @@ class Budget: ObservableObject {
             do {
                 try await transactionSaver.save(transaction: transaction, to: info)
             } catch {
-                print("Failed to save transaction on backend. \(error.localizedDescription)")
+                onError("Failed to save transaction.", error: error)
+
                 transactions[transaction.id] = tmp
             }
         }
@@ -155,7 +160,8 @@ class Budget: ObservableObject {
             do {
                 try await transactionDeleter.delete(transaction: transaction, from: info)
             } catch {
-                print("Failed to delete transaction on backend. \(error.localizedDescription)")
+                onError("Failed to delete transaction.", error: error)
+
                 transactions[transaction.id] = tmp
             }
         }
@@ -167,7 +173,8 @@ class Budget: ObservableObject {
             do {
                 try await categorySaver.save(category: transactionCategory, to: info)
             } catch {
-                print("Failed to save transaction category on backend. \(error.localizedDescription)")
+                onError("Failed to save transaction category.", error: error)
+
                 transactionCategories[transactionCategory.id] = tmp
             }
         }
@@ -188,9 +195,17 @@ class Budget: ObservableObject {
             do {
                 try await budgetRenamer.rename(budget: self, to: name)
             } catch {
-                print("Failed to rename budget on backend. \(error.localizedDescription)")
+                onError("Failed to rename budget.", error: error)
+
                 info = prevInfo
             }
+        }
+    }
+    
+    private func onError(_ message: String, error: Error) {
+        print("\(message) \(error.localizedDescription)")
+        if let popupNotificationCenter = popupNotificationCenter {
+            popupNotificationCenter.errorNotification(message, error: error)
         }
     }
 }

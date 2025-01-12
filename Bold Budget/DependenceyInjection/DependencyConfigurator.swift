@@ -18,6 +18,7 @@ func setup(iocContainer: Container) {
     iocContainer.autoregister(SubscriptionLevelProvider.self, initializer: { StoreKitSubscriptionLevelProvider.instance })
     registerReviewPrompter()
     registerIsAdminChecker()
+    registerPopupNotificationCenter()
     
     // Authentication
     iocContainer.autoregister(AuthenticationProvider.self, initializer: getAuthenticationProvider)
@@ -94,6 +95,11 @@ fileprivate func registerIsAdminChecker() {
         service = mock
     }
     iocContainer.autoregister(IsAdminChecker.self, initializer: { service })
+}
+
+fileprivate func registerPopupNotificationCenter() {
+    let service = PopupNotificationCenter()
+    iocContainer.autoregister(PopupNotificationCenter.self, initializer: { service })
 }
 
 //MARK: Authentication
