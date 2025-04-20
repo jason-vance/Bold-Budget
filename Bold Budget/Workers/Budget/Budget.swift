@@ -188,6 +188,11 @@ class Budget: ObservableObject {
         transaction.title?.value ?? getCategoryBy(id: transaction.categoryId).name.value
     }
     
+    func amountString(for transaction: Transaction) -> String {
+        let isIncome = getCategoryBy(id: transaction.categoryId).kind == .income
+        return (isIncome ? "+" : "") + transaction.amount.formatted()
+    }
+    
     func set(name: BudgetInfo.Name) {
         let prevInfo = info
         info = .init(id: info.id, name: name, users: info.users)

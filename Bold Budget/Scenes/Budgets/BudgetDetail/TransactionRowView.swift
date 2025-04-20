@@ -62,18 +62,24 @@ struct TransactionRowView: View {
                 .font(.body.bold())
                 .lineLimit(1)
             Spacer(minLength: 0)
-            Text(transaction.amount.formatted())
+            Text(budget.amountString(for: transaction))
                 .font(.body)
         }
     }
 }
 
 #Preview {
-    TransactionRowView(
-        budget: .init(info: .sample),
-        transaction: .sampleRandomBasic,
-        category: .unknown
-    )
-    .padding(.padding)
-    .background(Color.background)
+    List {
+        ForEach(Transaction.screenshotSamples) { transaction in
+            TransactionRowView(
+                budget: .init(info: .sample),
+                transaction: transaction,
+                category: .unknown
+            )
+            .listRowNoChrome()
+        }
+    }
+    .listStyle(.insetGrouped)
+    .scrollContentBackground(.hidden)
+    .scrollIndicators(.hidden)
 }
