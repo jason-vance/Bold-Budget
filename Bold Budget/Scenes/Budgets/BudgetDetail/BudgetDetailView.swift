@@ -20,6 +20,20 @@ struct BudgetDetailView: View {
         var id: SimpleDate { date }
         let date: SimpleDate
         var transactions: [Transaction]
+        
+        @MainActor
+        func formattedAmountSum(budget: Budget) -> String {
+            let sum: Double = transactions.reduce(0) {
+                let category = budget.getCategoryBy(id: $1.categoryId)
+                let sign = (category.kind == .income) ? 1.0 : -1.0
+                return $0 + (sign * $1.amount.amount)
+            }
+            
+            if let money = Money(abs(sum)) {
+                return sum > 0 ? "+\(money.formatted())" : money.formatted()
+            }
+            return ""
+        }
     }
     
     @Environment(\.requestReview) var requestReview
@@ -345,8 +359,12 @@ struct BudgetDetailView: View {
                     TransactionRow(transaction)
                 }
             } header: {
-                Text(transactionGroup.date.toDate()?.toBasicUiString() ?? "Unknown Date")
-                    .foregroundStyle(Color.text)
+                HStack {
+                    Text(transactionGroup.date.toDate()?.toBasicUiString() ?? "Unknown Date")
+                    Spacer()
+                    Text(transactionGroup.formattedAmountSum(budget: budget))
+                }
+                .foregroundStyle(Color.text)
             }
             .listSectionSeparator(.hidden)
             .listSectionSpacing(0)
