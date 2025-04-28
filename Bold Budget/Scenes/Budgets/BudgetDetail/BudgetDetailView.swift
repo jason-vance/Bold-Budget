@@ -37,6 +37,9 @@ struct BudgetDetailView: View {
     }
     
     @Environment(\.requestReview) var requestReview
+    @Environment(\.scenePhase) private var scenePhase
+    
+    @AppStorage("previouslyOpenedDate") private var previouslyOpenedDateInt: Int = 0
     
     @StateObject var budget: Budget
     
@@ -145,6 +148,22 @@ struct BudgetDetailView: View {
         alertMessage = alert
     }
     
+    // This func keeps `date` up to date when opening the app. Basically,
+    // if you open the app on a different day than you last closed it then `date` will be .today
+    private func onChangeOf(scenePhase: ScenePhase) {
+        switch scenePhase {
+        case .active:
+            if SimpleDate(rawValue: SimpleDate.RawValue(previouslyOpenedDateInt)) != .now {
+                timeFrame = .init(period: .month, containing: .now)
+            }
+            break
+        case .background:
+            previouslyOpenedDateInt = Int(SimpleDate.now.rawValue)
+        default:
+            break
+        }
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
             TopBar()
@@ -179,6 +198,7 @@ struct BudgetDetailView: View {
         .animation(.snappy, value: budget.isLoading)
         .onAppear { promptForReview() }
         .onReceive(subscriptionManager.subscriptionLevelPublisher) { subscriptionLevel = $0 }
+        .onChange(of: scenePhase) { old, new in onChangeOf(scenePhase: new) }
     }
     
     @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
