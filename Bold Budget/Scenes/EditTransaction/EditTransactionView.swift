@@ -36,6 +36,7 @@ struct EditTransactionView: View {
     
     @State private var suggestions: TransactionPropertySuggestions = .empty
 
+    @State private var hasPopulatedFields: Bool = false
     @State private var subscriptionLevel: SubscriptionLevel? = nil
     @State private var showDiscardDialog: Bool = false
     @State private var showTransactionDatePicker: Bool = false
@@ -143,7 +144,9 @@ struct EditTransactionView: View {
     }
     
     private func populateFields(_ transaction: OptionalTransaction) {
+        guard !hasPopulatedFields else { return }
         guard let transaction = transaction.transaction else { return }
+        
         screenTitle = String(localized: "Edit Transaction")
         categoryId = transaction.categoryId
         amount = transaction.amount
@@ -151,6 +154,8 @@ struct EditTransactionView: View {
         titleString = transaction.title?.value ?? ""
         locationString = transaction.location?.value ?? ""
         tags = transaction.tags
+        
+        hasPopulatedFields = true
     }
     
     private func getSuggestions(for partialTransaction: PartialTransaction) {
@@ -204,7 +209,7 @@ struct EditTransactionView: View {
         .navigationBarBackButtonHidden()
         .foregroundStyle(Color.text)
         .background(Color.background)
-        .onChange(of: transactionToEdit, initial: true) { _, transaction in populateFields(transaction) }
+        .onChange(of: transactionToEdit, initial: true) { _, new in populateFields(new) }
         .onChange(of: partialTransaction, initial: true) { old, new in getSuggestions(for: new) }
         .alert(alertMessage, isPresented: $showAlert) {}
         .onReceive(subscriptionManager.subscriptionLevelPublisher) { subscriptionLevel = $0 }
