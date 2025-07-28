@@ -408,7 +408,7 @@ struct EditTransactionView: View {
             DatePicker(
                 "Date",
                 selection: $transactionDate,
-                in: Date.distantPast...(Date.now),
+                in: Date.distantPast...(Date.distantFuture),
                 displayedComponents: [.date]
             )
             .datePickerStyle(.graphical)
