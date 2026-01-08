@@ -12,6 +12,10 @@ struct TransactionDetailView: View {
     
     @Environment(\.dismiss) private var dismiss
     
+    @EnvironmentObject private var adProviderFactory: AdProviderFactory
+    @State private var adProvider: AdProvider?
+    @State private var ad: Ad?
+    
     @StateObject var budget: Budget
     @State var transaction: Transaction
     var category: Transaction.Category { budget.getCategoryBy(id: transaction.categoryId) }
@@ -69,6 +73,7 @@ struct TransactionDetailView: View {
         .navigationBarBackButtonHidden()
         .foregroundStyle(Color.text)
         .background(Color.background)
+        .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
         .alert(alertMessage, isPresented: $showAlert) {}
         .onReceive(subscriptionManager.subscriptionLevelPublisher) { subscriptionLevel = $0 }
         .confirmationDialog(
@@ -146,7 +151,7 @@ struct TransactionDetailView: View {
     @ViewBuilder func AdSection() -> some View {
         if subscriptionLevel == SubscriptionLevel.none {
             Section {
-                SimpleNativeAdView(size: .small)
+                NativeAdListRow(ad: $ad, size: .small)
                     .listRow()
             }
         }

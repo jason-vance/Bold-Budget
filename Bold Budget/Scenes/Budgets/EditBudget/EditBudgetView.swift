@@ -17,6 +17,10 @@ struct EditBudgetView: View {
     
     @Environment(\.dismiss) private var dismiss: DismissAction
     
+    @EnvironmentObject private var adProviderFactory: AdProviderFactory
+    @State private var adProvider: AdProvider?
+    @State private var ad: Ad?
+    
     private var budgetToEdit: OptionalBudget = .none
     
     @State private var screenTitle: String = String(localized: "Add a Budget")
@@ -127,6 +131,7 @@ struct EditBudgetView: View {
         .navigationBarBackButtonHidden()
         .foregroundStyle(Color.text)
         .background(Color.background)
+        .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
         .alert(alertMessage, isPresented: $showAlert) {}
         .onChange(of: budgetToEdit, initial: true) { _, budget in populateFields(budget) }
         .onReceive(subscriptionManager.subscriptionLevelPublisher) { subscriptionLevel = $0 }
@@ -165,7 +170,7 @@ struct EditBudgetView: View {
     @ViewBuilder func AdSection() -> some View {
         if subscriptionLevel == SubscriptionLevel.none {
             Section {
-                SimpleNativeAdView(size: .small)
+                NativeAdListRow(ad: $ad, size: .small)
                     .listRow()
             }
         }

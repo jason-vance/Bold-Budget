@@ -17,76 +17,41 @@
 import GoogleMobileAds
 import SwiftUI
 
-// [START add_view_model_to_view]
-struct NativeContentView: View {
-    // Single source of truth for the native ad data.
-    @StateObject private var nativeViewModel = NativeAdViewModel()
-    // [START_EXCLUDE silent]
-    let navigationTitle: String
-    // [END_EXCLUDE]
+struct NativeAdListRow: View {
+    
+    @Binding var ad: Ad?
+    let size: AdSize
+    
+    @State private var showMarketingView: Bool = false
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 20) {
-                NativeAdView(
-                    nativeViewModel: nativeViewModel,
-                    xibName: "ExampleNativeAdView"
-                )  // Updates when the native ad data changes.
-                    .frame(minHeight: 300)  // minHeight determined from xib.
-                // [END add_view_model_to_view]
-                
-                Text(
-                    nativeViewModel.nativeAd?.mediaContent.hasVideoContent == true
-                    ? "Ad contains a video asset." : "Ad does not contain a video."
+        VStack {
+            switch ad {
+            case .native(let nativeAd):
+                SimpleNativeAdView(
+                    nativeAd: nativeAd,
+                    size: size
                 )
-                .frame(maxWidth: .infinity)
-                .foregroundColor(.gray)
-                .opacity(nativeViewModel.nativeAd == nil ? 0 : 1)
-                
-                Button("Refresh Ad") {
-                    refreshAd()
-                }
-                
-                Text(
-                    "SDK Version:"
-                    + "\(GADGetStringFromVersionNumber(GADMobileAds.sharedInstance().versionNumber))")
+            case .none:
+                Rectangle()
+                    .frame(height: getAdFrameHeight(size))
+                    .opacity(0)
             }
-            .padding()
         }
-        .onAppear {
-            refreshAd()
-        }
-        .navigationTitle(navigationTitle)
-    }
-    
-    private func refreshAd() {
-        nativeViewModel.refreshAd()
     }
 }
 
-struct NativeContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        NativeContentView(navigationTitle: "Native")
+func getAdFrameHeight(_ size: AdSize) -> CGFloat {
+    switch size {
+    case .small: return 80
+    case .medium: return 290
     }
 }
 
 struct SimpleNativeAdView: View {
-    
-    enum Size {
-        case small
-        case medium
-    }
-    
-    // Single source of truth for the native ad data.
-    @StateObject private var nativeViewModel = NativeAdViewModel()
-    @State var size: Size
-    
-    private var frameMinHeight: CGFloat {
-        switch size {
-        case .small: return 100
-        case .medium: return 380
-        }
-    }
+
+    let nativeAd: NativeAd
+    let size: AdSize
     
     private var xibName: String {
         switch size {
@@ -96,67 +61,72 @@ struct SimpleNativeAdView: View {
     }
     
     var body: some View {
-        NativeAdView(
-            nativeViewModel: nativeViewModel,
+        NativeAdViewContainer(
+            nativeAd: nativeAd,
             xibName: xibName
-        )  // Updates when the native ad data changes.
-        .frame(minHeight: frameMinHeight)  // minHeight determined from xib.
-        .onAppear {
-            refreshAd()
-        }
-    }
-    
-    private func refreshAd() {
-        nativeViewModel.refreshAd()
+        )
+        .frame(height: getAdFrameHeight(size))
     }
 }
 
-// [START create_native_ad_view]
-private struct NativeAdView: UIViewRepresentable {
-    typealias UIViewType = GADNativeAdView
+private struct NativeAdViewContainer: UIViewRepresentable {
+    typealias UIViewType = NativeAdView
     
-    // Observer to update the UIView when the native ad value changes.
-    @ObservedObject var nativeViewModel: NativeAdViewModel
-    @State var xibName: String
+    let nativeAd: NativeAd
+    let xibName: String
     
-    func makeUIView(context: Context) -> GADNativeAdView {
+    func makeUIView(context: Context) -> NativeAdView {
         Bundle.main.loadNibNamed(
             xibName,
             owner: nil,
-            options: nil)?.first as! GADNativeAdView
+            options: nil)?.first as! NativeAdView
     }
     
-    func updateUIView(_ nativeAdView: GADNativeAdView, context: Context) {
-        guard let nativeAd = nativeViewModel.nativeAd else { return }
-        
+    func updateUIView(_ nativeAdView: NativeAdView, context: Context) {
         // Each UI property is configurable using your native ad.
-        (nativeAdView.headlineView as? UILabel)?.text = nativeAd.headline
-        
-        nativeAdView.mediaView?.mediaContent = nativeAd.mediaContent
-        
-        (nativeAdView.bodyView as? UILabel)?.text = nativeAd.body
-        
-        (nativeAdView.iconView as? UIImageView)?.image = nativeAd.icon?.image
-        
-        (nativeAdView.starRatingView as? UIImageView)?.image = imageOfStars(from: nativeAd.starRating)
+        if let headlineView = (nativeAdView.headlineView as? UILabel) {
+            headlineView.text = nativeAd.headline
+        }
 
-        (nativeAdView.storeView as? UILabel)?.text = nativeAd.store
+        if let mediaView = nativeAdView.mediaView {
+            mediaView.mediaContent = nativeAd.mediaContent
+        }
         
-        (nativeAdView.priceView as? UILabel)?.text = nativeAd.price
+        if let bodyView = (nativeAdView.bodyView as? UILabel) {
+            bodyView.text = nativeAd.body
+        }
+
+        if let iconView = (nativeAdView.iconView as? UIImageView) {
+            iconView.image = nativeAd.icon?.image
+        }
         
-        (nativeAdView.advertiserView as? UILabel)?.text = nativeAd.advertiser
+        if let starRatingView = (nativeAdView.starRatingView as? UIImageView) {
+            starRatingView.image = imageOfStars(from: nativeAd.starRating)
+        }
+
+        if let storeView = (nativeAdView.storeView as? UILabel) {
+            storeView.text = nativeAd.store
+        }
+
+        if let priceView = (nativeAdView.priceView as? UILabel) {
+            priceView.text = nativeAd.price
+        }
         
-        (nativeAdView.callToActionView as? UIButton)?.setTitle(nativeAd.callToAction, for: .normal)
+        if let advertiserView = (nativeAdView.advertiserView as? UILabel) {
+            advertiserView.text = nativeAd.advertiser
+        }
         
-        // For the SDK to process touch events properly, user interaction should be disabled.
-        nativeAdView.callToActionView?.isUserInteractionEnabled = false
+        if let callToActionView = (nativeAdView.callToActionView as? UIButton) {
+            callToActionView.setTitle(nativeAd.callToAction, for: .normal)
+            // For the SDK to process touch events properly, user interaction should be disabled.
+            callToActionView.isUserInteractionEnabled = false
+        }
         
         // Associate the native ad view with the native ad object. This is required to make the ad
         // clickable.
         // Note: this should always be done after populating the ad views.
         nativeAdView.nativeAd = nativeAd
     }
-    // [END create_native_ad_view]
     
     private func imageOfStars(from starRating: NSDecimalNumber?) -> UIImage? {
         guard let rating = starRating?.doubleValue else {
@@ -173,6 +143,6 @@ private struct NativeAdView: UIViewRepresentable {
         } else if rating >= 3.5 {
             image = UIImage(named: "stars_3_5")
         }
-        return image?.withTintColor(.white)
+        return image?.withTintColor(UIColor(.yellow))
     }
 }

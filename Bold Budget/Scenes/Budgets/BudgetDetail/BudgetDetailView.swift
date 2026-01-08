@@ -39,6 +39,10 @@ struct BudgetDetailView: View {
     @Environment(\.requestReview) var requestReview
     @Environment(\.scenePhase) private var scenePhase
     
+    @EnvironmentObject private var adProviderFactory: AdProviderFactory
+    @State private var adProvider: AdProvider?
+    @State private var ad: Ad?
+    
     @AppStorage("previouslyOpenedDate") private var previouslyOpenedDateInt: Int = 0
     
     @StateObject var budget: Budget
@@ -194,6 +198,7 @@ struct BudgetDetailView: View {
         .toolbar { Toolbar() }
         .foregroundStyle(Color.text)
         .background(Color.background)
+        .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
         .alert(alertMessage, isPresented: $showAlert) {}
         .animation(.snappy, value: budget.isLoading)
         .onAppear { promptForReview() }
@@ -427,7 +432,7 @@ struct BudgetDetailView: View {
     @ViewBuilder func AdSection() -> some View {
         if subscriptionLevel == SubscriptionLevel.none {
             Section {
-                SimpleNativeAdView(size: .small)
+                NativeAdListRow(ad: $ad, size: .small)
                     .listRow()
             }
         }

@@ -7,19 +7,18 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		563E1A352D0D6F87003DED56 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 563E1A342D0D6F87003DED56 /* GoogleMobileAds */; };
-		565082842CA8179A009D9417 /* SwinjectAutoregistration in Frameworks */ = {isa = PBXBuildFile; productRef = 565082832CA8179A009D9417 /* SwinjectAutoregistration */; };
-		569088452CBA38AB00BFADCF /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 569088442CBA38AB00BFADCF /* FirebaseAnalytics */; };
-		569088472CBA38AB00BFADCF /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 569088462CBA38AB00BFADCF /* FirebaseAuth */; };
-		569088492CBA38AB00BFADCF /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 569088482CBA38AB00BFADCF /* FirebaseFirestore */; };
-		5690884B2CBA38AB00BFADCF /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 5690884A2CBA38AB00BFADCF /* FirebaseStorage */; };
-		5690884D2CBA3B3000BFADCF /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 5690884C2CBA3B3000BFADCF /* FirebaseCore */; };
-		569088832CBBC70000BFADCF /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 569088822CBBC70000BFADCF /* Kingfisher */; };
-		569088C02CBF9A3E00BFADCF /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 569088BF2CBF9A3E00BFADCF /* MarkdownUI */; };
-		569088C32CBF9B5800BFADCF /* YPImagePicker in Frameworks */ = {isa = PBXBuildFile; productRef = 569088C22CBF9B5800BFADCF /* YPImagePicker */; };
-		5690C4982CAE0F8700A389F4 /* SwiftUIFlowLayout in Frameworks */ = {isa = PBXBuildFile; productRef = 5690C4972CAE0F8700A389F4 /* SwiftUIFlowLayout */; };
 		5690C6F52CB3C60200A389F4 /* Screenshots.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 5690C6F42CB3C60200A389F4 /* Screenshots.xctestplan */; };
 		5690C6F72CB3C83000A389F4 /* Comprehensive.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 5690C6F62CB3C83000A389F4 /* Comprehensive.xctestplan */; };
+		5692036D2F1047A70008B2E6 /* SwiftUIFlowLayout in Frameworks */ = {isa = PBXBuildFile; productRef = 5692036C2F1047A70008B2E6 /* SwiftUIFlowLayout */; };
+		569203702F1047BA0008B2E6 /* SwinjectAutoregistration in Frameworks */ = {isa = PBXBuildFile; productRef = 5692036F2F1047BA0008B2E6 /* SwinjectAutoregistration */; };
+		569203732F1048010008B2E6 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 569203722F1048010008B2E6 /* FirebaseAnalytics */; };
+		569203752F1048010008B2E6 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 569203742F1048010008B2E6 /* FirebaseAuth */; };
+		569203772F1048010008B2E6 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 569203762F1048010008B2E6 /* FirebaseFirestore */; };
+		569203792F1048010008B2E6 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 569203782F1048010008B2E6 /* FirebaseStorage */; };
+		5692075D2F1049840008B2E6 /* YPImagePicker in Frameworks */ = {isa = PBXBuildFile; productRef = 5692075C2F1049840008B2E6 /* YPImagePicker */; };
+		569207602F104A280008B2E6 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 5692075F2F104A280008B2E6 /* MarkdownUI */; };
+		569207632F104A510008B2E6 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 569207622F104A510008B2E6 /* GoogleMobileAds */; };
+		569207742F10507A0008B2E6 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 569207732F10507A0008B2E6 /* Kingfisher */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -192,17 +191,16 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5690C4982CAE0F8700A389F4 /* SwiftUIFlowLayout in Frameworks */,
-				569088C32CBF9B5800BFADCF /* YPImagePicker in Frameworks */,
-				565082842CA8179A009D9417 /* SwinjectAutoregistration in Frameworks */,
-				569088452CBA38AB00BFADCF /* FirebaseAnalytics in Frameworks */,
-				569088C02CBF9A3E00BFADCF /* MarkdownUI in Frameworks */,
-				563E1A352D0D6F87003DED56 /* GoogleMobileAds in Frameworks */,
-				569088492CBA38AB00BFADCF /* FirebaseFirestore in Frameworks */,
-				569088832CBBC70000BFADCF /* Kingfisher in Frameworks */,
-				5690884D2CBA3B3000BFADCF /* FirebaseCore in Frameworks */,
-				569088472CBA38AB00BFADCF /* FirebaseAuth in Frameworks */,
-				5690884B2CBA38AB00BFADCF /* FirebaseStorage in Frameworks */,
+				5692036D2F1047A70008B2E6 /* SwiftUIFlowLayout in Frameworks */,
+				569203752F1048010008B2E6 /* FirebaseAuth in Frameworks */,
+				569203732F1048010008B2E6 /* FirebaseAnalytics in Frameworks */,
+				569207632F104A510008B2E6 /* GoogleMobileAds in Frameworks */,
+				569207742F10507A0008B2E6 /* Kingfisher in Frameworks */,
+				569207602F104A280008B2E6 /* MarkdownUI in Frameworks */,
+				569203792F1048010008B2E6 /* FirebaseStorage in Frameworks */,
+				5692075D2F1049840008B2E6 /* YPImagePicker in Frameworks */,
+				569203702F1047BA0008B2E6 /* SwinjectAutoregistration in Frameworks */,
+				569203772F1048010008B2E6 /* FirebaseFirestore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -273,17 +271,16 @@
 			);
 			name = "Bold Budget";
 			packageProductDependencies = (
-				565082832CA8179A009D9417 /* SwinjectAutoregistration */,
-				5690C4972CAE0F8700A389F4 /* SwiftUIFlowLayout */,
-				569088442CBA38AB00BFADCF /* FirebaseAnalytics */,
-				569088462CBA38AB00BFADCF /* FirebaseAuth */,
-				569088482CBA38AB00BFADCF /* FirebaseFirestore */,
-				5690884A2CBA38AB00BFADCF /* FirebaseStorage */,
-				5690884C2CBA3B3000BFADCF /* FirebaseCore */,
-				569088822CBBC70000BFADCF /* Kingfisher */,
-				569088BF2CBF9A3E00BFADCF /* MarkdownUI */,
-				569088C22CBF9B5800BFADCF /* YPImagePicker */,
-				563E1A342D0D6F87003DED56 /* GoogleMobileAds */,
+				5692036C2F1047A70008B2E6 /* SwiftUIFlowLayout */,
+				5692036F2F1047BA0008B2E6 /* SwinjectAutoregistration */,
+				569203722F1048010008B2E6 /* FirebaseAnalytics */,
+				569203742F1048010008B2E6 /* FirebaseAuth */,
+				569203762F1048010008B2E6 /* FirebaseFirestore */,
+				569203782F1048010008B2E6 /* FirebaseStorage */,
+				5692075C2F1049840008B2E6 /* YPImagePicker */,
+				5692075F2F104A280008B2E6 /* MarkdownUI */,
+				569207622F104A510008B2E6 /* GoogleMobileAds */,
+				569207732F10507A0008B2E6 /* Kingfisher */,
 			);
 			productName = "Bold Budget";
 			productReference = 5673DA0F2CA7FA58007833E0 /* Bold Budget.app */;
@@ -368,13 +365,13 @@
 			mainGroup = 5673DA062CA7FA58007833E0;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				565082822CA8179A009D9417 /* XCRemoteSwiftPackageReference "SwinjectAutoregistration" */,
-				5690C4962CAE0F8700A389F4 /* XCRemoteSwiftPackageReference "swiftui-flow-layout" */,
-				569088432CBA38AB00BFADCF /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
-				569088812CBBC70000BFADCF /* XCRemoteSwiftPackageReference "Kingfisher" */,
-				569088BE2CBF9A3E00BFADCF /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
-				569088C12CBF9B5800BFADCF /* XCRemoteSwiftPackageReference "YPImagePicker" */,
-				563E1A332D0D6F87003DED56 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
+				5692036B2F1047A70008B2E6 /* XCRemoteSwiftPackageReference "swiftui-flow-layout" */,
+				5692036E2F1047BA0008B2E6 /* XCRemoteSwiftPackageReference "SwinjectAutoregistration" */,
+				569203712F1048010008B2E6 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				5692075B2F1049840008B2E6 /* XCRemoteSwiftPackageReference "YPImagePicker" */,
+				5692075E2F104A280008B2E6 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
+				569207612F104A510008B2E6 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
+				569207722F10507A0008B2E6 /* XCRemoteSwiftPackageReference "Kingfisher" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 5673DA102CA7FA58007833E0 /* Products */;
@@ -783,55 +780,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		563E1A332D0D6F87003DED56 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 11.13.0;
-			};
-		};
-		565082822CA8179A009D9417 /* XCRemoteSwiftPackageReference "SwinjectAutoregistration" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/Swinject/SwinjectAutoregistration.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.9.1;
-			};
-		};
-		569088432CBA38AB00BFADCF /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 11.3.0;
-			};
-		};
-		569088812CBBC70000BFADCF /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/onevcat/Kingfisher.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 8.0.3;
-			};
-		};
-		569088BE2CBF9A3E00BFADCF /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/gonzalezreal/swift-markdown-ui";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.4.1;
-			};
-		};
-		569088C12CBF9B5800BFADCF /* XCRemoteSwiftPackageReference "YPImagePicker" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/LawrenceNorman/YPImagePicker.git";
-			requirement = {
-				branch = master;
-				kind = branch;
-			};
-		};
-		5690C4962CAE0F8700A389F4 /* XCRemoteSwiftPackageReference "swiftui-flow-layout" */ = {
+		5692036B2F1047A70008B2E6 /* XCRemoteSwiftPackageReference "swiftui-flow-layout" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/globulus/swiftui-flow-layout.git";
 			requirement = {
@@ -839,63 +788,106 @@
 				minimumVersion = 1.0.5;
 			};
 		};
+		5692036E2F1047BA0008B2E6 /* XCRemoteSwiftPackageReference "SwinjectAutoregistration" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Swinject/SwinjectAutoregistration.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.9.1;
+			};
+		};
+		569203712F1048010008B2E6 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.7.0;
+			};
+		};
+		5692075B2F1049840008B2E6 /* XCRemoteSwiftPackageReference "YPImagePicker" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Yummypets/YPImagePicker.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.3.2;
+			};
+		};
+		5692075E2F104A280008B2E6 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/gonzalezreal/swift-markdown-ui";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.4.1;
+			};
+		};
+		569207612F104A510008B2E6 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.14.0;
+			};
+		};
+		569207722F10507A0008B2E6 /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/onevcat/Kingfisher.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.6.2;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		563E1A342D0D6F87003DED56 /* GoogleMobileAds */ = {
+		5692036C2F1047A70008B2E6 /* SwiftUIFlowLayout */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 563E1A332D0D6F87003DED56 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
-			productName = GoogleMobileAds;
+			package = 5692036B2F1047A70008B2E6 /* XCRemoteSwiftPackageReference "swiftui-flow-layout" */;
+			productName = SwiftUIFlowLayout;
 		};
-		565082832CA8179A009D9417 /* SwinjectAutoregistration */ = {
+		5692036F2F1047BA0008B2E6 /* SwinjectAutoregistration */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 565082822CA8179A009D9417 /* XCRemoteSwiftPackageReference "SwinjectAutoregistration" */;
+			package = 5692036E2F1047BA0008B2E6 /* XCRemoteSwiftPackageReference "SwinjectAutoregistration" */;
 			productName = SwinjectAutoregistration;
 		};
-		569088442CBA38AB00BFADCF /* FirebaseAnalytics */ = {
+		569203722F1048010008B2E6 /* FirebaseAnalytics */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 569088432CBA38AB00BFADCF /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			package = 569203712F1048010008B2E6 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseAnalytics;
 		};
-		569088462CBA38AB00BFADCF /* FirebaseAuth */ = {
+		569203742F1048010008B2E6 /* FirebaseAuth */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 569088432CBA38AB00BFADCF /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			package = 569203712F1048010008B2E6 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseAuth;
 		};
-		569088482CBA38AB00BFADCF /* FirebaseFirestore */ = {
+		569203762F1048010008B2E6 /* FirebaseFirestore */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 569088432CBA38AB00BFADCF /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			package = 569203712F1048010008B2E6 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseFirestore;
 		};
-		5690884A2CBA38AB00BFADCF /* FirebaseStorage */ = {
+		569203782F1048010008B2E6 /* FirebaseStorage */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 569088432CBA38AB00BFADCF /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			package = 569203712F1048010008B2E6 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseStorage;
 		};
-		5690884C2CBA3B3000BFADCF /* FirebaseCore */ = {
+		5692075C2F1049840008B2E6 /* YPImagePicker */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 569088432CBA38AB00BFADCF /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseCore;
-		};
-		569088822CBBC70000BFADCF /* Kingfisher */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 569088812CBBC70000BFADCF /* XCRemoteSwiftPackageReference "Kingfisher" */;
-			productName = Kingfisher;
-		};
-		569088BF2CBF9A3E00BFADCF /* MarkdownUI */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 569088BE2CBF9A3E00BFADCF /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
-			productName = MarkdownUI;
-		};
-		569088C22CBF9B5800BFADCF /* YPImagePicker */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 569088C12CBF9B5800BFADCF /* XCRemoteSwiftPackageReference "YPImagePicker" */;
+			package = 5692075B2F1049840008B2E6 /* XCRemoteSwiftPackageReference "YPImagePicker" */;
 			productName = YPImagePicker;
 		};
-		5690C4972CAE0F8700A389F4 /* SwiftUIFlowLayout */ = {
+		5692075F2F104A280008B2E6 /* MarkdownUI */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 5690C4962CAE0F8700A389F4 /* XCRemoteSwiftPackageReference "swiftui-flow-layout" */;
-			productName = SwiftUIFlowLayout;
+			package = 5692075E2F104A280008B2E6 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
+			productName = MarkdownUI;
+		};
+		569207622F104A510008B2E6 /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 569207612F104A510008B2E6 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
+			productName = GoogleMobileAds;
+		};
+		569207732F10507A0008B2E6 /* Kingfisher */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 569207722F10507A0008B2E6 /* XCRemoteSwiftPackageReference "Kingfisher" */;
+			productName = Kingfisher;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

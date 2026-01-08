@@ -19,6 +19,10 @@ struct TransactionCategoryPickerView: View {
     
     @Environment(\.dismiss) private var dismiss
     
+    @EnvironmentObject private var adProviderFactory: AdProviderFactory
+    @State private var adProvider: AdProvider?
+    @State private var ad: Ad?
+    
     @StateObject public var budget: Budget
     @Binding public var selectedCategoryId: Transaction.Category.Id?
     
@@ -120,6 +124,7 @@ struct TransactionCategoryPickerView: View {
         .navigationBarBackButtonHidden()
         .foregroundStyle(Color.text)
         .background(Color.background)
+        .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
         .onChange(of: __mode, initial: true) { _, mode in set(mode: mode) }
         .onReceive(subscriptionLevelProvider.subscriptionLevelPublisher) { subscriptionLevel = $0 }
         .alert(alertMessage, isPresented: $showAlert) {}
@@ -128,7 +133,7 @@ struct TransactionCategoryPickerView: View {
     @ViewBuilder func AdSection() -> some View {
         if subscriptionLevel == SubscriptionLevel.none {
             Section {
-                SimpleNativeAdView(size: .small)
+                NativeAdListRow(ad: $ad, size: .small)
                     .listRow()
             }
         }

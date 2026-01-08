@@ -13,6 +13,10 @@ struct UserProfileView: View {
     
     @Environment(\.dismiss) private var dismiss
     
+    @EnvironmentObject private var adProviderFactory: AdProviderFactory
+    @State private var adProvider: AdProvider?
+    @State private var ad: Ad?
+    
     @State private var userId: UserId?
     @State private var userData: UserData?
     
@@ -144,6 +148,7 @@ struct UserProfileView: View {
         .onReceive(subscriptionLevelProvider.subscriptionLevelPublisher) { subscriptionLevel = $0 }
         .onAppear { checkIsAdmin() }
         .animation(.snappy, value: showAdminControls)
+        .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
     }
     
     @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
@@ -176,7 +181,7 @@ struct UserProfileView: View {
     @ViewBuilder func AdSection() -> some View {
         if subscriptionLevel == SubscriptionLevel.none {
             Section {
-                SimpleNativeAdView(size: .small)
+                NativeAdListRow(ad: $ad, size: .small)
                     .listRow()
             }
         }

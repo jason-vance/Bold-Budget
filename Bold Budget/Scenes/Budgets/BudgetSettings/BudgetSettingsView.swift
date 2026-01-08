@@ -10,6 +10,10 @@ import SwinjectAutoregistration
 
 struct BudgetSettingsView: View {
     
+    @EnvironmentObject private var adProviderFactory: AdProviderFactory
+    @State private var adProvider: AdProvider?
+    @State private var ad: Ad?
+    
     @StateObject var budget: Budget
 
     @State private var users: [UserData] = []
@@ -89,6 +93,7 @@ struct BudgetSettingsView: View {
         .navigationTitle(budget.info.name.value)
         .foregroundStyle(Color.text)
         .background(Color.background)
+        .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
         .onAppear { fetchUsers() }
         .onAppear { fetchUserRoles() }
         .animation(.snappy, value: users)
@@ -99,7 +104,7 @@ struct BudgetSettingsView: View {
     @ViewBuilder func AdSection() -> some View {
         if subscriptionLevel == SubscriptionLevel.none {
             Section {
-                SimpleNativeAdView(size: .small)
+                NativeAdListRow(ad: $ad, size: .small)
                     .listRow()
             }
         }
@@ -156,7 +161,7 @@ struct BudgetSettingsView: View {
             }
             Spacer(minLength: 0)
             if let role = budgetUsers[user.id]?.role {
-                Text("(\(role))")
+                Text("(\(String(describing: role)))")
             }
         }
         .listRow()

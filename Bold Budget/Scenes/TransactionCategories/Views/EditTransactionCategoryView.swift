@@ -17,6 +17,10 @@ struct EditTransactionCategoryView: View {
     
     @Environment(\.dismiss) private var dismiss
     
+    @EnvironmentObject private var adProviderFactory: AdProviderFactory
+    @State private var adProvider: AdProvider?
+    @State private var ad: Ad?
+    
     @State private var screenTitle: String = String(localized: "Add Category")
     @State private var kind: Transaction.Category.Kind = .expense
     @State private var symbolString: String? = nil
@@ -121,6 +125,7 @@ struct EditTransactionCategoryView: View {
         .navigationTitle(screenTitle)
         .foregroundStyle(Color.text)
         .background(Color.background)
+        .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
         .alert(alertMessage, isPresented: $showAlert) {}
         .onChange(of: nameString) { _, nameString in setNameInstructions(nameString) }
         .onChange(of: categoryToEdit, initial: true) { _, category in populateFields(category) }
@@ -147,7 +152,7 @@ struct EditTransactionCategoryView: View {
     @ViewBuilder func AdSection() -> some View {
         if subscriptionLevel == SubscriptionLevel.none {
             Section {
-                SimpleNativeAdView(size: .small)
+                NativeAdListRow(ad: $ad, size: .small)
                     .listRow()
             }
         }

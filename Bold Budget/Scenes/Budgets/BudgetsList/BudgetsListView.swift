@@ -10,6 +10,10 @@ import SwinjectAutoregistration
 
 struct BudgetsListView: View {
     
+    @EnvironmentObject private var adProviderFactory: AdProviderFactory
+    @State private var adProvider: AdProvider?
+    @State private var ad: Ad?
+    
     @State private var budgets: [BudgetInfo]? = nil
     
     @State private var subscriptionLevel: SubscriptionLevel? = nil
@@ -105,6 +109,7 @@ struct BudgetsListView: View {
         .navigationTitle("Budgets")
         .foregroundStyle(Color.text)
         .background(Color.background)
+        .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
         .alert(alertMessage, isPresented: $showAlert) {}
         .onAppear { fetchBudgets() }
         .onReceive(subscriptionManager.subscriptionLevelPublisher) { subscriptionLevel = $0 }
@@ -178,10 +183,10 @@ struct BudgetsListView: View {
         if let budgets = budgets, subscriptionLevel == SubscriptionLevel.none {
             Section {
                 if budgets.isEmpty {
-                    SimpleNativeAdView(size: .small)
+                    NativeAdListRow(ad: $ad, size: .small)
                         .listRow()
                 } else {
-                    SimpleNativeAdView(size: .medium)
+                    NativeAdListRow(ad: $ad, size: .medium)
                         .listRow()
                 }
 //            } footer: {
@@ -212,7 +217,7 @@ struct BudgetsListView: View {
     }
     
     @ViewBuilder func AddBudgetButton() -> some View {
-        if let count = budgets?.count {
+        if let _ = budgets?.count {
 //            if count == 0 || subscriptionLevel == .boldBudgetPlus {
                 NavigationLink {
                     EditBudgetView()

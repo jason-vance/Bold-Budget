@@ -123,7 +123,7 @@ struct SearchBar: View {
                     searchText: searchText,
                     searchPresented: searchedPresented
                 )
-                Text("searchedPresented: \(searchedPresented.wrappedValue)")
+                Text("searchedPresented: \(String(describing: searchedPresented.wrappedValue))")
                 Spacer()
             }
         }

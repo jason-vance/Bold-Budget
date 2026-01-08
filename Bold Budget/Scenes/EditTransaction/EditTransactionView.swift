@@ -17,6 +17,10 @@ struct EditTransactionView: View {
     
     @Environment(\.dismiss) private var dismiss
     
+    @EnvironmentObject private var adProviderFactory: AdProviderFactory
+    @State private var adProvider: AdProvider?
+    @State private var ad: Ad?
+    
     @StateObject var budget: Budget
     
     private var transactionToEdit: OptionalTransaction = .none
@@ -209,6 +213,7 @@ struct EditTransactionView: View {
         .navigationBarBackButtonHidden()
         .foregroundStyle(Color.text)
         .background(Color.background)
+        .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
         .onChange(of: transactionToEdit, initial: true) { _, new in populateFields(new) }
         .onChange(of: partialTransaction, initial: true) { old, new in getSuggestions(for: new) }
         .alert(alertMessage, isPresented: $showAlert) {}
@@ -270,7 +275,7 @@ struct EditTransactionView: View {
     @ViewBuilder func AdSection() -> some View {
         if subscriptionLevel == SubscriptionLevel.none {
             Section {
-                SimpleNativeAdView(size: .small)
+                NativeAdListRow(ad: $ad, size: .small)
                     .listRow()
             }
         }

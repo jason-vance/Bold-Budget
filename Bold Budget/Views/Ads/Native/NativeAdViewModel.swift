@@ -14,64 +14,74 @@
 //  limitations under the License.
 //
 
-// [START create_view_model]
 import GoogleMobileAds
+import Combine
 
-class NativeAdViewModel: NSObject, ObservableObject, GADNativeAdLoaderDelegate {
+class NativeAdViewModel: NSObject, ObservableObject, NativeAdLoaderDelegate, AdProvider {
     
     private let adUnitId = "ca-app-pub-1475400719226569/1223322061"
     private let testAdUnitId = "ca-app-pub-3940256099942544/3986624511"
     
-  @Published var nativeAd: GADNativeAd?
-  private var adLoader: GADAdLoader!
-
-  func refreshAd() {
+    @Published var nativeAd: NativeAd?
+    @Published var error: Error?
+    private var adLoader: AdLoader!
+    
+    var adPublisher: AnyPublisher<Ad?, Never> {
+        $nativeAd.map { nativeAd in
+            guard let nativeAd else { return nil }
+            return Ad.native(nativeAd)
+        }.eraseToAnyPublisher()
+    }
+    
+    var errorPublisher: AnyPublisher<Error?, Never> {
+        $error.eraseToAnyPublisher()
+    }
+    
+    func refreshAd() {
 #if DEBUG
-      let adUnitId = self.testAdUnitId
+        let adUnitId = self.testAdUnitId
 #else
-      let adUnitId = self.adUnitId
+        let adUnitId = self.adUnitId
 #endif
-      
-    adLoader = GADAdLoader(
-      adUnitID: adUnitId,
-      // The UIViewController parameter is optional.
-      rootViewController: nil,
-      adTypes: [.native], options: nil)
-    adLoader.delegate = self
-    adLoader.load(GADRequest())
-  }
-
-  func adLoader(_ adLoader: GADAdLoader, didReceive nativeAd: GADNativeAd) {
-    // Native ad data changes are published to its subscribers.
-    self.nativeAd = nativeAd
-    nativeAd.delegate = self
-  }
-
-  func adLoader(_ adLoader: GADAdLoader, didFailToReceiveAdWithError error: Error) {
-    print("\(adLoader) failed with error: \(error.localizedDescription)")
-  }
+        
+        adLoader = AdLoader(
+            adUnitID: adUnitId,
+            rootViewController: nil,
+            adTypes: [.native],
+            options: nil
+        )
+        adLoader.delegate = self
+        adLoader.load(Request())
+    }
+    
+    func adLoader(_ adLoader: AdLoader, didReceive nativeAd: NativeAd) {
+        self.nativeAd = nativeAd
+        nativeAd.delegate = self
+    }
+    
+    func adLoader(_ adLoader: AdLoader, didFailToReceiveAdWithError error: Error) {
+        print("\(adLoader) failed with error: \(error.localizedDescription)")
+    }
 }
-// [END create_view_model]
 
-// MARK: - GADNativeAdDelegate implementation
-extension NativeAdViewModel: GADNativeAdDelegate {
-  func nativeAdDidRecordClick(_ nativeAd: GADNativeAd) {
-    print("\(#function) called")
-  }
-
-  func nativeAdDidRecordImpression(_ nativeAd: GADNativeAd) {
-    print("\(#function) called")
-  }
-
-  func nativeAdWillPresentScreen(_ nativeAd: GADNativeAd) {
-    print("\(#function) called")
-  }
-
-  func nativeAdWillDismissScreen(_ nativeAd: GADNativeAd) {
-    print("\(#function) called")
-  }
-
-  func nativeAdDidDismissScreen(_ nativeAd: GADNativeAd) {
-    print("\(#function) called")
-  }
+extension NativeAdViewModel: NativeAdDelegate {
+    func nativeAdDidRecordClick(_ nativeAd: NativeAd) {
+        print("\(#function) called")
+    }
+    
+    func nativeAdDidRecordImpression(_ nativeAd: NativeAd) {
+        print("\(#function) called")
+    }
+    
+    func nativeAdWillPresentScreen(_ nativeAd: NativeAd) {
+        print("\(#function) called")
+    }
+    
+    func nativeAdWillDismissScreen(_ nativeAd: NativeAd) {
+        print("\(#function) called")
+    }
+    
+    func nativeAdDidDismissScreen(_ nativeAd: NativeAd) {
+        print("\(#function) called")
+    }
 }
