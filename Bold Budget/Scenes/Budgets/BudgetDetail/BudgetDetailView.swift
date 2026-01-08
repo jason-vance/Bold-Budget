@@ -361,19 +361,57 @@ struct BudgetDetailView: View {
     @ViewBuilder func Chart() -> some View {
         Section {
             HStack {
-                Spacer(minLength: 0)
+                Spacer()
                 PieChart(slices: pieSlices)
                     .valueFormatter { formatPieChart(value: $0) }
                     .containerRelativeFrame(.horizontal) { length, axis in length * 0.85 }
-                Spacer(minLength: 0)
+                Spacer()
             }
             .listRowBackground(Color.background)
             .listRowSeparator(.hidden)
-        } header: {
-            ZStack{}
+            HStack {
+                IncomeTotal()
+                Spacer()
+                ExpensesTotal()
+            }
+            .padding(.bottom, .padding)
+            .listRowBackground(Color.background)
+            .listRowSeparator(.hidden)
         }
         .listSectionSeparator(.hidden)
         .listSectionSpacing(0)
+    }
+    
+    @ViewBuilder private func IncomeTotal() -> some View {
+        let money = filteredTransactions
+            .filter( { budget.getCategoryBy(id: $0.categoryId).kind == .income })
+            .reduce(into: Money.zero) { $0  = $0 + $1.amount }
+        
+        VStack(alignment: .leading, spacing: 2) {
+            Text("Income")
+                .font(.caption2.weight(.semibold))
+                .textCase(.uppercase)
+                .foregroundStyle(Color.text.opacity(0.5))
+            Text(money.formatted())
+                .foregroundStyle(Color.text)
+                .contentTransition(.numericText())
+        }
+    }
+    
+    @ViewBuilder private func ExpensesTotal() -> some View {
+        let money = filteredTransactions
+            .filter( { budget.getCategoryBy(id: $0.categoryId).kind == .expense })
+            .reduce(into: Money.zero) { $0  = $0 + $1.amount }
+        
+        VStack(alignment: .trailing, spacing: 2) {
+            Text("Expenses")
+                .font(.caption2.bold())
+                .textCase(.uppercase)
+                .foregroundStyle(Color.text.opacity(0.5))
+            Text(money.formatted())
+                .foregroundStyle(Color.text)
+                .contentTransition(.numericText())
+        }
     }
     
     @ViewBuilder func TransactionList() -> some View {
