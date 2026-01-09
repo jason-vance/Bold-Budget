@@ -81,6 +81,28 @@ class SimpleDate {
 
 extension SimpleDate {
     
+    static func startOfWeek(containing date: SimpleDate) -> SimpleDate {
+        // Convert SimpleDate to Date
+        let inputDate = date.toDate()!
+        
+        // Use Calendar to find the start of the week (respects locale)
+        let calendar = Calendar.current
+        let interval = calendar.dateInterval(of: .weekOfYear, for: inputDate)!
+        
+        return SimpleDate(date: interval.start)!
+    }
+    
+    static func endOfWeek(containing date: SimpleDate) -> SimpleDate {
+        // Get the start of the week
+        let startOfWeek = startOfWeek(containing: date)
+        
+        // Add 6 days to the start date to get the end date
+        let calendar = Calendar.current
+        let endOfWeekDate = calendar.date(byAdding: .day, value: 6, to: startOfWeek.toDate()!)!
+        
+        return SimpleDate(date: endOfWeekDate)!
+    }
+    
     static func startOfMonth(containing date: SimpleDate) -> SimpleDate {
         let rawValue = date.rawValue - (date.rawValue % 100) + 1
         return SimpleDate(rawValue: rawValue)!

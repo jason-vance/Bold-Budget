@@ -44,11 +44,18 @@ struct BudgetDetailView: View {
     @State private var ad: Ad?
     
     @AppStorage("previouslyOpenedDate") private var previouslyOpenedDateInt: Int = 0
-    
+    @AppStorage("previousTimeFramePeriod") private var previousTimeFramePeriod: TimeFrame.Period = .month
+    @AppStorage("previousTimeFrameDate") private var previousTimeFrameDate: Int = Int(SimpleDate.now.rawValue)
+
     @StateObject var budget: Budget
     
     @State private var currentUserData: UserData? = nil
-    @State private var timeFrame: TimeFrame = .init(period: .month, containing: .now)
+    @State private var timeFrame: TimeFrame = .init(period: .month, containing: .now) {
+        didSet {
+            previousTimeFramePeriod = timeFrame.period
+            previousTimeFrameDate = Int(timeFrame.start.rawValue)
+        }
+    }
     @State private var transactionsFilter: TransactionsFilter = .none
     
     @State private var subscriptionLevel: SubscriptionLevel? = nil
@@ -158,7 +165,7 @@ struct BudgetDetailView: View {
         switch scenePhase {
         case .active:
             if SimpleDate(rawValue: SimpleDate.RawValue(previouslyOpenedDateInt)) != .now {
-                timeFrame = .init(period: .month, containing: .now)
+                timeFrame = .init(period: previousTimeFramePeriod, containing: .now)
             }
             break
         case .background:
@@ -202,6 +209,7 @@ struct BudgetDetailView: View {
         .alert(alertMessage, isPresented: $showAlert) {}
         .animation(.snappy, value: budget.isLoading)
         .onAppear { promptForReview() }
+        .onAppear { timeFrame = .init(period: previousTimeFramePeriod, containing: SimpleDate(rawValue: SimpleDate.RawValue(previousTimeFrameDate))!) }
         .onReceive(subscriptionManager.subscriptionLevelPublisher) { subscriptionLevel = $0 }
         .onChange(of: scenePhase) { old, new in onChangeOf(scenePhase: new) }
     }
@@ -302,7 +310,7 @@ struct BudgetDetailView: View {
                 toggle(extraOptionsMenu: .timeFrame)
             } label: {
                 Text(timeFrame.toUiString())
-                    .frame(width: 100)
+                    .frame(width: timeFrame.period == .week ? nil : 100)
                     .buttonLabelSmall()
                     .contentTransition(.numericText())
             }

@@ -9,12 +9,15 @@ import Foundation
 
 struct TimeFrame: Equatable {
     
-    enum Period {
+    enum Period: String {
+        case week
         case month
         case year
         
         func startContaining(_ date: SimpleDate) -> SimpleDate {
             switch self {
+            case .week:
+                SimpleDate.startOfWeek(containing: date)
             case .month:
                 SimpleDate.startOfMonth(containing: date)
             case .year:
@@ -24,6 +27,8 @@ struct TimeFrame: Equatable {
         
         func endContaining(_ date: SimpleDate) -> SimpleDate {
             switch self {
+            case .week:
+                SimpleDate.endOfWeek(containing: date)
             case .month:
                 SimpleDate.endOfMonth(containing: date)
             case .year:
@@ -33,6 +38,8 @@ struct TimeFrame: Equatable {
         
         func toUiString() -> String {
             switch self {
+            case .week:
+                return String(localized: "Week")
             case .month:
                 return String(localized: "Month")
             case .year:
@@ -69,6 +76,9 @@ struct TimeFrame: Equatable {
         let formatter = DateFormatter()
         
         switch period {
+        case .week:
+            formatter.dateFormat = "d MMM yy"
+            return "\(formatter.string(from: start.toDate()!)) - \(formatter.string(from: end.toDate()!))"
         case .month:
             formatter.dateFormat = "MMM yyyy"
         case .year:

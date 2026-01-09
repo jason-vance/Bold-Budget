@@ -50,7 +50,7 @@ struct ScreenTitleBar<PrimaryContent:View,LeadingContent:View,TrailingContent:Vi
     }
     
     var body: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: 0) {
             if let leadingContent = leadingContent {
                 leadingContent()
             }
@@ -62,6 +62,7 @@ struct ScreenTitleBar<PrimaryContent:View,LeadingContent:View,TrailingContent:Vi
             }
         }
         .frame(height: .barHeight)
+        .containerRelativeFrame(.horizontal)
         .overlay(alignment: .bottom) { BarDivider() }
     }
     
