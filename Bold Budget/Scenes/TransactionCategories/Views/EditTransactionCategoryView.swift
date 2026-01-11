@@ -26,6 +26,10 @@ struct EditTransactionCategoryView: View {
     @State private var symbolString: String? = nil
     @State private var nameString: String = ""
     @State private var nameInstructions: String = ""
+    @State private var limitAmount: Money = .zero
+    @State private var limitPeriod: TimeFrame.Period? = nil
+    
+    @State private var showAmountEntryView: Bool = false
     
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
@@ -64,12 +68,18 @@ struct EditTransactionCategoryView: View {
         guard let name = Transaction.Category.Name(nameString) else { return nil }
         guard let symbolString = symbolString else { return nil }
         guard let sfSymbol = Transaction.Category.SfSymbol(symbolString) else { return nil }
+        
+        let limit: Transaction.Category.Limit? = {
+            guard let limitPeriod else { return nil }
+            return .init(amount: limitAmount, period: limitPeriod)
+        }()
 
         return .init(
             id: categoryToEdit.category?.id ?? Transaction.Category.Id(),
             kind: kind,
             name: name,
-            sfSymbol: sfSymbol
+            sfSymbol: sfSymbol,
+            limit: limit
         )
     }
     
@@ -98,6 +108,8 @@ struct EditTransactionCategoryView: View {
         kind = category.kind
         symbolString = category.sfSymbol.value
         nameString = category.name.value
+        limitPeriod = category.limit?.period
+        limitAmount = category.limit?.amount ?? .zero
     }
     
     private func show(alert: String) {
@@ -116,6 +128,16 @@ struct EditTransactionCategoryView: View {
                 Text("")
                     .foregroundStyle(Color.text)
             }
+            Section {
+                LimitPeriodField()
+                if limitPeriod != nil {
+                    LimitAmountField()
+                }
+            } header: {
+                Text(kind == .income ? "Goal" : "Limit")
+                    .foregroundStyle(Color.text)
+                    .contentTransition(.numericText())
+            }
         }
         .scrollDismissesKeyboard(.immediately)
         .formStyle(.grouped)
@@ -130,6 +152,8 @@ struct EditTransactionCategoryView: View {
         .onChange(of: nameString) { _, nameString in setNameInstructions(nameString) }
         .onChange(of: categoryToEdit, initial: true) { _, category in populateFields(category) }
         .onReceive(subscriptionLevelProvider.subscriptionLevelPublisher) { subscriptionLevel = $0 }
+        .animation(.snappy, value: kind)
+        .animation(.snappy, value: limitPeriod)
     }
     
     @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
@@ -233,6 +257,63 @@ struct EditTransactionCategoryView: View {
         .formRow()
         .accessibilityIdentifier("EditTransactionCategoryView.SymbolField.SelectSymbolButton")
     }
+    
+    @ViewBuilder func LimitPeriodField() -> some View {
+        HStack {
+            Text("Period")
+                .foregroundStyle(Color.text)
+            Spacer(minLength: 0)
+            Menu {
+                LimitPeriodButton(period: nil)
+                LimitPeriodButton(period: .week)
+                LimitPeriodButton(period: .month)
+                LimitPeriodButton(period: .year)
+            } label: {
+                Text(limitPeriod?.rawValue ?? "None")
+                    .buttonLabelSmall()
+            }
+        }
+        .formRow()
+    }
+    
+    @ViewBuilder private func LimitPeriodButton(period: TimeFrame.Period?) -> some View {
+        Button {
+            limitPeriod = period
+        } label: {
+            HStack {
+                Text(period?.rawValue ?? "None")
+                if limitPeriod == period { Image(systemName: "checkmark") }
+            }
+        }
+    }
+    
+    @ViewBuilder func LimitAmountField() -> some View {
+        HStack {
+            Text("Amount")
+                .foregroundStyle(Color.text)
+            Spacer(minLength: 0)
+            Button {
+                showAmountEntryView = true
+            } label: {
+                HStack {
+                    Spacer(minLength: 0)
+                    Text(limitAmount.formatted())
+                        .multilineTextAlignment(.trailing)
+                }
+            }
+            .frame(width: 128)
+            .textFieldSmall()
+            .accessibilityIdentifier("EditTransactionCategoryView.LimitAmountField.TextField")
+        }
+        .formRow()
+        .listRowSeparator(limitAmount.amount == .zero ? .hidden : .visible)
+        .fullScreenCover(isPresented: $showAmountEntryView) {
+            TransactionAmountEntryView(
+                amount: $limitAmount,
+                budget: budget
+            )
+        }
+    }
 }
 
 #Preview("New") {
@@ -254,7 +335,9 @@ struct EditTransactionCategoryView: View {
             id: Transaction.Category.Id(),
             kind: .income,
             name: .init("Category To Edit")!,
-            sfSymbol: .init("pencil.and.outline")!
+            sfSymbol: .init("pencil.and.outline")!,
+            limit: .init(amount: Money(100)!, period: .month)
         ))
     }
+    .environmentObject(AdProviderFactory.forScreenshots)
 }

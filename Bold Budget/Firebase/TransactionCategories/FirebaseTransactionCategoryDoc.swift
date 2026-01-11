@@ -14,12 +14,16 @@ struct FirebaseTransactionCategoryDoc: Codable {
     var kind: String?
     var name: String?
     var sfSymbol: String?
+    var limitAmount: Double?
+    var limitPeriod: String?
 
     enum CodingKeys: String, CodingKey {
         case id
         case kind
         case name
         case sfSymbol
+        case limitAmount
+        case limitPeriod
     }
     
     static func from(_ category: Transaction.Category) -> FirebaseTransactionCategoryDoc {
@@ -27,7 +31,9 @@ struct FirebaseTransactionCategoryDoc: Codable {
             id: category.id.uuidString,
             kind: category.kind.rawValue,
             name: category.name.value,
-            sfSymbol: category.sfSymbol.value
+            sfSymbol: category.sfSymbol.value,
+            limitAmount: category.limit?.amount.amount,
+            limitPeriod: category.limit?.period.rawValue
         )
     }
     
@@ -36,12 +42,20 @@ struct FirebaseTransactionCategoryDoc: Codable {
         guard let kind = Transaction.Category.Kind(rawValue: kind ?? "") else { return nil }
         guard let name = Transaction.Category.Name(name) else { return nil }
         guard let sfSymbol = Transaction.Category.SfSymbol(sfSymbol) else { return nil }
+        
+        let limit: Transaction.Category.Limit? = {
+            guard let amount = Money(limitAmount), let period = TimeFrame.Period(rawValue: limitPeriod ?? "") else {
+                return nil
+            }
+            return .init(amount: amount, period: period)
+        }()
 
         return .init(
             id: id,
             kind: kind,
             name: name,
-            sfSymbol: sfSymbol
+            sfSymbol: sfSymbol,
+            limit: limit
         )
     }
 }
