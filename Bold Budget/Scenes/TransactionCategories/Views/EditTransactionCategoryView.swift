@@ -209,7 +209,7 @@ struct EditTransactionCategoryView: View {
                     .buttonLabelSmall()
             }
         }
-        .formRow()
+        .listRow()
     }
     
     @ViewBuilder func NameField() -> some View {
@@ -234,7 +234,7 @@ struct EditTransactionCategoryView: View {
                     .padding(.horizontal, .paddingHorizontalButtonXSmall)
             }
         }
-        .formRow()
+        .listRow()
     }
     
     @ViewBuilder func SymbolField() -> some View {
@@ -254,7 +254,7 @@ struct EditTransactionCategoryView: View {
                 }
             }
         }
-        .formRow()
+        .listRow()
         .accessibilityIdentifier("EditTransactionCategoryView.SymbolField.SelectSymbolButton")
     }
     
@@ -273,7 +273,7 @@ struct EditTransactionCategoryView: View {
                     .buttonLabelSmall()
             }
         }
-        .formRow()
+        .listRow()
     }
     
     @ViewBuilder private func LimitPeriodButton(period: TimeFrame.Period?) -> some View {
@@ -305,7 +305,7 @@ struct EditTransactionCategoryView: View {
             .textFieldSmall()
             .accessibilityIdentifier("EditTransactionCategoryView.LimitAmountField.TextField")
         }
-        .formRow()
+        .listRow()
         .listRowSeparator(limitAmount.amount == .zero ? .hidden : .visible)
         .fullScreenCover(isPresented: $showAmountEntryView) {
             TransactionAmountEntryView(

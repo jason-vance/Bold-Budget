@@ -210,7 +210,7 @@ struct TransactionCategoryPickerView: View {
         }
         .frame(width: 22, height: 22)
         .foregroundStyle(Color.background)
-        .padding(.padding)
+        .padding(.paddingSmall)
         .background {
             Circle().foregroundStyle(Color.text)
         }

@@ -39,6 +39,7 @@ struct PieChart: View {
         let to: CGFloat
     }
 
+    private let paddingPoints: CGFloat = 8
     private let lineWidth: CGFloat = 16
     private let tapMaxDuration: TimeInterval = 0.3
     private var minSliceViewSize: CGFloat  { 2 * lineWidth }
@@ -63,7 +64,7 @@ struct PieChart: View {
     }
     
     private func mapSlicesTo_Slice(pieCircumference: CGFloat) -> [_Slice] {
-        let padding = CGFloat.padding / pieCircumference
+        let padding = paddingPoints / pieCircumference
         let lineCap = (lineWidth / 2) / pieCircumference
         
         let total = self.grossTotal
@@ -106,7 +107,7 @@ struct PieChart: View {
     private func mergeSmallSlicesIfNecessary(_ slices: [_Slice], pieCircumference: CGFloat) -> [_Slice] {
         let wontBeVisible: (_Slice) -> Bool = { slice in
             let length = (slice.touchTo - slice.touchFrom) * pieCircumference
-            return length < (lineWidth + CGFloat.padding)
+            return length < (lineWidth + paddingPoints)
         }
         
         let merge: (_Slice, _Slice) -> _Slice = { lhs, rhs in
@@ -327,7 +328,7 @@ struct PieChart: View {
         let isEnlarged = selectedSlice != nil && selectedSlice?.id == slice.id
         let isEnsmalled = selectedSlice != nil && selectedSlice?.id != slice.id
         
-        let lineWidth = isEnlarged ? lineWidth + (.padding / 2) : isEnsmalled ? lineWidth - (.padding / 2) : lineWidth
+        let lineWidth = isEnlarged ? lineWidth + (paddingPoints / 2) : isEnsmalled ? lineWidth - (paddingPoints / 2) : lineWidth
 
         Circle()
             .trim(from: slice.from, to: slice.to)

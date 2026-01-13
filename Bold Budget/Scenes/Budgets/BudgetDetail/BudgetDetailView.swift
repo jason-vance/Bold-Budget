@@ -472,7 +472,7 @@ struct BudgetDetailView: View {
                 category: budget.getCategoryBy(id: transaction.categoryId)
             )
         }
-        .dashboardTransactionRow()
+        .listRow()
     }
     
     @ViewBuilder func AdSection() -> some View {

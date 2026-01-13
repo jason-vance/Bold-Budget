@@ -84,11 +84,16 @@ struct SfSymbolPickerView: View {
     @ViewBuilder func SymbolRow(_ symbol: String) -> some View {
         HStack {
             Image(systemName: symbol)
-                .buttonLabelMedium()
+                .frame(width: 44, height: 44)
+                .background {
+                    RoundedRectangle(cornerRadius: .cornerRadiusMedium, style: .continuous)
+                        .opacity(.opacityButtonBackground)
+                }
             Text(symbol)
-                .foregroundStyle(Color.white)
+                .multilineTextAlignment(.leading)
             Spacer(minLength: 0)
         }
+        .foregroundStyle(Color.text)
     }
     
     @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {

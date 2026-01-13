@@ -195,7 +195,7 @@ struct EditBudgetView: View {
             .autocapitalization(.words)
             .accessibilityIdentifier("EditBudgetView.NameField.TextField")
         }
-        .formRow()
+        .listRow()
     }
 }
 

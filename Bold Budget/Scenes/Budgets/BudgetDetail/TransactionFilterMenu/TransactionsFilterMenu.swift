@@ -90,7 +90,7 @@ struct TransactionsFilterMenu: View {
                 AddTagButtonLabel()
             }
         }
-        .formRow()
+        .listRow()
         .accessibilityIdentifier("TransactionsFilterMenu.TagsFieldButton")
         if !transactionsFilter.tags.isEmpty {
             ForEach(transactionsFilter.tags.sorted { $0.value < $1.value }) { tag in
@@ -104,7 +104,7 @@ struct TransactionsFilterMenu: View {
                     TransactionTagView(tag)
                     Spacer(minLength: 0)
                 }
-                .formRow()
+                .listRow()
                 .listRowSeparator(.hidden)
             }
         }
@@ -176,7 +176,7 @@ struct TransactionsFilterMenu: View {
                 }
             }
         }
-        .formRow()
+        .listRow()
     }
     
     @ViewBuilder func ClearCategoryButton() -> some View {
@@ -209,7 +209,7 @@ struct TransactionsFilterMenu: View {
             }
             .textFieldSmall()
         }
-        .formRow()
+        .listRow()
     }
 }
 

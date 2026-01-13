@@ -124,7 +124,7 @@ struct SendUserFeedbackView: View {
             .autocapitalization(.sentences)
             .accessibilityIdentifier("SendUserFeedbackView.FeedbackContentField.TextField")
         }
-        .formRow()
+        .listRow()
     }
     
     @ViewBuilder private func SendButton() -> some View {

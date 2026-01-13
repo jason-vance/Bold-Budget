@@ -71,34 +71,10 @@ extension View {
             }
     }
     
-    func dashboardTransactionRow() -> some View {
-        self
-            .listRowBackground(Color.text.opacity(.opacityButtonBackground))
-            .listRowSeparatorTint(Color.text.opacity(.opacityButtonBackground))
-            .listRowInsets(.init(top: .paddingVerticalButtonXSmall,
-                                 leading: .paddingHorizontalButtonXSmall,
-                                 bottom: .paddingVerticalButtonXSmall,
-                                 trailing: .paddingHorizontalButtonXSmall))
-    }
-    
-    func formRow() -> some View {
-        self
-            .listRowBackground(Color.text.opacity(.opacityButtonBackground))
-            .listRowSeparatorTint(Color.text.opacity(.opacityButtonBackground))
-            .listRowInsets(.init(top: .paddingVerticalButtonXSmall,
-                                 leading: .paddingHorizontalButtonMedium,
-                                 bottom: .paddingVerticalButtonXSmall,
-                                 trailing: .paddingHorizontalButtonXSmall))
-    }
-    
     func listRow() -> some View {
         self
             .listRowBackground(Color.text.opacity(.opacityButtonBackground))
             .listRowSeparatorTint(Color.text.opacity(.opacityButtonBackground))
-            .listRowInsets(.init(top: .paddingVerticalButtonXSmall,
-                                 leading: .paddingHorizontalButtonXSmall,
-                                 bottom: .paddingVerticalButtonXSmall,
-                                 trailing: .paddingHorizontalButtonXSmall))
     }
     
     func listRowIcon() -> some View {

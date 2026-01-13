@@ -35,13 +35,13 @@ struct TimeFramePicker: View {
     }
     
     var body: some View {
-        VStack(spacing: .padding) {
+        VStack(spacing: .paddingSmall) {
             PeriodPicker()
-                .padding(.horizontal, .padding)
+                .padding(.horizontal, .paddingSmall)
             BarDivider()
             YearAndMonthPicker()
         }
-        .padding(.vertical, .padding)
+        .padding(.vertical, .paddingSmall)
         .background(Color.background)
         .onAppear { setState(timeFrame) }
         .onChange(of: timeFrame) { _, timeFrame in setState(timeFrame) }
@@ -51,7 +51,7 @@ struct TimeFramePicker: View {
     }
     
     @ViewBuilder func PeriodPicker() -> some View {
-        HStack(spacing: .padding) {
+        HStack(spacing: .paddingSmall) {
             PeriodButton(.week)
             PeriodButton(.month)
             PeriodButton(.year)
@@ -86,7 +86,7 @@ struct TimeFramePicker: View {
                         }
                     }
                 }
-                .padding(.horizontal, .padding)
+                .padding(.horizontal, .paddingSmall)
             }
             .onAppear { value.scrollTo(year, anchor: .center) }
         }
@@ -94,16 +94,16 @@ struct TimeFramePicker: View {
     }
     
     @ViewBuilder func MonthPicker() -> some View {
-        VStack(spacing: .padding) {
+        VStack(spacing: .paddingSmall) {
             ForEach((0..<3).map { $0 }, id: \.self) { row in
-                HStack(spacing: .padding) {
+                HStack(spacing: .paddingSmall) {
                     ForEach((0..<4).map { $0 }, id: \.self) { column in
                         MonthButton(row * 4 + column + 1)
                     }
                 }
             }
         }
-        .padding(.horizontal, .padding)
+        .padding(.horizontal, .paddingSmall)
     }
     
     @ViewBuilder func WeekPicker() -> some View {
@@ -138,7 +138,7 @@ struct TimeFramePicker: View {
             }
         }()
         
-        VStack(spacing: .padding) {
+        VStack(spacing: .paddingSmall) {
             HStack {
                 ForEach(dayLabels, id: \.self) { dayLabel in
                     Text(dayLabel)
@@ -152,7 +152,7 @@ struct TimeFramePicker: View {
                 WeekButton(weekDate)
             }
         }
-        .padding(.horizontal, .padding)
+        .padding(.horizontal, .paddingSmall)
     }
     
     @ViewBuilder func WeekButton(_ weekDate: SimpleDate) -> some View {
@@ -205,7 +205,7 @@ struct TimeFramePicker: View {
     }
     
     @ViewBuilder func YearAndMonthPicker() -> some View {
-        VStack(spacing: .padding) {
+        VStack(spacing: .paddingSmall) {
             YearPicker()
             if period != .year {
                 BarDivider()

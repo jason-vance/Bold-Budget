@@ -296,7 +296,7 @@ struct EditTransactionView: View {
                 CategoryButtonLabel(categoryId)
             }
         }
-        .formRow()
+        .listRow()
         .listRowSeparator(categoryId == nil ? .hidden : .visible)
         .accessibilityIdentifier("EditTransactionView.CategoryField.SelectCategoryButton")
         if categoryId == nil && !suggestions.categoryIds.isEmpty {
@@ -371,7 +371,7 @@ struct EditTransactionView: View {
             .textFieldSmall()
             .accessibilityIdentifier("EditTransactionView.AmountField.TextField")
         }
-        .formRow()
+        .listRow()
         .listRowSeparator(amount.amount == .zero ? .hidden : .visible)
         .fullScreenCover(isPresented: $showAmountEntryView) {
             TransactionAmountEntryView(
@@ -405,7 +405,7 @@ struct EditTransactionView: View {
                 }
             }
         }
-        .formRow()
+        .listRow()
     }
     
     @ViewBuilder func TransactionDatePicker() -> some View {
@@ -418,7 +418,7 @@ struct EditTransactionView: View {
             )
             .datePickerStyle(.graphical)
             .tint(Color.text)
-            .formRow()
+            .listRow()
         }
     }
     
@@ -446,7 +446,7 @@ struct EditTransactionView: View {
             .textFieldSmall()
             .accessibilityIdentifier("EditTransactionView.TitleField.TextField")
         }
-        .formRow()
+        .listRow()
         .listRowSeparator(titleString.isEmpty ? .hidden : .visible)
         .fullScreenCover(isPresented: $showTitleEntryView) {
             TransactionTitleEntryView(
@@ -490,7 +490,7 @@ struct EditTransactionView: View {
             .textFieldSmall()
             .accessibilityIdentifier("EditTransactionView.LocationField.TextField")
         }
-        .formRow()
+        .listRow()
         .listRowSeparator(locationString.isEmpty ? .hidden : .visible)
         .fullScreenCover(isPresented: $showLocationEntryView) {
             TransactionLocationEntryView(
@@ -520,7 +520,7 @@ struct EditTransactionView: View {
                 AddTagsButton()
             }
         }
-        .formRow()
+        .listRow()
         .listRowSeparator(!suggestedTags.isEmpty ? .hidden : .visible)
         if !suggestedTags.isEmpty {
             HorizontalScrollingSuggestions(items: suggestedTags) { tag in
@@ -575,7 +575,7 @@ struct EditTransactionView: View {
                 }
             TransactionTagView(tag)
         }
-        .formRow()
+        .listRow()
     }
 }
 
