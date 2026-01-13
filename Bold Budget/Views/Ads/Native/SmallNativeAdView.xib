@@ -14,7 +14,7 @@
             <rect key="frame" x="0.0" y="0.0" width="355" height="80"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
-                <view clipsSubviews="YES" contentMode="scaleAspectFit" translatesAutoresizingMaskIntoConstraints="NO" id="1fk-kU-oWx" customClass="GADMediaView">
+                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="1fk-kU-oWx">
                     <rect key="frame" x="0.0" y="0.0" width="80" height="80"/>
                     <constraints>
                         <constraint firstAttribute="width" secondItem="1fk-kU-oWx" secondAttribute="height" multiplier="1:1" id="ESN-Qd-GeN"/>
@@ -25,7 +25,7 @@
                         </userDefinedRuntimeAttribute>
                         <userDefinedRuntimeAttribute type="boolean" keyPath="layer.maskToBounds" value="YES"/>
                     </userDefinedRuntimeAttributes>
-                </view>
+                </imageView>
                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" verticalHuggingPriority="251" horizontalCompressionResistancePriority="751" text="" textAlignment="justified" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="C1a-JM-qYK">
                     <rect key="frame" x="95" y="0.0" width="260" height="20.5"/>
                     <constraints>
@@ -93,7 +93,7 @@
             <connections>
                 <outlet property="callToActionView" destination="wEU-pw-G8h" id="ebh-zZ-ST5"/>
                 <outlet property="headlineView" destination="C1a-JM-qYK" id="H8e-67-5mE"/>
-                <outlet property="mediaView" destination="1fk-kU-oWx" id="zB5-AG-01Y"/>
+                <outlet property="iconView" destination="1fk-kU-oWx" id="zB5-AG-01Y"/>
                 <outlet property="storeView" destination="jgh-aa-IgX" id="Ef5-1Q-Nj4"/>
             </connections>
             <point key="canvasLocation" x="13.768115942028986" y="-5.6919642857142856"/>
