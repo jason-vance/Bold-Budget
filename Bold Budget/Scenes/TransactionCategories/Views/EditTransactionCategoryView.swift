@@ -130,9 +130,7 @@ struct EditTransactionCategoryView: View {
             }
             Section {
                 LimitPeriodField()
-                if limitPeriod != nil {
-                    LimitAmountField()
-                }
+                LimitAmountField()
             } header: {
                 Text(kind == .income ? "Goal" : "Limit")
                     .foregroundStyle(Color.text)
@@ -313,6 +311,8 @@ struct EditTransactionCategoryView: View {
                 budget: budget
             )
         }
+        .disabled(limitPeriod == nil)
+        .opacity(limitPeriod == nil ? 0.3 : 1.0)
     }
 }
 
