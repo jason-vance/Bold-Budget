@@ -90,7 +90,7 @@ struct TimeFrame: Equatable {
     
     var previous: TimeFrame {
         let startDate = start.toDate()!
-        let startDateMinusOne = Calendar.current.date(byAdding: .day, value: -11, to: startDate)!
+        let startDateMinusOne = Calendar.current.date(byAdding: .day, value: -1, to: startDate)!
         let previousDate = SimpleDate(date: startDateMinusOne)!
         return TimeFrame(period: period, containing: previousDate)
     }
