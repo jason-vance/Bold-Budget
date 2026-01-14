@@ -187,6 +187,7 @@ struct BudgetDetailView: View {
             List {
                 if viewMode == .envelopes {
                     AdSection()
+                    IncomeExpenseTotals()
                     EnvelopesView(budget: budget, timeFrame: timeFrame)
                 } else {
                     Chart()
@@ -410,17 +411,21 @@ struct BudgetDetailView: View {
             }
             .listRowBackground(Color.background)
             .listRowSeparator(.hidden)
-            HStack {
-                IncomeTotal()
-                Spacer()
-                ExpensesTotal()
-            }
-            .padding(.bottom, .padding)
-            .listRowBackground(Color.background)
-            .listRowSeparator(.hidden)
+            IncomeExpenseTotals()
+                .padding(.bottom, .padding)
         }
         .listSectionSeparator(.hidden)
         .listSectionSpacing(0)
+    }
+    
+    @ViewBuilder private func IncomeExpenseTotals() -> some View {
+        HStack {
+            IncomeTotal()
+            Spacer()
+            ExpensesTotal()
+        }
+        .listRowBackground(Color.background)
+        .listRowSeparator(.hidden)
     }
     
     @ViewBuilder private func IncomeTotal() -> some View {
