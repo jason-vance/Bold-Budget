@@ -46,6 +46,29 @@ struct TimeFrame: Equatable {
                 return String(localized: "Year")
             }
         }
+        
+        func number(in other: Period) -> Double {
+            switch self {
+            case .week:
+                switch other {
+                case .week: return 1
+                case .month: return 4
+                case .year: return 52
+                }
+            case .month:
+                switch other {
+                case .week: return 0.25
+                case .month: return 1
+                case .year: return 12
+                }
+            case .year:
+                switch other {
+                case .week: return 1/52.0
+                case .month: return 1/12.0
+                case .year: return 1
+                }
+            }
+        }
     }
     
     let period: Period

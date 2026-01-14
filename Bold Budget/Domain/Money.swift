@@ -29,6 +29,19 @@ class Money {
     static func + (_ lhs: Money, rhs: Money) -> Money {
         Money(lhs.amount + rhs.amount)!
     }
+    
+    static func - (_ lhs: Money, rhs: Money) -> Money? {
+        Money(lhs.amount - rhs.amount)
+    }
+    
+    static func / (_ lhs: Money, rhs: Double) -> Money {
+        guard rhs > 0 else { return .zero }
+        return Money(lhs.amount / rhs)!
+    }
+    
+    static func * (_ lhs: Money, rhs: Double) -> Money {
+        return Money(lhs.amount * rhs)!
+    }
 }
 
 extension Money: Comparable {

@@ -11,6 +11,11 @@ import Combine
 
 struct BudgetDetailView: View {
     
+    private enum ViewMode: String {
+        case pieChart
+        case envelopes
+    }
+    
     private enum ExtraOptionsMenu {
         case timeFrame
         case transactionFilters
@@ -44,6 +49,7 @@ struct BudgetDetailView: View {
     @State private var ad: Ad?
     
     @AppStorage("previouslyOpenedDate") private var previouslyOpenedDateInt: Int = 0
+    @AppStorage("viewMode") private var viewMode: ViewMode = .pieChart
     @AppStorage("previousTimeFramePeriod") private var previousTimeFramePeriod: TimeFrame.Period = .month
     @AppStorage("previousTimeFrameDate") private var previousTimeFrameDate: Int = Int(SimpleDate.now.rawValue)
 
@@ -61,7 +67,7 @@ struct BudgetDetailView: View {
     @State private var subscriptionLevel: SubscriptionLevel? = nil
     @State private var showTimeFramePicker: Bool = false
     @State private var showFilterTransactionsOptions: Bool = false
-    
+
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
     
@@ -179,9 +185,14 @@ struct BudgetDetailView: View {
         VStack(spacing: 0) {
             TopBar()
             List {
-                Chart()
-                AdSection()
-                TransactionList()
+                if viewMode == .envelopes {
+                    AdSection()
+                    EnvelopesView(budget: budget, timeFrame: timeFrame)
+                } else {
+                    Chart()
+                    AdSection()
+                    TransactionList()
+                }
             }
             .refreshable { budget.refresh() }
             .listStyle(.insetGrouped)
@@ -208,6 +219,7 @@ struct BudgetDetailView: View {
         .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
         .alert(alertMessage, isPresented: $showAlert) {}
         .animation(.snappy, value: budget.isLoading)
+        .animation(.snappy, value: viewMode)
         .onAppear { promptForReview() }
         .onAppear { timeFrame = .init(period: previousTimeFramePeriod, containing: SimpleDate(rawValue: SimpleDate.RawValue(previousTimeFrameDate))!) }
         .onReceive(subscriptionManager.subscriptionLevelPublisher) { subscriptionLevel = $0 }
@@ -279,13 +291,34 @@ struct BudgetDetailView: View {
                 TimeFrameButton()
             },
             leadingContent: {
-                FilterTransactionsButton().opacity(0)
+                ViewModeButton()
             },
             trailingContent: {
                 FilterTransactionsButton()
                     .accessibilityIdentifier("DashboardView.FilterTransactionsButton")
             }
         )
+    }
+    
+    @ViewBuilder private func ViewModeButton() -> some View {
+        Menu {
+            Section("View Mode") {
+                Button {
+                    viewMode = .envelopes
+                } label: {
+                    Image(systemName: "envelope")
+                    Text("Envelopes")
+                }
+                Button {
+                    viewMode = .pieChart
+                } label: {
+                    Image(systemName: "chart.pie")
+                    Text("Pie Chart")
+                }
+            }
+        } label: {
+            TitleBarButtonLabel(sfSymbol: viewMode == .envelopes ? "envelope" : "chart.pie")
+        }
     }
     
     @ViewBuilder func FilterTransactionsButton() -> some View {

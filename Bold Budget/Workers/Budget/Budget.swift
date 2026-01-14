@@ -53,6 +53,13 @@ class Budget: ObservableObject {
             .reduce(into: Set()) { $0.insert($1) }
     }
     
+    var transactionsByCategory: [Transaction.Category:[Transaction]] {
+        transactions.reduce(into: [:]) { result, transaction in
+            let category = getCategoryBy(id: transaction.value.categoryId)
+            result[category, default: []].append(transaction.value)
+        }
+    }
+    
     var popupNotificationCenter: PopupNotificationCenter? {
         iocContainer.resolve(PopupNotificationCenter.self)
     }
