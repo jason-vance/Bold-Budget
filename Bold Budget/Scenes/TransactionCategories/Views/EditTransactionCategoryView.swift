@@ -30,9 +30,12 @@ struct EditTransactionCategoryView: View {
     @State private var limitPeriod: TimeFrame.Period? = nil
     
     @State private var showAmountEntryView: Bool = false
-    
+
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
+
+    @State private var showDeleteConfirmation: Bool = false
+    @State private var showReassignSheet: Bool = false
     
     @State private var subscriptionLevel: SubscriptionLevel = .none
     private let subscriptionLevelProvider: SubscriptionLevelProvider
@@ -90,6 +93,25 @@ struct EditTransactionCategoryView: View {
         budget.save(transactionCategory: category)
         dismiss()
     }
+
+    private var affectedTransactions: [Transaction] {
+        guard let category = categoryToEdit.category else { return [] }
+        return budget.transactions.values.filter { $0.categoryId == category.id }
+    }
+
+    private func startDelete() {
+        if affectedTransactions.isEmpty {
+            showDeleteConfirmation = true
+        } else {
+            showReassignSheet = true
+        }
+    }
+
+    private func deleteWithoutReassignment() {
+        guard let category = categoryToEdit.category else { return }
+        budget.remove(transactionCategory: category, replacingWith: nil)
+        dismiss()
+    }
     
     private func setNameInstructions(_ nameString: String) {
         withAnimation(.snappy) {
@@ -136,6 +158,7 @@ struct EditTransactionCategoryView: View {
                     .foregroundStyle(Color.text)
                     .contentTransition(.numericText())
             }
+            DeleteSection()
         }
         .scrollDismissesKeyboard(.immediately)
         .formStyle(.grouped)
@@ -147,11 +170,51 @@ struct EditTransactionCategoryView: View {
         .background(Color.background)
         .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
         .alert(alertMessage, isPresented: $showAlert) {}
+        .confirmationDialog(
+            "Delete '\(categoryToEdit.category?.name.value ?? "")'?",
+            isPresented: $showDeleteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) {
+                deleteWithoutReassignment()
+            }
+            Button("Cancel", role: .cancel) { }
+        }
+        .sheet(isPresented: $showReassignSheet) {
+            if let category = categoryToEdit.category {
+                NavigationStack {
+                    ReassignCategoryView(
+                        budget: budget,
+                        categoryToDelete: category,
+                        affectedTransactionCount: affectedTransactions.count,
+                        onCompleted: { dismiss() }
+                    )
+                }
+            }
+        }
         .onChange(of: nameString) { _, nameString in setNameInstructions(nameString) }
         .onChange(of: categoryToEdit, initial: true) { _, category in populateFields(category) }
         .onReceive(subscriptionLevelProvider.subscriptionLevelPublisher) { subscriptionLevel = $0 }
         .animation(.snappy, value: kind)
         .animation(.snappy, value: limitPeriod)
+    }
+
+    @ViewBuilder private func DeleteSection() -> some View {
+        if categoryToEdit.category != nil {
+            Section {
+                Button(role: .destructive) {
+                    startDelete()
+                } label: {
+                    HStack {
+                        Image(systemName: "trash")
+                        Text("Delete Category")
+                        Spacer(minLength: 0)
+                    }
+                }
+                .listRow()
+                .accessibilityIdentifier("EditTransactionCategoryView.DeleteButton")
+            }
+        }
     }
     
     @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {

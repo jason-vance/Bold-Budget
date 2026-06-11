@@ -40,6 +40,20 @@ extension Transaction {
     typealias Id = UUID
 }
 
+extension Transaction {
+    func with(categoryId: Transaction.Category.Id) -> Transaction {
+        .init(
+            id: id,
+            title: title,
+            amount: amount,
+            date: date,
+            categoryId: categoryId,
+            location: location,
+            tags: tags
+        )
+    }
+}
+
 extension Transaction: Equatable { }
 
 extension Transaction: Hashable { }

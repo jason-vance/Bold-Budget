@@ -38,3 +38,11 @@ extension FirebaseTransactionCategoryRepository: TransactionCategorySaver {
             .setData(from: doc)
     }
 }
+
+extension FirebaseTransactionCategoryRepository: TransactionCategoryDeleter {
+    func delete(category: Transaction.Category, from budget: BudgetInfo) async throws {
+        try await categoriesCollection(in: budget)
+            .document(category.id.uuidString)
+            .delete()
+    }
+}

@@ -58,6 +58,12 @@ extension MockTransactionCategoryRepo: TransactionCategoryFetcher {
     }
 }
 
+extension MockTransactionCategoryRepo: TransactionCategoryDeleter {
+    func delete(category: Transaction.Category, from budget: BudgetInfo) async throws {
+        categoriesSubject.send(categories.filter { $0.id != category.id })
+    }
+}
+
 extension MockTransactionCategoryRepo {
     
     public enum TestCategories: String, RawRepresentable {

@@ -72,6 +72,7 @@ class Budget: ObservableObject {
     
     let categoryFetcher: TransactionCategoryFetcher
     let categorySaver: TransactionCategorySaver
+    let categoryDeleter: TransactionCategoryDeleter
 
     convenience init(
         info: BudgetInfo
@@ -83,10 +84,11 @@ class Budget: ObservableObject {
             transactionSaver: iocContainer~>TransactionSaver.self,
             transactionDeleter: iocContainer~>TransactionDeleter.self,
             categoryFetcher: iocContainer~>TransactionCategoryFetcher.self,
-            categorySaver: iocContainer~>TransactionCategorySaver.self
+            categorySaver: iocContainer~>TransactionCategorySaver.self,
+            categoryDeleter: iocContainer~>TransactionCategoryDeleter.self
         )
     }
-    
+
     init(
         info: BudgetInfo,
         budgetRenamer: BudgetRenamer,
@@ -94,7 +96,8 @@ class Budget: ObservableObject {
         transactionSaver: TransactionSaver,
         transactionDeleter: TransactionDeleter,
         categoryFetcher: TransactionCategoryFetcher,
-        categorySaver: TransactionCategorySaver
+        categorySaver: TransactionCategorySaver,
+        categoryDeleter: TransactionCategoryDeleter
     ) {
         self.id = info.id
         self.info = info
@@ -104,6 +107,7 @@ class Budget: ObservableObject {
         self.transactionDeleter = transactionDeleter
         self.categoryFetcher = categoryFetcher
         self.categorySaver = categorySaver
+        self.categoryDeleter = categoryDeleter
 
         fetchData()
     }
@@ -183,6 +187,39 @@ class Budget: ObservableObject {
                 onError("Failed to save transaction category.", error: error)
 
                 transactionCategories[transactionCategory.id] = tmp
+            }
+        }
+    }
+
+    func remove(transactionCategory category: Transaction.Category,
+                replacingWith replacement: Transaction.Category?) {
+        let affected = transactions.values.filter { $0.categoryId == category.id }
+
+        if !affected.isEmpty && replacement == nil { return }
+
+        let removedCategory = transactionCategories.removeValue(forKey: category.id)
+        let originals = affected
+
+        if let replacement {
+            for txn in affected {
+                transactions[txn.id] = txn.with(categoryId: replacement.id)
+            }
+        }
+
+        Task {
+            do {
+                if let replacement {
+                    for txn in affected {
+                        let updated = txn.with(categoryId: replacement.id)
+                        try await transactionSaver.save(transaction: updated, to: info)
+                    }
+                }
+                try await categoryDeleter.delete(category: category, from: info)
+            } catch {
+                onError("Failed to delete transaction category.", error: error)
+
+                if let removedCategory { transactionCategories[removedCategory.id] = removedCategory }
+                for txn in originals { transactions[txn.id] = txn }
             }
         }
     }

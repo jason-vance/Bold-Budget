@@ -43,6 +43,7 @@ func setup(iocContainer: Container) {
     // TransactionCategories
     registerTransactionCategoryFetcher()
     registerTransactionCategorySaver()
+    registerTransactionCategoryDeleter()
     
     // Transactions
     registerTransactionFetcher()
@@ -202,6 +203,15 @@ fileprivate func registerTransactionCategorySaver() {
     }
 
     iocContainer.autoregister(TransactionCategorySaver.self, initializer: { service })
+}
+
+fileprivate func registerTransactionCategoryDeleter() {
+    var service: TransactionCategoryDeleter = FirebaseTransactionCategoryRepository()
+    if let mock = MockTransactionCategoryRepo.getTestInstance() {
+        service = mock
+    }
+
+    iocContainer.autoregister(TransactionCategoryDeleter.self, initializer: { service })
 }
 
 //MARK: Transactions
