@@ -149,7 +149,7 @@ struct EditUserProfileView: View {
             .navigationTitle(navTitle)
             .navigationBarBackButtonHidden()
             .foregroundStyle(Color.text)
-            .background(Color.background)
+            .background(Color.background.ignoresSafeArea())
     }
     
     @ViewBuilder func InitializedView() -> some View {
@@ -178,7 +178,7 @@ struct EditUserProfileView: View {
             .padding(.horizontal, .padding)
             .padding(.vertical)
         }
-        .background(Color.background)
+        .background(Color.background.ignoresSafeArea())
     }
     
     @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
@@ -271,7 +271,7 @@ struct EditUserProfileView: View {
                 .frame(maxWidth: .infinity)
                 .padding()
         }
-        .background(Color.background)
+        .background(Color.background.ignoresSafeArea())
         .presentationDragIndicator(.visible)
     }
     

@@ -80,12 +80,14 @@ struct ContentView: View {
         NavigationStack {
             BudgetsListView()
         }
+        .background(Color.background)
     }
-    
+
     @ViewBuilder private func NotOnboardedView() -> some View {
         NavigationStack {
             EditUserProfileView(mode: .createProfile)
         }
+        .background(Color.background)
     }
 }
 

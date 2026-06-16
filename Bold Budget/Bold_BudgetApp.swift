@@ -16,6 +16,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         configureFirebase()
         setupToolbars()
         setupNavBars()
+        setupTableViews()
         setup(iocContainer: iocContainer)
         return true
     }
@@ -33,6 +34,10 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         }
     }
     
+    fileprivate func setupTableViews() {
+        UITableViewCell.appearance().backgroundColor = .clear
+    }
+
     fileprivate func setupToolbars() {
         let appearance = UIToolbarAppearance()
         appearance.backgroundColor = UIColor(Color.background)
@@ -81,6 +86,7 @@ struct Bold_BudgetApp: App {
     var body: some Scene {
         WindowGroup {
             ZStack {
+                Color.background.ignoresSafeArea()
                 ContentView()
                     .accentColor(Color.accent)
                     .onAppear { trackAppLaunch() }

@@ -76,10 +76,9 @@ private struct NativeAdViewContainer: UIViewRepresentable {
     let xibName: String
     
     func makeUIView(context: Context) -> NativeAdView {
-        Bundle.main.loadNibNamed(
-            xibName,
-            owner: nil,
-            options: nil)?.first as! NativeAdView
+        let view = Bundle.main.loadNibNamed(xibName, owner: nil, options: nil)?.first as! NativeAdView
+        view.backgroundColor = .clear
+        return view
     }
     
     func updateUIView(_ nativeAdView: NativeAdView, context: Context) {

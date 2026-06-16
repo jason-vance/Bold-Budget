@@ -77,7 +77,7 @@ struct SfSymbolPickerView: View {
         .navigationTitle("Pick a Symbol")
         .navigationBarBackButtonHidden()
         .foregroundStyle(Color.text)
-        .background(Color.background)
+        .background(Color.background.ignoresSafeArea())
         .onAppear { fetchSymbols() }
     }
     

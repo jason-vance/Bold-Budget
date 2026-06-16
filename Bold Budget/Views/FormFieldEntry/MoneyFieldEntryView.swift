@@ -78,7 +78,7 @@ struct MoneyFieldEntryView: View {
             .navigationTitle(title)
             .navigationBarBackButtonHidden()
             .foregroundStyle(Color.text)
-            .background(Color.background)
+            .background(Color.background.ignoresSafeArea())
             .overlay(alignment: .bottomTrailing) { DoneButton().padding() }
         }
         .onAppear { focusState = true }

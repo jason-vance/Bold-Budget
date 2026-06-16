@@ -99,7 +99,7 @@ struct SendUserFeedbackView: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle("Submit Feedback")
         .foregroundStyle(Color.text)
-        .background(Color.background)
+        .background(Color.background.ignoresSafeArea())
         .alert(alertMessage, isPresented: $showAlert) {}
     }
     

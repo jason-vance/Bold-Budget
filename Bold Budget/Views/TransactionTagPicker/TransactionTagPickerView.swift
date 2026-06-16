@@ -57,9 +57,9 @@ struct TransactionTagPickerView: View {
         .navigationTitle("Pick a Tag")
         .navigationBarBackButtonHidden()
         .foregroundStyle(Color.text)
-        .background(Color.background)
+        .background(Color.background.ignoresSafeArea())
     }
-    
+
     @ViewBuilder func NoTagsView() -> some View {
         ContentUnavailableView(
             "No Tags",

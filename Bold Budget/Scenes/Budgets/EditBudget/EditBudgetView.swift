@@ -130,7 +130,7 @@ struct EditBudgetView: View {
         .navigationTitle(screenTitle)
         .navigationBarBackButtonHidden()
         .foregroundStyle(Color.text)
-        .background(Color.background)
+        .background(Color.background.ignoresSafeArea())
         .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
         .alert(alertMessage, isPresented: $showAlert) {}
         .onChange(of: budgetToEdit, initial: true) { _, budget in populateFields(budget) }

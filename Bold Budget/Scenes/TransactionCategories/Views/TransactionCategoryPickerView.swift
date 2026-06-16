@@ -123,7 +123,7 @@ struct TransactionCategoryPickerView: View {
         .navigationTitle(isEditing ? "Edit a Category" : "Pick a Category")
         .navigationBarBackButtonHidden()
         .foregroundStyle(Color.text)
-        .background(Color.background)
+        .background(Color.background.ignoresSafeArea())
         .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
         .onChange(of: __mode, initial: true) { _, mode in set(mode: mode) }
         .onReceive(subscriptionLevelProvider.subscriptionLevelPublisher) { subscriptionLevel = $0 }

@@ -167,7 +167,7 @@ struct EditTransactionCategoryView: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle(screenTitle)
         .foregroundStyle(Color.text)
-        .background(Color.background)
+        .background(Color.background.ignoresSafeArea())
         .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
         .alert(alertMessage, isPresented: $showAlert) {}
         .confirmationDialog(

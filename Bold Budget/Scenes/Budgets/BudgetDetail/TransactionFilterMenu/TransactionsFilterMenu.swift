@@ -110,7 +110,7 @@ struct TransactionsFilterMenu: View {
         }
         .padding(.bottom)
         .foregroundStyle(Color.text)
-        .background(Color.background)
+        .background(Color.background.ignoresSafeArea(.keyboard))
         .onChange(of: selectedCategoryForWhitelist) { _, id in
             if let id {
                 transactionsFilter.whitelistedCategoryIds.insert(id)

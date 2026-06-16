@@ -81,7 +81,7 @@ struct TagsEditorView: View {
             .navigationBarBackButtonHidden()
             .overlay(alignment: .bottomTrailing) { DoneButton().padding() }
             .foregroundStyle(Color.text)
-            .background(Color.background)
+            .background(Color.background.ignoresSafeArea())
         }
         .onAppear { entryTags = tags }
     }

@@ -216,7 +216,7 @@ struct BudgetDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { Toolbar() }
         .foregroundStyle(Color.text)
-        .background(Color.background)
+        .background(Color.background.ignoresSafeArea())
         .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
         .alert(alertMessage, isPresented: $showAlert) {}
         .animation(.snappy, value: budget.isLoading)

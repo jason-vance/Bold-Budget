@@ -212,7 +212,7 @@ struct EditTransactionView: View {
         .navigationTitle(screenTitle)
         .navigationBarBackButtonHidden()
         .foregroundStyle(Color.text)
-        .background(Color.background)
+        .background(Color.background.ignoresSafeArea())
         .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
         .onChange(of: transactionToEdit, initial: true) { _, new in populateFields(new) }
         .onChange(of: partialTransaction, initial: true) { old, new in getSuggestions(for: new) }
