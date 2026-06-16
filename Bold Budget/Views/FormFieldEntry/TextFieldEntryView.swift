@@ -41,9 +41,16 @@ struct TextFieldEntryView: View {
     
     private var instructions: String { instructionsGenerator(entryValue) }
     
+    private func normalized(_ s: String) -> String {
+        s.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: nil)
+            .components(separatedBy: .init(charactersIn: "abcdefghijklmnopqrstuvwxyz0123456789").inverted)
+            .joined()
+    }
+
     private var filteredSuggestions: [String] {
-        suggestions
-            .filter { entryValue.isEmpty || $0.contains(entryValue) }
+        let query = normalized(entryValue)
+        return suggestions
+            .filter { entryValue.isEmpty || normalized($0).contains(query) }
             .sorted { $0 < $1 }
     }
     
