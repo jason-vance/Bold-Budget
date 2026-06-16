@@ -8,26 +8,32 @@
 import SwiftUI
 
 struct TransactionsFilter {
-    
+
     static let none: TransactionsFilter = .init(
         descriptionContainsText: "",
         locationContainsText: "",
-        categoryId: nil,
-        tags: []
+        whitelistedCategoryIds: [],
+        blacklistedCategoryIds: [],
+        whitelistedTags: [],
+        blacklistedTags: []
     )
 
     var descriptionContainsText: String
     var locationContainsText: String
-    var categoryId: Transaction.Category.Id?
-    var tags: Set<Transaction.Tag>
+    var whitelistedCategoryIds: Set<Transaction.Category.Id>
+    var blacklistedCategoryIds: Set<Transaction.Category.Id>
+    var whitelistedTags: Set<Transaction.Tag>
+    var blacklistedTags: Set<Transaction.Tag>
 
     var count: Int {
         var rv: Int = 0
 
         if !descriptionContainsText.isEmpty { rv += 1 }
         if !locationContainsText.isEmpty { rv += 1 }
-        if categoryId != nil { rv += 1 }
-        rv += tags.count
+        rv += whitelistedCategoryIds.count
+        rv += blacklistedCategoryIds.count
+        rv += whitelistedTags.count
+        rv += blacklistedTags.count
 
         return rv
     }
@@ -45,11 +51,19 @@ struct TransactionsFilter {
             }
         }
 
-        if let categoryId = categoryId, categoryId != transaction.categoryId {
+        if !whitelistedCategoryIds.isEmpty && !whitelistedCategoryIds.contains(transaction.categoryId) {
             return false
         }
 
-        if !tags.isEmpty && transaction.tags.intersection(tags).isEmpty {
+        if blacklistedCategoryIds.contains(transaction.categoryId) {
+            return false
+        }
+
+        if !whitelistedTags.isEmpty && transaction.tags.intersection(whitelistedTags).isEmpty {
+            return false
+        }
+
+        if !transaction.tags.intersection(blacklistedTags).isEmpty {
             return false
         }
 
@@ -58,20 +72,29 @@ struct TransactionsFilter {
 }
 
 struct TransactionsFilterMenu: View {
-    
+
     @StateObject var budget: Budget
     @Binding var isMenuVisible: Bool
     @Binding var transactionsFilter: TransactionsFilter
     @Binding var transactionCount: Int
-    
+
+    @State private var selectedCategoryForWhitelist: Transaction.Category.Id? = nil
+    @State private var selectedCategoryForBlacklist: Transaction.Category.Id? = nil
+
     var body: some View {
         VStack {
             Form {
                 Section {
                     ContainsAnyTextField()
                     LocationField()
-                    CategoryField()
-                    TagsField()
+                    if transactionsFilter.blacklistedCategoryIds.isEmpty {
+                        CategoryIncludeField()
+                    }
+                    if transactionsFilter.whitelistedCategoryIds.isEmpty {
+                        CategoryExcludeField()
+                    }
+                    TagsIncludeField()
+                    TagsExcludeField()
                 } header: {
                     Text("Filter Transactions")
                         .foregroundStyle(Color.text)
@@ -88,26 +111,119 @@ struct TransactionsFilterMenu: View {
         .padding(.bottom)
         .foregroundStyle(Color.text)
         .background(Color.background)
+        .onChange(of: selectedCategoryForWhitelist) { _, id in
+            if let id {
+                transactionsFilter.whitelistedCategoryIds.insert(id)
+                selectedCategoryForWhitelist = nil
+            }
+        }
+        .onChange(of: selectedCategoryForBlacklist) { _, id in
+            if let id {
+                transactionsFilter.blacklistedCategoryIds.insert(id)
+                selectedCategoryForBlacklist = nil
+            }
+        }
     }
-    
-    @ViewBuilder private func TagsField() -> some View {
+
+    @ViewBuilder private func CategoryIncludeField() -> some View {
         NavigationLink {
-            TransactionTagPickerView(budget: budget) { transactionsFilter.tags.insert($0) }
+            TransactionCategoryPickerView(
+                budget: budget,
+                selectedCategoryId: $selectedCategoryForWhitelist
+            )
+            .pickerMode(.picker)
         } label: {
             HStack {
-                Text("Tags")
+                Text("Include Categories")
                     .foregroundStyle(Color.text)
                 Spacer(minLength: 0)
-                AddTagButtonLabel()
+                AddCategoryButtonLabel(isInclude: true)
             }
         }
         .listRow()
-        .accessibilityIdentifier("TransactionsFilterMenu.TagsFieldButton")
-        if !transactionsFilter.tags.isEmpty {
-            ForEach(transactionsFilter.tags.sorted { $0.value < $1.value }) { tag in
+        let sortedWhitelistedIds = transactionsFilter.whitelistedCategoryIds.sorted {
+            budget.getCategoryBy(id: $0).name.value < budget.getCategoryBy(id: $1).name.value
+        }
+        ForEach(sortedWhitelistedIds, id: \.self) { categoryId in
+            let category = budget.getCategoryBy(id: categoryId)
+            HStack {
+                Button {
+                    withAnimation(.snappy) { _ = transactionsFilter.whitelistedCategoryIds.remove(categoryId) }
+                } label: {
+                    Image(systemName: "xmark")
+                        .buttonSymbolCircleSmall()
+                }
+                Image(systemName: category.sfSymbol.value)
+                Text(category.name.value)
+                    .buttonLabelSmall()
+                Spacer(minLength: 0)
+            }
+            .listRow()
+            .listRowSeparator(.hidden)
+        }
+    }
+
+    @ViewBuilder private func CategoryExcludeField() -> some View {
+        NavigationLink {
+            TransactionCategoryPickerView(
+                budget: budget,
+                selectedCategoryId: $selectedCategoryForBlacklist
+            )
+            .pickerMode(.picker)
+        } label: {
+            HStack {
+                Text("Exclude Categories")
+                    .foregroundStyle(Color.text)
+                Spacer(minLength: 0)
+                AddCategoryButtonLabel(isInclude: false)
+            }
+        }
+        .listRow()
+        let sortedBlacklistedIds = transactionsFilter.blacklistedCategoryIds.sorted {
+            budget.getCategoryBy(id: $0).name.value < budget.getCategoryBy(id: $1).name.value
+        }
+        ForEach(sortedBlacklistedIds, id: \.self) { categoryId in
+            let category = budget.getCategoryBy(id: categoryId)
+            HStack {
+                Button {
+                    withAnimation(.snappy) { _ = transactionsFilter.blacklistedCategoryIds.remove(categoryId) }
+                } label: {
+                    Image(systemName: "xmark")
+                        .buttonSymbolCircleSmall()
+                }
+                Image(systemName: category.sfSymbol.value)
+                Text(category.name.value)
+                    .buttonLabelSmall()
+                Spacer(minLength: 0)
+            }
+            .listRow()
+            .listRowSeparator(.hidden)
+        }
+    }
+
+    @ViewBuilder private func AddCategoryButtonLabel(isInclude: Bool) -> some View {
+        Image(systemName: isInclude ? "folder.badge.plus" : "folder.badge.minus")
+            .buttonLabelSmall()
+    }
+
+    @ViewBuilder private func TagsIncludeField() -> some View {
+        NavigationLink {
+            TransactionTagPickerView(budget: budget) { transactionsFilter.whitelistedTags.insert($0) }
+        } label: {
+            HStack {
+                Text("Include Tags")
+                    .foregroundStyle(Color.text)
+                Spacer(minLength: 0)
+                AddTagButtonLabel(isInclude: true)
+            }
+        }
+        .listRow()
+        .accessibilityIdentifier("TransactionsFilterMenu.TagsIncludeFieldButton")
+        if !transactionsFilter.whitelistedTags.isEmpty {
+            ForEach(transactionsFilter.whitelistedTags.sorted { $0.value < $1.value }) { tag in
                 HStack {
                     Button {
-                        withAnimation(.snappy) { transactionsFilter.tags = transactionsFilter.tags.subtracting([tag]) }
+                        withAnimation(.snappy) { _ = transactionsFilter.whitelistedTags.remove(tag) }
                     } label: {
                         Image(systemName: "xmark")
                             .buttonSymbolCircleSmall()
@@ -120,12 +236,43 @@ struct TransactionsFilterMenu: View {
             }
         }
     }
-    
-    @ViewBuilder private func AddTagButtonLabel() -> some View {
+
+    @ViewBuilder private func TagsExcludeField() -> some View {
+        NavigationLink {
+            TransactionTagPickerView(budget: budget) { transactionsFilter.blacklistedTags.insert($0) }
+        } label: {
+            HStack {
+                Text("Exclude Tags")
+                    .foregroundStyle(Color.text)
+                Spacer(minLength: 0)
+                AddTagButtonLabel(isInclude: false)
+            }
+        }
+        .listRow()
+        .accessibilityIdentifier("TransactionsFilterMenu.TagsExcludeFieldButton")
+        if !transactionsFilter.blacklistedTags.isEmpty {
+            ForEach(transactionsFilter.blacklistedTags.sorted { $0.value < $1.value }) { tag in
+                HStack {
+                    Button {
+                        withAnimation(.snappy) { _ = transactionsFilter.blacklistedTags.remove(tag) }
+                    } label: {
+                        Image(systemName: "xmark")
+                            .buttonSymbolCircleSmall()
+                    }
+                    TransactionTagView(tag)
+                    Spacer(minLength: 0)
+                }
+                .listRow()
+                .listRowSeparator(.hidden)
+            }
+        }
+    }
+
+    @ViewBuilder private func AddTagButtonLabel(isInclude: Bool) -> some View {
         HStack {
             Image(systemName: "tag")
                 .overlay(alignment: .bottomTrailing) {
-                    Image(systemName: "plus")
+                    Image(systemName: isInclude ? "plus" : "minus")
                         .font(.system(size: 8))
                         .bold()
                         .foregroundStyle(Color.background)
@@ -138,7 +285,7 @@ struct TransactionsFilterMenu: View {
         }
         .buttonLabelSmall()
     }
-    
+
     @ViewBuilder private func SeeTransactionsButton() -> some View {
         Button {
             withAnimation(.snappy) { isMenuVisible = false }
@@ -148,7 +295,7 @@ struct TransactionsFilterMenu: View {
                 .buttonLabelMedium(isProminent: true)
         }
     }
-    
+
     @ViewBuilder func ClearAllButton() -> some View {
         Button {
             withAnimation(.snappy) { self.transactionsFilter = .none }
@@ -158,7 +305,7 @@ struct TransactionsFilterMenu: View {
                 .buttonLabelMedium()
         }
     }
-    
+
     @ViewBuilder func LocationField() -> some View {
         VStack {
             HStack {
@@ -184,45 +331,6 @@ struct TransactionsFilterMenu: View {
         .listRow()
     }
 
-    @ViewBuilder func CategoryField() -> some View {
-        NavigationLink {
-            TransactionCategoryPickerView(
-                budget: budget,
-                selectedCategoryId: $transactionsFilter.categoryId
-            )
-            .pickerMode(.picker)
-        } label: {
-            HStack {
-                Text("Category")
-                    .foregroundStyle(Color.text)
-                Spacer(minLength: 0)
-                if let categoryId = transactionsFilter.categoryId {
-                    let category = budget.getCategoryBy(id: categoryId)
-                    HStack {
-                        HStack {
-                            Image(systemName: category.sfSymbol.value)
-                            Text(category.name.value)
-                        }
-                        .buttonLabelSmall()
-                        ClearCategoryButton() // Inside the other button's label to allow two buttons in one form row
-                    }
-                } else {
-                    Text("N/A")
-                        .buttonLabelSmall()
-                }
-            }
-        }
-        .listRow()
-    }
-    
-    @ViewBuilder func ClearCategoryButton() -> some View {
-        Image(systemName: "xmark")
-            .buttonSymbolCircleSmall()
-            .onTapGesture {
-                withAnimation(.snappy) { transactionsFilter.categoryId = nil }
-            }
-    }
-    
     @ViewBuilder func ContainsAnyTextField() -> some View {
         VStack {
             HStack {

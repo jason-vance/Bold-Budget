@@ -33,7 +33,7 @@ struct SfSymbolPickerView: View {
             let sfSymbolsFileName = "sf_symbol_names"
             if let filepath = Bundle.main.path(forResource: sfSymbolsFileName, ofType: "txt") {
                 do {
-                    let contents = try String(contentsOfFile: filepath)
+                    let contents = try String(contentsOfFile: filepath, encoding: .utf8)
                     self.symbols = contents.split(separator: "\n").map { String($0) }
                 } catch {
                     print("Contents could not be read. \(error.localizedDescription)")

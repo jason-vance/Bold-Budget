@@ -74,12 +74,12 @@ final class TransactionTagsTests: XCTestCase {
         app.buttons["DashboardView.FilterTransactionsButton"].tap()
         
         // Transaction Filter Menu
-        app.buttons["TransactionsFilterMenu.TagsFieldButton"].tap()
-        
+        app.buttons["TransactionsFilterMenu.TagsIncludeFieldButton"].tap()
+
         // TransactionTagPickerView
         XCTAssertTrue(app.scrollViews.otherElements.staticTexts["Beach Trip"].exists)
     }
-    
+
     func testSelectedTransactionTagAppearsInTransactionsFilterMenu() throws {
         let app = XCUIApplication()
         MockAuthenticationProvider.test(using: .signedIn, in: &app.launchEnvironment)
@@ -89,15 +89,15 @@ final class TransactionTagsTests: XCTestCase {
         MockTransactionFetcher.test(using: .taggedSample, in: &app.launchEnvironment)
         MockTransactionCategoryRepo.test(using: .categorySamples, in: &app.launchEnvironment)
         app.launch()
-        
+
         // Budget List
         app.buttons["BudgetsListView.BudgetRow.Family Budget"].tap()
-        
+
         // Dashboard
         app.buttons["DashboardView.FilterTransactionsButton"].tap()
 
         // Transaction Filter Menu
-        app.buttons["TransactionsFilterMenu.TagsFieldButton"].tap()
+        app.buttons["TransactionsFilterMenu.TagsIncludeFieldButton"].tap()
         
         // TransactionTagPickerView
         _ = app.scrollViews.otherElements.staticTexts["Beach Trip"].waitForExistence(timeout: 2)
