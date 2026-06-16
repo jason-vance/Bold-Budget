@@ -11,38 +11,48 @@ struct TransactionsFilter {
     
     static let none: TransactionsFilter = .init(
         descriptionContainsText: "",
+        locationContainsText: "",
         categoryId: nil,
         tags: []
     )
-    
+
     var descriptionContainsText: String
+    var locationContainsText: String
     var categoryId: Transaction.Category.Id?
     var tags: Set<Transaction.Tag>
-    
+
     var count: Int {
         var rv: Int = 0
-        
+
         if !descriptionContainsText.isEmpty { rv += 1 }
+        if !locationContainsText.isEmpty { rv += 1 }
         if categoryId != nil { rv += 1 }
         rv += tags.count
-        
+
         return rv
     }
-    
+
     @MainActor func shouldInclude(_ transaction: Transaction, from budget: Budget) -> Bool {
         let descriptionContainsText = descriptionContainsText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         if !descriptionContainsText.isEmpty, !budget.description(of: transaction).lowercased().contains(descriptionContainsText) {
             return false
         }
-        
+
+        let locationContainsText = locationContainsText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if !locationContainsText.isEmpty {
+            guard let location = transaction.location, location.value.lowercased().contains(locationContainsText) else {
+                return false
+            }
+        }
+
         if let categoryId = categoryId, categoryId != transaction.categoryId {
             return false
         }
-        
+
         if !tags.isEmpty && transaction.tags.intersection(tags).isEmpty {
             return false
         }
-        
+
         return true
     }
 }
@@ -59,6 +69,7 @@ struct TransactionsFilterMenu: View {
             Form {
                 Section {
                     ContainsAnyTextField()
+                    LocationField()
                     CategoryField()
                     TagsField()
                 } header: {
@@ -148,6 +159,31 @@ struct TransactionsFilterMenu: View {
         }
     }
     
+    @ViewBuilder func LocationField() -> some View {
+        VStack {
+            HStack {
+                Text("Location Contains Text")
+                    .foregroundStyle(Color.text)
+                Spacer(minLength: 0)
+            }
+            TextField("Location Contains Text",
+                      text: $transactionsFilter.locationContainsText,
+                      prompt: Text("Seattle, WA, etc...").foregroundStyle(Color.text.opacity(.opacityTextFieldPrompt))
+            )
+            .overlay(alignment: .trailing) {
+                Button {
+                    transactionsFilter.locationContainsText = ""
+                } label: {
+                    Image(systemName: "xmark")
+                        .buttonSymbolCircleSmall()
+                }
+                .opacity(transactionsFilter.locationContainsText.isEmpty ? 0 : 1)
+            }
+            .textFieldSmall()
+        }
+        .listRow()
+    }
+
     @ViewBuilder func CategoryField() -> some View {
         NavigationLink {
             TransactionCategoryPickerView(
