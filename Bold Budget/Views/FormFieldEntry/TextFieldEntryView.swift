@@ -89,15 +89,17 @@ struct TextFieldEntryView: View {
             .navigationBarBackButtonHidden()
             .foregroundStyle(Color.text)
             .background(Color.background.ignoresSafeArea())
-            .overlay(alignment: .bottomTrailing) { DoneButton().padding() }
         }
         .onAppear { focusState = true }
         .onAppear { entryValue = value }
     }
-    
+
     @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
         ToolbarItemGroup(placement: .topBarLeading) {
             CancelButton()
+        }
+        ToolbarItemGroup(placement: .topBarTrailing) {
+            DoneButton()
         }
     }
     
@@ -115,13 +117,9 @@ struct TextFieldEntryView: View {
             value = entryValue
             dismiss()
         } label: {
-            HStack(spacing: 0) {
-                Image(systemName: "checkmark")
-                Text("DONE")
-            }
-            .font(.footnote.bold())
-            .buttonLabelSmall(isProminent: true)
+            Image(systemName: "checkmark")
         }
+        .accessibilityIdentifier("TextFieldEntryView.Toolbar.DoneButton")
     }
     
     @ViewBuilder private func Suggestions() -> some View {

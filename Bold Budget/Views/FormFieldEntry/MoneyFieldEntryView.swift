@@ -9,20 +9,41 @@ import SwiftUI
 import SwiftUIFlowLayout
 
 struct MoneyFieldEntryView: View {
-    
+
     @Environment(\.dismiss) private var dismiss
-    
+
     @State private var title: LocalizedStringKey
     @Binding private var money: Money
     @State private var suggestions: [Money]
-    
-    @State private var entryAmount: Double = 0
-    
-    @FocusState private var focusState: Bool
-    
+
+    /// Raw digits entered so far, read right-to-left as cents (e.g. "1234" == $12.34).
+    /// A dedicated numeric keypad drives this instead of the system keyboard/TextField
+    /// cursor, since that's the only way to guarantee new taps always land at the end -
+    /// no placeholder like "$0.00" to select or delete before entry can begin, and the
+    /// amount visibly updates after every tap so it's obvious how digits map to cents.
+    @State private var digits: String = ""
+    @State private var shakeAmount: Bool = false
+
+    private static let maxDigits = 12 // caps entry at $9,999,999,999.99
+
+    private static let keypadRows: [[String]] = [
+        ["1", "2", "3"],
+        ["4", "5", "6"],
+        ["7", "8", "9"],
+        ["00", "0", "delete.left"]
+    ]
+
+    private var entryAmount: Double {
+        (Double(digits) ?? 0) / 100
+    }
+
+    private var displayText: String {
+        Money(entryAmount)?.formatted() ?? "$0.00"
+    }
+
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
-    
+
     init(
         title: LocalizedStringKey,
         money: Binding<Money>,
@@ -32,7 +53,7 @@ struct MoneyFieldEntryView: View {
         self._money = money
         self.suggestions = suggestions
     }
-    
+
     private var filteredSuggestions: [Money] {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
@@ -40,38 +61,70 @@ struct MoneyFieldEntryView: View {
         formatter.minimumFractionDigits = 0 // Don't force decimals if not needed
 
         guard let entryAmountString = formatter.string(from: NSNumber(value: entryAmount)) else { return [] }
-        
+
         return suggestions
             .filter { entryAmount == 0 || $0.formatted().contains(entryAmountString) }
             .sorted { $0 < $1 }
     }
-    
+
     private func show(alert: String) {
         showAlert = true
         alertMessage = alert
     }
-    
+
+    private func appendDigit(_ digit: String) {
+        // Strip insignificant leading zeros before counting against the cap, so the
+        // limit tracks digits that actually affect the displayed amount. Without this,
+        // leading zeros (e.g. typing "0" repeatedly) would silently eat into the cap
+        // while the display kept showing $0.00, hiding that the limit had been hit.
+        let candidate = String((digits + digit).drop { $0 == "0" })
+        let normalized = candidate.isEmpty ? "0" : candidate
+        guard normalized.count <= Self.maxDigits else {
+            hapticBlocked()
+            shakeAmount = true
+            return
+        }
+        digits = normalized
+        hapticTap()
+    }
+
+    private func deleteLastDigit() {
+        guard !digits.isEmpty else { return }
+        digits = String(digits.dropLast())
+        hapticTap()
+    }
+
+    private func clearAllDigits() {
+        guard !digits.isEmpty else { return }
+        digits = ""
+        hapticClear()
+    }
+
+    private func hapticTap() {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+    }
+
+    private func hapticClear() {
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+    }
+
+    private func hapticBlocked() {
+        UINotificationFeedbackGenerator().notificationOccurred(.warning)
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack {
-                    TextField(Money(0)?.formatted() ?? "$0.00",
-                              value: $entryAmount,
-                              format: .currency(code: "USD"),
-                              prompt: Text(Money(0)?.formatted() ?? "$0.00").foregroundStyle(Color.text.opacity(.opacityTextFieldPrompt))
-                    )
-                    .keyboardType(.decimalPad)
-                    .multilineTextAlignment(.trailing)
-                    .focused($focusState)
-                    .textFieldSmall()
-                    .accessibilityIdentifier("MoneyFieldEntryView.TextField")
+                    AmountDisplay()
+                    Keypad()
+                        .padding(.top)
                     Suggestions()
                         .animation(.snappy, value: money)
                         .padding(.top)
                 }
                 .padding()
             }
-            .scrollDismissesKeyboard(.immediately)
             .scrollContentBackground(.hidden)
             .toolbar { Toolbar() }
             .navigationBarTitleDisplayMode(.inline)
@@ -79,19 +132,23 @@ struct MoneyFieldEntryView: View {
             .navigationBarBackButtonHidden()
             .foregroundStyle(Color.text)
             .background(Color.background.ignoresSafeArea())
-            .overlay(alignment: .bottomTrailing) { DoneButton().padding() }
         }
-        .onAppear { focusState = true }
-        .onAppear { entryAmount = money.amount }
+        .onAppear {
+            let cents = Int((money.amount * 100).rounded())
+            digits = cents == 0 ? "" : String(cents)
+        }
         .alert(alertMessage, isPresented: $showAlert) { }
     }
-    
+
     @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
         ToolbarItemGroup(placement: .topBarLeading) {
             CancelButton()
         }
+        ToolbarItemGroup(placement: .topBarTrailing) {
+            DoneButton()
+        }
     }
-    
+
     @ViewBuilder func CancelButton() -> some View {
         Button {
             dismiss()
@@ -100,21 +157,70 @@ struct MoneyFieldEntryView: View {
         }
         .accessibilityIdentifier("TextFieldEntryView.CancelButton")
     }
-    
+
     @ViewBuilder func DoneButton() -> some View {
         Button {
             money = Money(entryAmount) ?? money
             dismiss()
         } label: {
-            HStack(spacing: 0) {
-                Image(systemName: "checkmark")
-                Text("DONE")
+            Image(systemName: "checkmark")
+        }
+        .accessibilityIdentifier("MoneyFieldEntryView.Toolbar.DoneButton")
+    }
+
+    @ViewBuilder private func AmountDisplay() -> some View {
+        Text(displayText)
+            .font(.largeTitle.bold())
+            .contentTransition(.numericText())
+            .animation(.snappy, value: digits)
+            .frame(maxWidth: .infinity, alignment: .trailing)
+            .lineLimit(1)
+            .minimumScaleFactor(0.5)
+            .textFieldSmall()
+            .shake($shakeAmount)
+            .accessibilityIdentifier("MoneyFieldEntryView.AmountDisplay")
+    }
+
+    @ViewBuilder private func Keypad() -> some View {
+        VStack(spacing: .paddingCircleButtonSmall) {
+            ForEach(Self.keypadRows, id: \.self) { row in
+                HStack(spacing: .paddingCircleButtonSmall) {
+                    ForEach(row, id: \.self) { key in
+                        KeypadButton(key)
+                    }
+                }
             }
-            .font(.footnote.bold())
-            .buttonLabelSmall(isProminent: true)
         }
     }
-    
+
+    @ViewBuilder private func KeypadButton(_ key: String) -> some View {
+        switch key {
+        case "delete.left":
+            Image(systemName: key)
+                .font(.title3)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, .paddingVerticalButtonMedium)
+                .buttonLabelMedium()
+                .contentShape(Rectangle())
+                .onTapGesture { deleteLastDigit() }
+                .onLongPressGesture(minimumDuration: 0.5) { clearAllDigits() }
+                .accessibilityIdentifier("MoneyFieldEntryView.Keypad.Delete")
+                .accessibilityLabel("Delete")
+                .accessibilityHint("Touch and hold to clear the amount")
+        default:
+            Button {
+                appendDigit(key)
+            } label: {
+                Text(key)
+                    .font(.title3.bold())
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, .paddingVerticalButtonMedium)
+            }
+            .buttonLabelMedium()
+            .accessibilityIdentifier("MoneyFieldEntryView.Keypad.\(key)")
+        }
+    }
+
     @ViewBuilder private func Suggestions() -> some View {
         if !filteredSuggestions.isEmpty {
             VStack {
@@ -133,7 +239,7 @@ struct MoneyFieldEntryView: View {
             }
         }
     }
-    
+
     @ViewBuilder private func Suggestion(_ money: Money) -> some View {
         Button {
             self.money = money

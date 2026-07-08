@@ -79,16 +79,18 @@ struct TagsEditorView: View {
             .navigationBarTitleDisplayMode(.inline)
             .navigationTitle("Tags")
             .navigationBarBackButtonHidden()
-            .overlay(alignment: .bottomTrailing) { DoneButton().padding() }
             .foregroundStyle(Color.text)
             .background(Color.background.ignoresSafeArea())
         }
         .onAppear { entryTags = tags }
     }
-    
+
     @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
         ToolbarItemGroup(placement: .topBarLeading) {
             CancelButton()
+        }
+        ToolbarItemGroup(placement: .topBarTrailing) {
+            DoneButton()
         }
     }
     
@@ -106,12 +108,7 @@ struct TagsEditorView: View {
             tags = entryTags
             dismiss()
         } label: {
-            HStack(spacing: 0) {
-                Image(systemName: "checkmark")
-                Text("DONE")
-            }
-            .font(.footnote.bold())
-            .buttonLabelSmall(isProminent: true)
+            Image(systemName: "checkmark")
         }
         .accessibilityIdentifier("TagsEditorView.DoneButton")
     }
