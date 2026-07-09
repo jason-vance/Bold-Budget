@@ -14,7 +14,16 @@ struct MoneyFieldEntryView: View {
 
     @State private var title: LocalizedStringKey
     @Binding private var money: Money
-    @State private var suggestions: [Money]
+
+    /// Suggestions paired with their formatted string, computed once up front instead
+    /// of on every render - formatting each one is a locale-aware NumberFormatter call,
+    /// which got expensive once accounts had enough transaction history to produce a
+    /// large suggestion list.
+    private struct SuggestionEntry {
+        let money: Money
+        let formatted: String
+    }
+    @State private var suggestionEntries: [SuggestionEntry]
 
     /// Raw digits entered so far, read right-to-left as cents (e.g. "1234" == $12.34).
     /// A dedicated numeric keypad drives this instead of the system keyboard/TextField
@@ -51,20 +60,25 @@ struct MoneyFieldEntryView: View {
     ) {
         self.title = title
         self._money = money
-        self.suggestions = suggestions
+        let sorted = suggestions.sorted()
+        self._suggestionEntries = State(initialValue: sorted.map { SuggestionEntry(money: $0, formatted: $0.formatted()) })
     }
 
-    private var filteredSuggestions: [Money] {
+    private static let entryAmountFormatter: NumberFormatter = {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         formatter.maximumFractionDigits = 10 // Set a reasonable maximum
         formatter.minimumFractionDigits = 0 // Don't force decimals if not needed
+        return formatter
+    }()
 
-        guard let entryAmountString = formatter.string(from: NSNumber(value: entryAmount)) else { return [] }
+    private var filteredSuggestions: [Money] {
+        guard entryAmount != 0 else { return suggestionEntries.map(\.money) }
+        guard let entryAmountString = Self.entryAmountFormatter.string(from: NSNumber(value: entryAmount)) else { return [] }
 
-        return suggestions
-            .filter { entryAmount == 0 || $0.formatted().contains(entryAmountString) }
-            .sorted { $0 < $1 }
+        return suggestionEntries
+            .filter { $0.formatted.contains(entryAmountString) }
+            .map(\.money)
     }
 
     private func show(alert: String) {
@@ -222,7 +236,8 @@ struct MoneyFieldEntryView: View {
     }
 
     @ViewBuilder private func Suggestions() -> some View {
-        if !filteredSuggestions.isEmpty {
+        let filtered = filteredSuggestions
+        if !filtered.isEmpty {
             VStack {
                 HStack {
                     Text("Suggestions:")
@@ -231,7 +246,7 @@ struct MoneyFieldEntryView: View {
                 }
                 FlowLayout(
                     mode: .scrollable,
-                    items: filteredSuggestions,
+                    items: filtered,
                     itemSpacing: .paddingCircleButtonSmall
                 ) { suggestion in
                     Suggestion(suggestion)
