@@ -24,6 +24,7 @@ class Budget: ObservableObject {
     }
     @Published var transactions: [Transaction.Id:Transaction] = [:]
     @Published var transactionCategories: [Transaction.Category.Id:Transaction.Category] = [:]
+    @Published var recurringExpenses: [RecurringExpense.Id:RecurringExpense] = [:]
     
     var transactionTags: Set<Transaction.Tag> {
         transactions
@@ -74,6 +75,10 @@ class Budget: ObservableObject {
     let categorySaver: TransactionCategorySaver
     let categoryDeleter: TransactionCategoryDeleter
 
+    let recurringExpenseFetcher: RecurringExpenseFetcher
+    let recurringExpenseSaver: RecurringExpenseSaver
+    let recurringExpenseDeleter: RecurringExpenseDeleter
+
     convenience init(
         info: BudgetInfo
     ) {
@@ -85,7 +90,10 @@ class Budget: ObservableObject {
             transactionDeleter: iocContainer~>TransactionDeleter.self,
             categoryFetcher: iocContainer~>TransactionCategoryFetcher.self,
             categorySaver: iocContainer~>TransactionCategorySaver.self,
-            categoryDeleter: iocContainer~>TransactionCategoryDeleter.self
+            categoryDeleter: iocContainer~>TransactionCategoryDeleter.self,
+            recurringExpenseFetcher: iocContainer~>RecurringExpenseFetcher.self,
+            recurringExpenseSaver: iocContainer~>RecurringExpenseSaver.self,
+            recurringExpenseDeleter: iocContainer~>RecurringExpenseDeleter.self
         )
     }
 
@@ -97,7 +105,10 @@ class Budget: ObservableObject {
         transactionDeleter: TransactionDeleter,
         categoryFetcher: TransactionCategoryFetcher,
         categorySaver: TransactionCategorySaver,
-        categoryDeleter: TransactionCategoryDeleter
+        categoryDeleter: TransactionCategoryDeleter,
+        recurringExpenseFetcher: RecurringExpenseFetcher,
+        recurringExpenseSaver: RecurringExpenseSaver,
+        recurringExpenseDeleter: RecurringExpenseDeleter
     ) {
         self.id = info.id
         self.info = info
@@ -108,6 +119,9 @@ class Budget: ObservableObject {
         self.categoryFetcher = categoryFetcher
         self.categorySaver = categorySaver
         self.categoryDeleter = categoryDeleter
+        self.recurringExpenseFetcher = recurringExpenseFetcher
+        self.recurringExpenseSaver = recurringExpenseSaver
+        self.recurringExpenseDeleter = recurringExpenseDeleter
 
         fetchData()
     }
@@ -127,6 +141,9 @@ class Budget: ObservableObject {
                 }
                 group.addTask {
                     await self.fetchTransactions()
+                }
+                group.addTask {
+                    await self.fetchRecurringExpenses()
                 }
             }
             
@@ -152,6 +169,15 @@ class Budget: ObservableObject {
         }
     }
     
+    private func fetchRecurringExpenses() async {
+        do {
+            let recurringExpenses = try await recurringExpenseFetcher.fetchRecurringExpenses(in: info)
+            self.recurringExpenses = Dictionary(uniqueKeysWithValues: recurringExpenses.map { ($0.id, $0) })
+        } catch {
+            onError("Failed to fetch recurring expenses.", error: error)
+        }
+    }
+
     func save(transaction: Transaction) {
         let tmp = transactions.updateValue(transaction, forKey: transaction.id)
         Task {
@@ -178,6 +204,32 @@ class Budget: ObservableObject {
         }
     }
     
+    func save(recurringExpense: RecurringExpense) {
+        let tmp = recurringExpenses.updateValue(recurringExpense, forKey: recurringExpense.id)
+        Task {
+            do {
+                try await recurringExpenseSaver.save(recurringExpense: recurringExpense, to: info)
+            } catch {
+                onError("Failed to save recurring expense.", error: error)
+
+                recurringExpenses[recurringExpense.id] = tmp
+            }
+        }
+    }
+
+    func remove(recurringExpense: RecurringExpense) {
+        let tmp = recurringExpenses.removeValue(forKey: recurringExpense.id)
+        Task {
+            do {
+                try await recurringExpenseDeleter.delete(recurringExpense: recurringExpense, from: info)
+            } catch {
+                onError("Failed to delete recurring expense.", error: error)
+
+                recurringExpenses[recurringExpense.id] = tmp
+            }
+        }
+    }
+
     func save(transactionCategory: Transaction.Category) {
         let tmp = transactionCategories.updateValue(transactionCategory, forKey: transactionCategory.id)
         Task {
@@ -262,5 +314,35 @@ class Budget: ObservableObject {
 extension Budget: Equatable {
     nonisolated public static func == (lhs: Budget, rhs: Budget) -> Bool {
         lhs.id == rhs.id
+    }
+}
+
+extension Budget {
+    /// A Budget backed entirely by mocks, pre-populated with sample data, for SwiftUI previews.
+    static func previewSample(
+        transactions: [Transaction] = [],
+        recurringExpenses: [RecurringExpense] = []
+    ) -> Budget {
+        let transactionFetcher = MockTransactionFetcher()
+        transactionFetcher.transactions = transactions
+
+        let recurringExpenseFetcher = MockRecurringExpenseFetcher()
+        recurringExpenseFetcher.recurringExpenses = recurringExpenses
+
+        let categoryRepo = MockTransactionCategoryRepo(initialCategories: Transaction.Category.samples)
+
+        return Budget(
+            info: .sample,
+            budgetRenamer: MockBudgetRenamer(),
+            transactionFetcher: transactionFetcher,
+            transactionSaver: MockTransactionSaver(),
+            transactionDeleter: MockTransactionDeleter(),
+            categoryFetcher: categoryRepo,
+            categorySaver: categoryRepo,
+            categoryDeleter: categoryRepo,
+            recurringExpenseFetcher: recurringExpenseFetcher,
+            recurringExpenseSaver: MockRecurringExpenseSaver(),
+            recurringExpenseDeleter: MockRecurringExpenseDeleter()
+        )
     }
 }
