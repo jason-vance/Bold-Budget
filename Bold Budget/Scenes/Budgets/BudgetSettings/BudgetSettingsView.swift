@@ -86,7 +86,6 @@ struct BudgetSettingsView: View {
             AdSection()
             RenameBudgetSection()
             CategoriesSection()
-            RecurringExpensesSection()
             UsersSection()
         }
         .listStyle(.insetGrouped)
@@ -138,17 +137,6 @@ struct BudgetSettingsView: View {
         }
     }
     
-    @ViewBuilder private func RecurringExpensesSection() -> some View {
-        Section {
-            NavigationLink {
-                RecurringExpensesView(budget: budget)
-            } label: {
-                Text("Recurring Expenses")
-            }
-            .listRow()
-        }
-    }
-
     @ViewBuilder private func UsersSection() -> some View {
         if !users.isEmpty {
             Section {

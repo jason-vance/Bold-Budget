@@ -14,6 +14,23 @@ struct BudgetDetailView: View {
     private enum ViewMode: String {
         case pieChart
         case envelopes
+        case recurringExpenses
+
+        var sfSymbol: String {
+            switch self {
+            case .pieChart: "chart.pie"
+            case .envelopes: "envelope"
+            case .recurringExpenses: "calendar.badge.clock"
+            }
+        }
+
+        var label: String {
+            switch self {
+            case .pieChart: String(localized: "Chart")
+            case .envelopes: String(localized: "Envelopes")
+            case .recurringExpenses: String(localized: "Recurring")
+            }
+        }
     }
     
     private enum ExtraOptionsMenu {
@@ -185,21 +202,24 @@ struct BudgetDetailView: View {
         VStack(spacing: 0) {
             TopBar()
             List {
-                if viewMode == .envelopes {
+                switch viewMode {
+                case .envelopes:
                     AdSection()
                     IncomeExpenseTotals()
                     EnvelopesView(budget: budget, timeFrame: timeFrame)
-                } else {
+                case .pieChart:
                     Chart()
                     AdSection()
                     TransactionList()
+                case .recurringExpenses:
+                    AdSection()
+                    RecurringExpensesListContent(budget: budget)
                 }
             }
             .refreshable { budget.refresh() }
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
             .scrollIndicators(.hidden)
-            .overlay(alignment: .bottomTrailing) { AddTransactionButton() }
             .overlay(alignment: .top) {
                 Rectangle()
                     .opacity(0)
@@ -211,6 +231,7 @@ struct BudgetDetailView: View {
                     BlockingSpinnerView()
                 }
             }
+            BottomTabBar()
         }
         .navigationTitle(budget.info.name.value)
         .navigationBarTitleDisplayMode(.inline)
@@ -228,11 +249,25 @@ struct BudgetDetailView: View {
     }
     
     @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
-        ToolbarItem(placement: .topBarTrailing) {
+        ToolbarItemGroup(placement: .topBarTrailing) {
+            AddButton()
             SettingsButton()
         }
     }
-    
+
+    @ViewBuilder private func AddButton() -> some View {
+        NavigationLink {
+            if viewMode == .recurringExpenses {
+                EditRecurringExpenseView(budget: budget)
+            } else {
+                EditTransactionView(budget: budget)
+            }
+        } label: {
+            Image(systemName: "plus")
+        }
+        .accessibilityIdentifier("BudgetDetailView.Toolbar.AddButton")
+    }
+
     @ViewBuilder private func SettingsButton() -> some View {
         NavigationLink {
             BudgetSettingsView(budget: _budget)
@@ -287,39 +322,50 @@ struct BudgetDetailView: View {
     }
     
     @ViewBuilder func TopBar() -> some View {
-        ScreenTitleBar(
-            primaryContent: {
-                TimeFrameButton()
-            },
-            leadingContent: {
-                ViewModeButton()
-            },
-            trailingContent: {
-                FilterTransactionsButton()
-                    .accessibilityIdentifier("DashboardView.FilterTransactionsButton")
-            }
-        )
-    }
-    
-    @ViewBuilder private func ViewModeButton() -> some View {
-        Menu {
-            Section("View Mode") {
-                Button {
-                    viewMode = .envelopes
-                } label: {
-                    Image(systemName: "envelope")
-                    Text("Envelopes")
+        if viewMode == .recurringExpenses {
+            ScreenTitleBar("Recurring Expenses")
+        } else {
+            ScreenTitleBar(
+                primaryContent: {
+                    TimeFrameButton()
+                },
+                leadingContent: {
+                    EmptyView()
+                },
+                trailingContent: {
+                    FilterTransactionsButton()
+                        .accessibilityIdentifier("DashboardView.FilterTransactionsButton")
                 }
-                Button {
-                    viewMode = .pieChart
-                } label: {
-                    Image(systemName: "chart.pie")
-                    Text("Pie Chart")
-                }
-            }
-        } label: {
-            TitleBarButtonLabel(sfSymbol: viewMode == .envelopes ? "envelope" : "chart.pie")
+            )
         }
+    }
+
+    @ViewBuilder private func BottomTabBar() -> some View {
+        HStack(spacing: 0) {
+            TabBarButton(.pieChart)
+            TabBarButton(.envelopes)
+            TabBarButton(.recurringExpenses)
+        }
+        .padding(.top, .paddingSmall)
+        .background(Color.background)
+        .overlay(alignment: .top) { BarDivider() }
+    }
+
+    @ViewBuilder private func TabBarButton(_ mode: ViewMode) -> some View {
+        let isSelected = viewMode == mode
+        Button {
+            withAnimation(.snappy) { viewMode = mode }
+        } label: {
+            VStack(spacing: 2) {
+                Image(systemName: mode.sfSymbol)
+                    .font(.body)
+                Text(mode.label)
+                    .font(.caption2)
+            }
+            .foregroundStyle(Color.text.opacity(isSelected ? 1 : .opacityMutedText))
+            .frame(maxWidth: .infinity)
+        }
+        .accessibilityIdentifier("BudgetDetailView.TabBar.\(mode.rawValue)")
     }
     
     @ViewBuilder func FilterTransactionsButton() -> some View {
@@ -380,24 +426,6 @@ struct BudgetDetailView: View {
                 .opacity(isDisabled ? .opacityButtonBackground : 1)
         }
         .disabled(isDisabled)
-    }
-    
-    @ViewBuilder func AddTransactionButton() -> some View {
-        NavigationLink {
-            EditTransactionView(budget: budget)
-        } label: {
-            Image(systemName: "plus")
-                .foregroundStyle(Color.background)
-                .font(.title)
-                .padding()
-                .background {
-                    Circle()
-                        .foregroundStyle(Color.text)
-                        .shadow(color: Color.background, radius: .padding)
-                }
-        }
-        .padding()
-        .accessibilityIdentifier("DashboardView.AddTransactionButton")
     }
     
     @ViewBuilder func Chart() -> some View {

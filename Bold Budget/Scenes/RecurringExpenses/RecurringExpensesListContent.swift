@@ -1,38 +1,17 @@
 //
-//  RecurringExpensesView.swift
+//  RecurringExpensesListContent.swift
 //  Bold Budget
 //
-//  Created by Jason Vance on 7/15/26.
+//  Created by Jason Vance on 7/16/26.
 //
 
 import SwiftUI
-import SwinjectAutoregistration
 
-struct RecurringExpensesView: View {
-
-    @EnvironmentObject private var adProviderFactory: AdProviderFactory
-    @State private var adProvider: AdProvider?
-    @State private var ad: Ad?
+/// List `Section` content for recurring expenses, meant to be embedded inside a parent `List`
+/// (mirrors `EnvelopesView`) rather than owning its own screen chrome.
+struct RecurringExpensesListContent: View {
 
     @StateObject var budget: Budget
-
-    @State private var subscriptionLevel: SubscriptionLevel = .none
-    private let subscriptionLevelProvider: SubscriptionLevelProvider
-
-    init(budget: Budget) {
-        self.init(
-            budget: budget,
-            subscriptionLevelProvider: iocContainer~>SubscriptionLevelProvider.self
-        )
-    }
-
-    init(
-        budget: Budget,
-        subscriptionLevelProvider: SubscriptionLevelProvider
-    ) {
-        self._budget = .init(wrappedValue: budget)
-        self.subscriptionLevelProvider = subscriptionLevelProvider
-    }
 
     private var allExpenses: [RecurringExpense] {
         Array(budget.recurringExpenses.values)
@@ -56,29 +35,14 @@ struct RecurringExpensesView: View {
     }
 
     var body: some View {
-        List {
-            AdSection()
-            if allExpenses.isEmpty {
-                NoExpensesView()
-            } else {
-                TotalsSection()
-                ForEach(RecurringExpense.Kind.allCases, id: \.self) { kind in
-                    KindSection(kind)
-                }
+        if allExpenses.isEmpty {
+            NoExpensesView()
+        } else {
+            TotalsSection()
+            ForEach(RecurringExpense.Kind.allCases, id: \.self) { kind in
+                KindSection(kind)
             }
         }
-        .refreshable { budget.refresh() }
-        .listStyle(.insetGrouped)
-        .scrollContentBackground(.hidden)
-        .scrollIndicators(.hidden)
-        .overlay(alignment: .bottomTrailing) { AddExpenseButton() }
-        .navigationTitle("Recurring Expenses")
-        .navigationBarTitleDisplayMode(.inline)
-        .foregroundStyle(Color.text)
-        .background(Color.background.ignoresSafeArea())
-        .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
-        .animation(.snappy, value: budget.recurringExpenses)
-        .onReceive(subscriptionLevelProvider.subscriptionLevelPublisher) { subscriptionLevel = $0 }
     }
 
     @ViewBuilder private func TotalsSection() -> some View {
@@ -169,51 +133,26 @@ struct RecurringExpensesView: View {
         .listRowBackground(Color.background)
         .listRowSeparator(.hidden)
     }
-
-    @ViewBuilder private func AddExpenseButton() -> some View {
-        NavigationLink {
-            EditRecurringExpenseView(budget: budget)
-        } label: {
-            Image(systemName: "plus")
-                .foregroundStyle(Color.background)
-                .font(.title)
-                .padding()
-                .background {
-                    Circle()
-                        .foregroundStyle(Color.text)
-                        .shadow(color: Color.background, radius: .padding)
-                }
-        }
-        .padding()
-        .accessibilityIdentifier("RecurringExpensesView.AddExpenseButton")
-    }
-
-    @ViewBuilder private func AdSection() -> some View {
-        if subscriptionLevel == SubscriptionLevel.none {
-            Section {
-                NativeAdListRow(ad: $ad, size: .small)
-                    .listRow()
-            }
-        }
-    }
 }
 
 #Preview("Populated") {
-    NavigationStack {
-        RecurringExpensesView(
-            budget: .previewSample(recurringExpenses: RecurringExpense.samples),
-            subscriptionLevelProvider: MockSubscriptionLevelProvider(level: .boldBudgetPlus)
-        )
+    List {
+        RecurringExpensesListContent(budget: .previewSample(recurringExpenses: RecurringExpense.samples))
     }
-    .environmentObject(AdProviderFactory.forScreenshots)
+    .listStyle(.insetGrouped)
+    .scrollContentBackground(.hidden)
+    .scrollIndicators(.hidden)
+    .foregroundStyle(Color.text)
+    .background(Color.background)
 }
 
 #Preview("Empty") {
-    NavigationStack {
-        RecurringExpensesView(
-            budget: .previewSample(),
-            subscriptionLevelProvider: MockSubscriptionLevelProvider(level: .boldBudgetPlus)
-        )
+    List {
+        RecurringExpensesListContent(budget: .previewSample())
     }
-    .environmentObject(AdProviderFactory.forScreenshots)
+    .listStyle(.insetGrouped)
+    .scrollContentBackground(.hidden)
+    .scrollIndicators(.hidden)
+    .foregroundStyle(Color.text)
+    .background(Color.background)
 }

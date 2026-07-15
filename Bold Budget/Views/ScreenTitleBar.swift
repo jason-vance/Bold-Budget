@@ -50,15 +50,16 @@ struct ScreenTitleBar<PrimaryContent:View,LeadingContent:View,TrailingContent:Vi
     }
     
     var body: some View {
-        HStack(spacing: 0) {
-            if let leadingContent = leadingContent {
-                leadingContent()
-            }
-            Spacer(minLength: 0)
+        ZStack {
             TitleText()
-            Spacer(minLength: 0)
-            if let trailingContent = trailingContent {
-                trailingContent()
+            HStack(spacing: 0) {
+                if let leadingContent = leadingContent {
+                    leadingContent()
+                }
+                Spacer(minLength: 0)
+                if let trailingContent = trailingContent {
+                    trailingContent()
+                }
             }
         }
         .frame(height: .barHeight)
