@@ -128,18 +128,17 @@ struct MoneyFieldEntryView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack {
-                    AmountDisplay()
-                    Keypad()
-                        .padding(.top)
+            VStack {
+                AmountDisplay()
+                ScrollView {
                     Suggestions()
                         .animation(.snappy, value: money)
                         .padding(.top)
                 }
-                .padding()
+                Spacer(minLength: 0)
+                Keypad()
             }
-            .scrollContentBackground(.hidden)
+            .padding()
             .toolbar { Toolbar() }
             .navigationBarTitleDisplayMode(.inline)
             .navigationTitle(title)
