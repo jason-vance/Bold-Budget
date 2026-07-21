@@ -11,18 +11,37 @@ import Combine
 
 struct BudgetDetailView: View {
     
+    /// Top-level destinations in the bottom bar. `Add` sits between them as the primary action.
+    private enum TopTab: String {
+        case spending
+        case netWorth
+
+        var sfSymbol: String {
+            switch self {
+            case .spending: "chart.pie"
+            case .netWorth: "chart.line.uptrend.xyaxis"
+            }
+        }
+
+        var label: String {
+            switch self {
+            case .spending: String(localized: "Spending")
+            case .netWorth: String(localized: "Net Worth")
+            }
+        }
+    }
+
+    /// Sub-modes within the Spending tab.
     private enum ViewMode: String {
         case pieChart
         case envelopes
         case recurringExpenses
-        case netWorth
 
         var sfSymbol: String {
             switch self {
             case .pieChart: "chart.pie"
             case .envelopes: "envelope"
             case .recurringExpenses: "calendar.badge.clock"
-            case .netWorth: "chart.line.uptrend.xyaxis"
             }
         }
 
@@ -31,7 +50,6 @@ struct BudgetDetailView: View {
             case .pieChart: String(localized: "Chart")
             case .envelopes: String(localized: "Envelopes")
             case .recurringExpenses: String(localized: "Recurring")
-            case .netWorth: String(localized: "Net Worth")
             }
         }
 
@@ -39,7 +57,7 @@ struct BudgetDetailView: View {
         var isTimeFramed: Bool {
             switch self {
             case .pieChart, .envelopes: true
-            case .recurringExpenses, .netWorth: false
+            case .recurringExpenses: false
             }
         }
     }
@@ -77,6 +95,7 @@ struct BudgetDetailView: View {
     @State private var ad: Ad?
     
     @AppStorage("previouslyOpenedDate") private var previouslyOpenedDateInt: Int = 0
+    @AppStorage("topTab") private var topTab: TopTab = .spending
     @AppStorage("viewMode") private var viewMode: ViewMode = .pieChart
     @AppStorage("previousTimeFramePeriod") private var previousTimeFramePeriod: TimeFrame.Period = .month
     @AppStorage("previousTimeFrameDate") private var previousTimeFrameDate: Int = Int(SimpleDate.now.rawValue)
@@ -222,21 +241,24 @@ struct BudgetDetailView: View {
         VStack(spacing: 0) {
             TopBar()
             List {
-                switch viewMode {
-                case .envelopes:
-                    AdSection()
-                    IncomeExpenseTotals()
-                    EnvelopesView(budget: budget, timeFrame: timeFrame)
-                case .pieChart:
-                    Chart()
-                    AdSection()
-                    TransactionList()
-                case .recurringExpenses:
-                    AdSection()
-                    RecurringExpensesListContent(budget: budget)
+                switch topTab {
                 case .netWorth:
                     AdSection()
                     NetWorthListContent(budget: budget)
+                case .spending:
+                    switch viewMode {
+                    case .envelopes:
+                        AdSection()
+                        IncomeExpenseTotals()
+                        EnvelopesView(budget: budget, timeFrame: timeFrame)
+                    case .pieChart:
+                        Chart()
+                        AdSection()
+                        TransactionList()
+                    case .recurringExpenses:
+                        AdSection()
+                        RecurringExpensesListContent(budget: budget)
+                    }
                 }
             }
             .refreshable { budget.refresh() }
@@ -254,6 +276,9 @@ struct BudgetDetailView: View {
                     BlockingSpinnerView()
                 }
             }
+            if topTab == .spending {
+                SpendingModeBar()
+            }
             BottomTabBar()
         }
         .navigationTitle(budget.info.name.value)
@@ -265,6 +290,7 @@ struct BudgetDetailView: View {
         .alert(alertMessage, isPresented: $showAlert) {}
         .animation(.snappy, value: budget.isLoading)
         .animation(.snappy, value: viewMode)
+        .animation(.snappy, value: topTab)
         .onAppear { promptForReview() }
         .onAppear { timeFrame = .init(period: previousTimeFramePeriod, containing: SimpleDate(rawValue: SimpleDate.RawValue(previousTimeFrameDate))!) }
         .onReceive(subscriptionManager.subscriptionLevelPublisher) { subscriptionLevel = $0 }
@@ -273,25 +299,30 @@ struct BudgetDetailView: View {
     
     @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
         ToolbarItemGroup(placement: .topBarTrailing) {
-            AddButton()
+            ContextualAddButton()
             SettingsButton()
         }
     }
 
-    @ViewBuilder private func AddButton() -> some View {
-        NavigationLink {
-            switch viewMode {
-            case .recurringExpenses:
-                EditRecurringExpenseView(budget: budget)
-            case .netWorth:
+    /// Transactions are added from the prominent Add tab. This toolbar button covers the
+    /// context-specific additions — a new account on the Net Worth tab, a new recurring expense
+    /// on the Recurring sub-mode — and is hidden elsewhere.
+    @ViewBuilder private func ContextualAddButton() -> some View {
+        if topTab == .netWorth {
+            NavigationLink {
                 EditAccountView(budget: budget)
-            default:
-                EditTransactionView(budget: budget)
+            } label: {
+                Image(systemName: "plus")
             }
-        } label: {
-            Image(systemName: "plus")
+            .accessibilityIdentifier("BudgetDetailView.Toolbar.AddAccountButton")
+        } else if topTab == .spending && viewMode == .recurringExpenses {
+            NavigationLink {
+                EditRecurringExpenseView(budget: budget)
+            } label: {
+                Image(systemName: "plus")
+            }
+            .accessibilityIdentifier("BudgetDetailView.Toolbar.AddRecurringButton")
         }
-        .accessibilityIdentifier("BudgetDetailView.Toolbar.AddButton")
     }
 
     @ViewBuilder private func SettingsButton() -> some View {
@@ -348,10 +379,10 @@ struct BudgetDetailView: View {
     }
     
     @ViewBuilder func TopBar() -> some View {
-        if viewMode == .recurringExpenses {
-            ScreenTitleBar("Recurring Expenses")
-        } else if viewMode == .netWorth {
+        if topTab == .netWorth {
             ScreenTitleBar("Net Worth")
+        } else if viewMode == .recurringExpenses {
+            ScreenTitleBar("Recurring Expenses")
         } else {
             ScreenTitleBar(
                 primaryContent: {
@@ -368,33 +399,90 @@ struct BudgetDetailView: View {
         }
     }
 
+    /// Secondary switcher for the Spending tab's sub-modes (Chart / Envelopes / Recurring).
+    @ViewBuilder private func SpendingModeBar() -> some View {
+        HStack(spacing: .paddingSmall) {
+            SpendingModeButton(.pieChart)
+            SpendingModeButton(.envelopes)
+            SpendingModeButton(.recurringExpenses)
+        }
+        .padding(.horizontal, .padding)
+        .padding(.vertical, .paddingSmall)
+        .background(Color.background)
+    }
+
+    @ViewBuilder private func SpendingModeButton(_ mode: ViewMode) -> some View {
+        let isSelected = viewMode == mode
+        Button {
+            withAnimation(.snappy) { viewMode = mode }
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: mode.sfSymbol)
+                    .font(.caption)
+                Text(mode.label)
+                    .font(.caption.weight(.semibold))
+            }
+            .foregroundStyle(isSelected ? Color.background : Color.text)
+            .padding(.vertical, .paddingSmall)
+            .frame(maxWidth: .infinity)
+            .background {
+                RoundedRectangle(cornerRadius: .cornerRadiusMedium, style: .continuous)
+                    .foregroundStyle(isSelected ? Color.text : Color.text.opacity(.opacityButtonBackground))
+            }
+        }
+        .accessibilityIdentifier("BudgetDetailView.SpendingModeBar.\(mode.rawValue)")
+    }
+
     @ViewBuilder private func BottomTabBar() -> some View {
-        HStack(spacing: 0) {
-            TabBarButton(.pieChart)
-            TabBarButton(.envelopes)
-            TabBarButton(.recurringExpenses)
-            TabBarButton(.netWorth)
+        HStack(alignment: .center, spacing: 0) {
+            TopTabButton(.spending)
+            AddTabButton()
+            TopTabButton(.netWorth)
         }
         .padding(.top, .paddingSmall)
         .background(Color.background)
         .overlay(alignment: .top) { BarDivider() }
     }
 
-    @ViewBuilder private func TabBarButton(_ mode: ViewMode) -> some View {
-        let isSelected = viewMode == mode
+    @ViewBuilder private func TopTabButton(_ tab: TopTab) -> some View {
+        let isSelected = topTab == tab
         Button {
-            withAnimation(.snappy) { viewMode = mode }
+            withAnimation(.snappy) { topTab = tab }
         } label: {
             VStack(spacing: 2) {
-                Image(systemName: mode.sfSymbol)
+                Image(systemName: tab.sfSymbol)
                     .font(.body)
-                Text(mode.label)
+                Text(tab.label)
                     .font(.caption2)
             }
             .foregroundStyle(Color.text.opacity(isSelected ? 1 : .opacityMutedText))
             .frame(maxWidth: .infinity)
         }
-        .accessibilityIdentifier("BudgetDetailView.TabBar.\(mode.rawValue)")
+        .accessibilityIdentifier("BudgetDetailView.TabBar.\(tab.rawValue)")
+    }
+
+    /// The primary action: elevated, always adds a transaction.
+    @ViewBuilder private func AddTabButton() -> some View {
+        NavigationLink {
+            EditTransactionView(budget: budget)
+        } label: {
+            VStack(spacing: 2) {
+                Image(systemName: "plus")
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(Color.background)
+                    .frame(width: 52, height: 52)
+                    .background {
+                        Circle().foregroundStyle(Color.text)
+                    }
+                    .offset(y: -8)
+                Text("Add")
+                    .font(.caption2)
+                    .foregroundStyle(Color.text)
+                    .offset(y: -8)
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .accessibilityIdentifier("BudgetDetailView.TabBar.add")
     }
     
     @ViewBuilder func FilterTransactionsButton() -> some View {
@@ -496,7 +584,7 @@ struct BudgetDetailView: View {
                 .textCase(.uppercase)
                 .foregroundStyle(Color.text.opacity(0.5))
             Text(money.formatted())
-                .foregroundStyle(Color.text)
+                .foregroundStyle(money.amount > 0 ? Color.positive : Color.text)
                 .contentTransition(.numericText())
         }
     }

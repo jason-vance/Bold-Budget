@@ -57,7 +57,7 @@ struct NetWorthListContent: View {
                     .foregroundStyle(Color.text.opacity(0.5))
                 Text(budget.netWorth.formatted())
                     .font(.largeTitle.bold())
-                    .foregroundStyle(Color.text)
+                    .foregroundStyle(budget.netWorth.amount < 0 ? Color.negative : Color.text)
                     .contentTransition(.numericText())
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -71,7 +71,7 @@ struct NetWorthListContent: View {
                         .textCase(.uppercase)
                         .foregroundStyle(Color.text.opacity(0.5))
                     Text(budget.totalAssets.formatted())
-                        .foregroundStyle(Color.text)
+                        .foregroundStyle(Color.positive)
                         .contentTransition(.numericText())
                 }
                 Spacer()
@@ -81,7 +81,7 @@ struct NetWorthListContent: View {
                         .textCase(.uppercase)
                         .foregroundStyle(Color.text.opacity(0.5))
                     Text(budget.totalLiabilities.formatted())
-                        .foregroundStyle(Color.text)
+                        .foregroundStyle(budget.totalLiabilities.amount > 0 ? Color.negative : Color.text)
                         .contentTransition(.numericText())
                 }
             }
@@ -143,7 +143,8 @@ struct NetWorthListContent: View {
                     }
                 }
                 Spacer(minLength: 0)
-                Text(account.balance.formatted())
+                Text(account.signedBalance.formattedSigned())
+                    .foregroundStyle(account.accountClass == .liability ? Color.negative : Color.text)
                     .contentTransition(.numericText())
             }
         }

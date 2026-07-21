@@ -117,8 +117,12 @@ Sequenced so nothing breaks and the spreadsheet dies early. The current shipping
 - ✅ App + unit + UI test targets build clean.
 - ✅ **Category goal (was "limit")**: renamed `Transaction.Category.Limit` → `Goal` and added a `comparison` property (`.lessThan` / `.greaterThan`) so a goal is either a spending cap to stay under or a target to reach. Editor relabeled to "Goal" with a Target picker; envelopes use the comparison for the over/under messaging (rather than deriving from income). Firestore keeps the legacy `limit*` field names for existing data and adds `goalComparison` (legacy rows default to `.lessThan`).
 
-### v2.5 - UI
-- Implement UI and styling from mockup
+### v2.5 - UI ✅ **Core complete**
+- ✅ **Adopted the mockup's 3-tab bottom bar**: `Spending` / **Add** (elevated, primary — always adds a transaction) / `Net Worth`. `BudgetDetailView` now has a top-level `TopTab` (spending/netWorth); the old Chart/Envelopes/Recurring modes became a secondary `SpendingModeBar` switcher under the Spending tab. Contextual adds moved to a toolbar `+` (account on Net Worth, recurring expense on the Recurring sub-mode).
+- ✅ **Added green/red semantics** (new `PositiveColor` → `Color.positive`, `NegativeColor` → `Color.negative` assets, light + dark): assets/income/gains green, liabilities/expense/losses red. Applied to net worth (total colors by sign), assets/liabilities totals, account row balances (liabilities shown signed in red), income totals, and transaction amounts (income green, transfers muted) in rows and detail.
+- ✅ App + unit + UI test targets build clean.
+
+**Remaining visual polish (tracked):** keypad-first Add screen, card-based Net Worth layout, and donut center-total treatment from the mockup — finer styling passes on top of this structural + color foundation.
 
 ---
 

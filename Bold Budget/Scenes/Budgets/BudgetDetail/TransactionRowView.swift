@@ -76,6 +76,11 @@ struct TransactionRowView: View {
         }
     }
     
+    private var amountColor: Color {
+        if transaction.isTransfer { return Color.text.opacity(.opacityMutedText) }
+        return transaction.kind == .income ? Color.positive : Color.text
+    }
+
     @ViewBuilder func Description() -> some View {
         HStack {
             Text(budget.description(of: transaction))
@@ -84,6 +89,7 @@ struct TransactionRowView: View {
             Spacer(minLength: 0)
             Text(budget.amountString(for: transaction))
                 .font(.body)
+                .foregroundStyle(amountColor)
         }
     }
 }

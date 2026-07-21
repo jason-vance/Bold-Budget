@@ -19,7 +19,12 @@ struct TransactionDetailView: View {
     @StateObject var budget: Budget
     @State var transaction: Transaction
     var category: Transaction.Category { budget.getCategoryBy(id: transaction.categoryId) }
-    
+
+    private var headerAmountColor: Color {
+        if transaction.isTransfer { return Color.text.opacity(.opacityMutedText) }
+        return transaction.kind == .income ? Color.positive : Color.text
+    }
+
     @State private var subscriptionLevel: SubscriptionLevel? = nil
     @State private var showDeleteDialog: Bool = false
     @State private var showAlert: Bool = false
@@ -165,7 +170,7 @@ struct TransactionDetailView: View {
                     Text(transaction.amount.formatted())
                         .minimumScaleFactor(0.5)
                         .font(.largeTitle.bold())
-                        .foregroundStyle(Color.text)
+                        .foregroundStyle(headerAmountColor)
                     Spacer(minLength: 0)
                 }
                 HStack {
