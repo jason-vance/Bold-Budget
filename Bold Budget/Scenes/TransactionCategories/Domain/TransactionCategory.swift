@@ -10,21 +10,42 @@ import Foundation
 extension Transaction {
     struct Category {
 
-        struct Limit: Equatable, Hashable {
+        struct Goal: Equatable, Hashable {
+
+            /// Whether spending should stay under the target or reach at least it.
+            enum Comparison: String, Codable, CaseIterable {
+                case lessThan
+                case greaterThan
+
+                var name: String {
+                    switch self {
+                    case .lessThan: String(localized: "Less than")
+                    case .greaterThan: String(localized: "Greater than")
+                    }
+                }
+            }
+
             let amount: Money
             let period: TimeFrame.Period
+            let comparison: Comparison
+
+            init(amount: Money, period: TimeFrame.Period, comparison: Comparison = .lessThan) {
+                self.amount = amount
+                self.period = period
+                self.comparison = comparison
+            }
         }
 
         let id: Id
         let name: Name
         let sfSymbol: SfSymbol
-        let limit: Limit?
+        let goal: Goal?
 
-        init(id: Id, name: Name, sfSymbol: SfSymbol, limit: Limit?) {
+        init(id: Id, name: Name, sfSymbol: SfSymbol, goal: Goal?) {
             self.id = id
             self.name = name
             self.sfSymbol = sfSymbol
-            self.limit = limit
+            self.goal = goal
         }
     }
 }
@@ -50,44 +71,44 @@ extension Transaction.Category {
         id: Id(),
         name: .init("Unknown")!,
         sfSymbol: .init("questionmark.circle.fill")!,
-        limit: nil
+        goal: nil
     )
     
     static let sampleEntertainment = Transaction.Category(
         id: Id(),
         name: .init("Entertainment")!,
         sfSymbol: .init("ticket.fill")!,
-        limit: .init(amount: Money(150)!, period: .month)
+        goal: .init(amount: Money(150)!, period: .month)
     )
     static let sampleGroceries = Transaction.Category(
         id: Id(),
         name: .init("Groceries")!,
         sfSymbol: .init("bag.fill")!,
-        limit: .init(amount: Money(200)!, period: .week)
+        goal: .init(amount: Money(200)!, period: .week)
     )
     static let sampleHousing = Transaction.Category(
         id: Id(),
         name: .init("Housing")!,
         sfSymbol: .init("house.fill")!,
-        limit: .init(amount: Money(1500)!, period: .month)
+        goal: .init(amount: Money(1500)!, period: .month)
     )
     static let samplePaycheck = Transaction.Category(
         id: Id(),
         name: .init("Paycheck")!,
         sfSymbol: .init("banknote.fill")!,
-        limit: nil
+        goal: .init(amount: Money(4000)!, period: .month, comparison: .greaterThan)
     )
     static let sampleTravel = Transaction.Category(
         id: Id(),
         name: .init("Travel")!,
         sfSymbol: .init("airplane")!,
-        limit: .init(amount: Money(2000)!, period: .year)
+        goal: .init(amount: Money(2000)!, period: .year)
     )
     static let sampleVehicle = Transaction.Category(
         id: Id(),
         name: .init("Vehicle")!,
         sfSymbol: .init("car.side.fill")!,
-        limit: .init(amount: Money(500)!, period: .month)
+        goal: .init(amount: Money(500)!, period: .month)
     )
     
     static let samples: [Transaction.Category] = [

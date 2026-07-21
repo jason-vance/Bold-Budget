@@ -115,6 +115,7 @@ Sequenced so nothing breaks and the spreadsheet dies early. The current shipping
   - Dropped the kind UI from the category editor, picker (`KindIndicator`), and reassign screen.
 - ✅ **Net-worth-over-time area chart** (`NetWorthChartView`): hand-drawn, monochrome, with area fill, zero baseline, and an emphasized endpoint. Driven by `Account.netWorthHistory()` (carry-forward alignment across accounts' snapshot dates). Shown atop the Net Worth screen when ≥2 history points exist.
 - ✅ App + unit + UI test targets build clean.
+- ✅ **Category goal (was "limit")**: renamed `Transaction.Category.Limit` → `Goal` and added a `comparison` property (`.lessThan` / `.greaterThan`) so a goal is either a spending cap to stay under or a target to reach. Editor relabeled to "Goal" with a Target picker; envelopes use the comparison for the over/under messaging (rather than deriving from income). Firestore keeps the legacy `limit*` field names for existing data and adds `goalComparison` (legacy rows default to `.lessThan`).
 
 ### v2.5 - UI
 - Implement UI and styling from mockup

@@ -22,10 +22,10 @@ struct PieChart: View {
             .init(value: 1500, category: Transaction.Category.samples[4], kind: .expense),
             .init(value: 250, category: Transaction.Category.samples[3], kind: .income),
             .init(value: 125, category: Transaction.Category.samples[2], kind: .expense),
-            .init(value: 7, category: .init(id: .init(), name: .init("Candy Bar")!, sfSymbol: .init("ellipsis.rectangle.fill")!, limit: nil), kind: .expense),
-            .init(value: 5, category: .init(id: .init(), name: .init("Candy Bar")!, sfSymbol: .init("ellipsis.rectangle.fill")!, limit: nil), kind: .income),
-            .init(value: 1700, category: .init(id: .init(), name: .init("Stocks")!, sfSymbol: .init("chart.bar.xaxis.ascending")!, limit: nil), kind: .income),
-            .init(value: 2700, category: .init(id: .init(), name: .init("Paycheck")!, sfSymbol: .init("banknote.fill")!, limit: nil), kind: .income)
+            .init(value: 7, category: .init(id: .init(), name: .init("Candy Bar")!, sfSymbol: .init("ellipsis.rectangle.fill")!, goal: nil), kind: .expense),
+            .init(value: 5, category: .init(id: .init(), name: .init("Candy Bar")!, sfSymbol: .init("ellipsis.rectangle.fill")!, goal: nil), kind: .income),
+            .init(value: 1700, category: .init(id: .init(), name: .init("Stocks")!, sfSymbol: .init("chart.bar.xaxis.ascending")!, goal: nil), kind: .income),
+            .init(value: 2700, category: .init(id: .init(), name: .init("Paycheck")!, sfSymbol: .init("banknote.fill")!, goal: nil), kind: .income)
         ]
     }
     

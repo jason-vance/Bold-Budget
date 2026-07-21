@@ -30,7 +30,7 @@ struct EnvelopesView: View {
         budget.transactionsByCategory
             .map(Category.init)
             .sorted { $0.category.name.value < $1.category.name.value }
-            .sorted { $0.category.limit != nil && $1.category.limit == nil }
+            .sorted { $0.category.goal != nil && $1.category.goal == nil }
             .sorted { $0.isIncome && !$1.isIncome }
     }
     
@@ -87,26 +87,25 @@ struct EnvelopesView: View {
                         Text("\(isIncome ? "+" : "")\(totalAmount.formatted())")
                             .font(.title3.bold())
                     }
-                    if let limit = category.limit {
+                    if let goal = category.goal {
                         HStack {
-                            if limit.period != timeFrame.period {
-                                let avgPerPeriod = totalAmount / limit.period.number(in: timeFrame.period)
-                                Text("Average: \(avgPerPeriod.formatted())/\(limit.period.toUiString())")
+                            if goal.period != timeFrame.period {
+                                let avgPerPeriod = totalAmount / goal.period.number(in: timeFrame.period)
+                                Text("Average: \(avgPerPeriod.formatted())/\(goal.period.toUiString())")
                                 Spacer()
                             }
-                            let goalOrLimit = isIncome ? "Goal" : "Limit"
-                            Text("\(goalOrLimit): \(limit.amount.formatted())/\(limit.period.toUiString())")
+                            Text("Goal: \(goal.comparison == .lessThan ? "<" : ">") \(goal.amount.formatted())/\(goal.period.toUiString())")
                         }
                         .font(.caption2.bold())
                         .opacity(0.5)
                     }
                 }
-                
-                if let limit = category.limit {
-                    let multiplier = limit.period.number(in: timeFrame.period)
-                    let limitAmount = limit.amount * multiplier
-                    let percent = totalAmount.amount / limitAmount.amount
-                    
+
+                if let goal = category.goal {
+                    let multiplier = goal.period.number(in: timeFrame.period)
+                    let goalAmount = goal.amount * multiplier
+                    let percent = totalAmount.amount / goalAmount.amount
+
                     if percent >= 1 {
                         RoundedRectangle(cornerRadius: .cornerRadiusMedium, style: .continuous)
                             .foregroundStyle(Color.text)
@@ -127,26 +126,28 @@ struct EnvelopesView: View {
                         }
                     }
                 }
-                
+
                 HStack {
-                    if let limit = category.limit {
-                        let multiplier = limit.period.number(in: timeFrame.period)
-                        let limitAmount = limit.amount * multiplier
-                        
-                        if !isIncome {
-                            if let overAmount = totalAmount - limitAmount {
-                                Text("\(overAmount.formatted()) over limit!")
+                    if let goal = category.goal {
+                        let multiplier = goal.period.number(in: timeFrame.period)
+                        let goalAmount = goal.amount * multiplier
+
+                        // For a "less than" goal, going over is the problem to flag; for a
+                        // "greater than" goal, falling short is.
+                        if goal.comparison == .lessThan {
+                            if let overAmount = totalAmount - goalAmount {
+                                Text("\(overAmount.formatted()) over goal!")
                                     .bold()
                                     .buttonLabelXSmall(isProminent: true)
-                            } else if let underAmount = limitAmount - totalAmount {
+                            } else if let underAmount = goalAmount - totalAmount {
                                 Text("\(underAmount.formatted()) left")
                                     .bold()
                             }
                         } else {
-                            if let overAmount = totalAmount - limitAmount {
+                            if let overAmount = totalAmount - goalAmount {
                                 Text("\(overAmount.formatted()) over goal!")
                                     .bold()
-                            } else if let underAmount = limitAmount - totalAmount {
+                            } else if let underAmount = goalAmount - totalAmount {
                                 Text("\(underAmount.formatted()) to go")
                                     .bold()
                                     .buttonLabelXSmall(isProminent: true)

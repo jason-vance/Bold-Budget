@@ -27,6 +27,7 @@ struct EditTransactionCategoryView: View {
     @State private var nameInstructions: String = ""
     @State private var limitAmount: Money = .zero
     @State private var limitPeriod: TimeFrame.Period? = nil
+    @State private var goalComparison: Transaction.Category.Goal.Comparison = .lessThan
     
     @State private var showAmountEntryView: Bool = false
 
@@ -71,16 +72,16 @@ struct EditTransactionCategoryView: View {
         guard let symbolString = symbolString else { return nil }
         guard let sfSymbol = Transaction.Category.SfSymbol(symbolString) else { return nil }
         
-        let limit: Transaction.Category.Limit? = {
+        let goal: Transaction.Category.Goal? = {
             guard let limitPeriod else { return nil }
-            return .init(amount: limitAmount, period: limitPeriod)
+            return .init(amount: limitAmount, period: limitPeriod, comparison: goalComparison)
         }()
 
         return .init(
             id: categoryToEdit.category?.id ?? Transaction.Category.Id(),
             name: name,
             sfSymbol: sfSymbol,
-            limit: limit
+            goal: goal
         )
     }
     
@@ -127,8 +128,9 @@ struct EditTransactionCategoryView: View {
         screenTitle = String(localized: "Edit Category")
         symbolString = category.sfSymbol.value
         nameString = category.name.value
-        limitPeriod = category.limit?.period
-        limitAmount = category.limit?.amount ?? .zero
+        limitPeriod = category.goal?.period
+        limitAmount = category.goal?.amount ?? .zero
+        goalComparison = category.goal?.comparison ?? .lessThan
     }
     
     private func show(alert: String) {
@@ -147,12 +149,18 @@ struct EditTransactionCategoryView: View {
                     .foregroundStyle(Color.text)
             }
             Section {
+                GoalComparisonField()
                 LimitPeriodField()
                 LimitAmountField()
             } header: {
-                Text("Limit")
+                Text("Goal")
                     .foregroundStyle(Color.text)
                     .contentTransition(.numericText())
+            } footer: {
+                Text(goalComparison == .lessThan
+                     ? "Track spending that should stay under this amount."
+                     : "Track a target you want to reach or exceed.")
+                    .foregroundStyle(Color.text.opacity(.opacityMutedText))
             }
             DeleteSection()
         }
@@ -192,6 +200,7 @@ struct EditTransactionCategoryView: View {
         .onChange(of: categoryToEdit, initial: true) { _, category in populateFields(category) }
         .onReceive(subscriptionLevelProvider.subscriptionLevelPublisher) { subscriptionLevel = $0 }
         .animation(.snappy, value: limitPeriod)
+        .animation(.snappy, value: goalComparison)
     }
 
     @ViewBuilder private func DeleteSection() -> some View {
@@ -284,6 +293,30 @@ struct EditTransactionCategoryView: View {
         .accessibilityIdentifier("EditTransactionCategoryView.SymbolField.SelectSymbolButton")
     }
     
+    @ViewBuilder func GoalComparisonField() -> some View {
+        HStack {
+            Text("Target")
+                .foregroundStyle(Color.text)
+            Spacer(minLength: 0)
+            Menu {
+                ForEach(Transaction.Category.Goal.Comparison.allCases, id: \.self) { option in
+                    Button {
+                        goalComparison = option
+                    } label: {
+                        HStack {
+                            Text(option.name)
+                            if goalComparison == option { Image(systemName: "checkmark") }
+                        }
+                    }
+                }
+            } label: {
+                Text(goalComparison.name)
+                    .buttonLabelSmall()
+            }
+        }
+        .listRow()
+    }
+
     @ViewBuilder func LimitPeriodField() -> some View {
         HStack {
             Text("Period")
@@ -363,7 +396,7 @@ struct EditTransactionCategoryView: View {
             id: Transaction.Category.Id(),
             name: .init("Category To Edit")!,
             sfSymbol: .init("pencil.and.outline")!,
-            limit: .init(amount: Money(100)!, period: .month)
+            goal: .init(amount: Money(100)!, period: .month)
         ))
     }
     .environmentObject(AdProviderFactory.forScreenshots)
