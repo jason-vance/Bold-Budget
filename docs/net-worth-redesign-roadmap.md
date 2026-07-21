@@ -108,6 +108,13 @@ Sequenced so nothing breaks and the spreadsheet dies early. The current shipping
 - ✅ **Correctness fix:** deleting a category that reassigns transactions across an income↔expense boundary now re-points the linked ledger account balances (the v2.1 deferred edge case).
 - ✅ App + test targets build clean.
 
+### v2.4 - Misc
+- Remove expense/income property from categories
+- Net worth over time area chart
+
+### v2.5 - UI
+- Implement UI and styling from mockup
+
 ---
 
 ## 6. Migration & data
