@@ -28,6 +28,7 @@ struct EditAccountView: View {
     @State private var trackingMode: Account.TrackingMode = .ledger
     @State private var balance: Money = .zero
     @State private var monthlyPayment: Money = .zero
+    @State private var snapshots: [BalanceSnapshot] = []
 
     @State private var showBalanceEntryView: Bool = false
     @State private var showPaymentEntryView: Bool = false
@@ -77,14 +78,21 @@ struct EditAccountView: View {
             kind: kind,
             trackingMode: trackingMode,
             balance: balance,
-            snapshots: accountToEdit.account?.snapshots ?? [],
+            snapshots: snapshots,
             monthlyPayment: payment
         )
 
-        // Snapshot accounts record the entered balance as this month's data point.
-        return trackingMode == .snapshot
+        // Snapshot accounts always record this month's value. Ledger accounts record a snapshot
+        // only when their balance is reconciled to a new number — a dated checkpoint.
+        return (trackingMode == .snapshot || didReconcileBalance)
             ? base.recordingSnapshot(value: balance, on: .now)
             : base
+    }
+
+    /// True when editing a ledger account whose balance was changed in this session (a reconcile).
+    private var didReconcileBalance: Bool {
+        guard let original = accountToEdit.account?.balance else { return false }
+        return balance != original
     }
 
     private var isFormComplete: Bool { account != nil }
@@ -94,6 +102,17 @@ struct EditAccountView: View {
             ? String(localized: "Amount Owed")
             : String(localized: "Balance")
     }
+
+    private var balanceFooter: String {
+        // Ledger accounts are normally driven by transactions; editing the balance here reconciles
+        // it to reality and records a dated checkpoint.
+        if trackingMode == .ledger && isEditingExisting {
+            return String(localized: "Reconcile to your real balance to correct any drift. This records a checkpoint you can review below.")
+        }
+        return trackingMode.description
+    }
+
+    private var isEditingExisting: Bool { accountToEdit.account != nil }
 
     private func saveAccount() {
         guard let account = account else { return }
@@ -126,6 +145,7 @@ struct EditAccountView: View {
         trackingMode = account.trackingMode
         balance = account.balance
         monthlyPayment = account.monthlyPayment ?? .zero
+        snapshots = account.snapshots
     }
 
     var body: some View {
@@ -145,7 +165,7 @@ struct EditAccountView: View {
                 Text(balanceLabel)
                     .foregroundStyle(Color.text)
             } footer: {
-                Text(trackingMode.description)
+                Text(balanceFooter)
                     .foregroundStyle(Color.text.opacity(.opacityMutedText))
             }
             MonthlyPaymentSection()
@@ -360,9 +380,13 @@ struct EditAccountView: View {
         }
     }
 
+    // Edits local state only; the change is persisted when the form is saved.
+    private func deleteSnapshot(_ snapshot: BalanceSnapshot) {
+        snapshots.removeAll { $0.date == snapshot.date }
+    }
+
     @ViewBuilder private func BalanceHistorySection() -> some View {
-        let snapshots = accountToEdit.account?.snapshots ?? []
-        if trackingMode == .snapshot, !snapshots.isEmpty {
+        if !snapshots.isEmpty {
             Section {
                 ForEach(snapshots) { snapshot in
                     HStack {
@@ -373,9 +397,16 @@ struct EditAccountView: View {
                             .foregroundStyle(Color.text.opacity(.opacityMutedText))
                     }
                     .listRow()
+                    .swipeActions(edge: .trailing) {
+                        Button(role: .destructive) {
+                            deleteSnapshot(snapshot)
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    }
                 }
             } header: {
-                Text("Balance History")
+                Text(trackingMode == .ledger ? "Reconciliation History" : "Balance History")
                     .foregroundStyle(Color.text)
             }
         }

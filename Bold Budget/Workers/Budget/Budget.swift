@@ -359,12 +359,23 @@ class Budget: ObservableObject {
 
         if !affected.isEmpty && replacement == nil { return }
 
+        // If the replacement flips income<->expense, the direction of any linked ledger balance
+        // effect flips too. Reverse the old effect while the old category still resolves, before
+        // it's removed from the dictionary.
+        let kindChanged = replacement != nil && replacement?.kind != category.kind
+        if kindChanged {
+            for txn in affected { applyBalanceEffects(of: txn, reverse: true) }
+        }
+
         let removedCategory = transactionCategories.removeValue(forKey: category.id)
         let originals = affected
 
         if let replacement {
             for txn in affected {
-                transactions[txn.id] = txn.with(categoryId: replacement.id)
+                let updated = txn.with(categoryId: replacement.id)
+                transactions[txn.id] = updated
+                // Re-apply with the replacement's kind now that it's the current category.
+                if kindChanged { applyBalanceEffects(of: updated, reverse: false) }
             }
         }
 

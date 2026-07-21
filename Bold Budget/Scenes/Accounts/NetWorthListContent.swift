@@ -119,6 +119,14 @@ struct NetWorthListContent: View {
                     Text(rowSubtitle(for: account))
                         .font(.caption)
                         .foregroundStyle(Color.text.opacity(.opacityMutedText))
+                    if let staleNote = stalenessNote(for: account) {
+                        HStack(spacing: 3) {
+                            Image(systemName: "clock.arrow.circlepath")
+                            Text(staleNote)
+                        }
+                        .font(.caption2)
+                        .foregroundStyle(Color.text.opacity(.opacityMutedText))
+                    }
                 }
                 Spacer(minLength: 0)
                 Text(account.balance.formatted())
@@ -136,6 +144,16 @@ struct NetWorthListContent: View {
             ? String(localized: "manual")
             : String(localized: "transactions")
         return "\(account.kind.name) · \(mode)"
+    }
+
+    /// A staleness cue for accounts whose most recent balance point predates the current month.
+    private func stalenessNote(for account: Account) -> String? {
+        guard let snapshot = account.latestSnapshot else { return nil }
+        let now = SimpleDate.now
+        let isStale = snapshot.date.year < now.year
+            || (snapshot.date.year == now.year && snapshot.date.month < now.month)
+        guard isStale, let dateString = snapshot.date.toDate()?.toBasicUiString() else { return nil }
+        return String(localized: "as of \(dateString)")
     }
 
     @ViewBuilder private func NoAccountsView() -> some View {

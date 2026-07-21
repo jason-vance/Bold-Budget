@@ -101,8 +101,12 @@ Sequenced so nothing breaks and the spreadsheet dies early. The current shipping
 
 **Deferred:** "bills/subscriptions → scheduled transactions" needs a transaction scheduler (auto-posting on a cadence — background posting, dedup, catch-up) and is pulled into its own future release; bills/subscriptions remain recurring expenses for now.
 
-### v2.3 — Reconcile & polish
-- Reconcile flow for ledger accounts; drift indicators; history editing; ledger account detail refinements.
+### v2.3 — Reconcile & polish ✅ **Complete**
+- ✅ **Reconcile** for ledger accounts: editing a ledger account's balance in `EditAccountView` snaps it to reality and records a dated checkpoint (reuses the snapshot machinery), surfaced as a "Reconciliation History" section.
+- ✅ **Editable history:** balance history shows for both tracking modes with swipe-to-delete (local edit, persisted on Save).
+- ✅ **Staleness indicator:** Net Worth rows show "as of `<date>`" when an account's latest balance point predates the current month.
+- ✅ **Correctness fix:** deleting a category that reassigns transactions across an income↔expense boundary now re-points the linked ledger account balances (the v2.1 deferred edge case).
+- ✅ App + test targets build clean.
 
 ---
 

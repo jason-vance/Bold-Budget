@@ -187,6 +187,19 @@ struct Account: Identifiable {
         return withBalance(Money(newAmount) ?? .zero)
     }
 
+    /// Returns a copy with the snapshot on `date` removed. Current balance is left unchanged.
+    func removingSnapshot(on date: SimpleDate) -> Account {
+        .init(
+            id: id,
+            name: name,
+            kind: kind,
+            trackingMode: trackingMode,
+            balance: balance,
+            snapshots: snapshots.filter { $0.date != date },
+            monthlyPayment: monthlyPayment
+        )
+    }
+
     /// Returns a copy with a snapshot recorded for `date` and the balance set to `value`.
     func recordingSnapshot(value: Money, on date: SimpleDate) -> Account {
         var updated = snapshots.filter { $0.date != date }
