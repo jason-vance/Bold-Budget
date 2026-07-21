@@ -27,8 +27,10 @@ struct EditAccountView: View {
     @State private var kind: Account.Kind = .checking
     @State private var trackingMode: Account.TrackingMode = .ledger
     @State private var balance: Money = .zero
+    @State private var monthlyPayment: Money = .zero
 
     @State private var showBalanceEntryView: Bool = false
+    @State private var showPaymentEntryView: Bool = false
     @State private var showDeleteConfirmation: Bool = false
 
     @State private var subscriptionLevel: SubscriptionLevel = .none
@@ -64,13 +66,19 @@ struct EditAccountView: View {
     private var account: Account? {
         guard let name = Account.Name(nameString) else { return nil }
 
+        // A monthly payment only applies to liabilities, and only when non-zero.
+        let payment: Money? = (kind.accountClass == .liability && monthlyPayment.amount > 0)
+            ? monthlyPayment
+            : nil
+
         let base = Account(
             id: accountToEdit.account?.id ?? Account.Id(),
             name: name,
             kind: kind,
             trackingMode: trackingMode,
             balance: balance,
-            snapshots: accountToEdit.account?.snapshots ?? []
+            snapshots: accountToEdit.account?.snapshots ?? [],
+            monthlyPayment: payment
         )
 
         // Snapshot accounts record the entered balance as this month's data point.
@@ -117,6 +125,7 @@ struct EditAccountView: View {
         kind = account.kind
         trackingMode = account.trackingMode
         balance = account.balance
+        monthlyPayment = account.monthlyPayment ?? .zero
     }
 
     var body: some View {
@@ -139,6 +148,7 @@ struct EditAccountView: View {
                 Text(trackingMode.description)
                     .foregroundStyle(Color.text.opacity(.opacityMutedText))
             }
+            MonthlyPaymentSection()
             BalanceHistorySection()
             DeleteSection()
         }
@@ -310,6 +320,44 @@ struct EditAccountView: View {
             .accessibilityIdentifier("EditAccountView.TrackingModeField.Menu")
         }
         .listRow()
+    }
+
+    @ViewBuilder private func MonthlyPaymentSection() -> some View {
+        if kind.accountClass == .liability {
+            Section {
+                HStack {
+                    Text("Monthly Payment")
+                        .foregroundStyle(Color.text)
+                    Spacer(minLength: 0)
+                    Button {
+                        showPaymentEntryView = true
+                    } label: {
+                        HStack {
+                            Spacer(minLength: 0)
+                            Text(monthlyPayment.formatted())
+                                .multilineTextAlignment(.trailing)
+                        }
+                    }
+                    .frame(width: 160)
+                    .textFieldSmall()
+                    .accessibilityIdentifier("EditAccountView.MonthlyPaymentField.TextField")
+                }
+                .listRow()
+                .fullScreenCover(isPresented: $showPaymentEntryView) {
+                    MoneyFieldEntryView(
+                        title: "Monthly Payment",
+                        money: $monthlyPayment,
+                        suggestions: budget.accounts.values.compactMap(\.monthlyPayment)
+                    )
+                }
+            } header: {
+                Text("Monthly Payment")
+                    .foregroundStyle(Color.text)
+            } footer: {
+                Text("What you pay toward this each month. Leave at $0.00 if there's no set payment.")
+                    .foregroundStyle(Color.text.opacity(.opacityMutedText))
+            }
+        }
     }
 
     @ViewBuilder private func BalanceHistorySection() -> some View {

@@ -36,6 +36,7 @@ struct EditRecurringExpenseView: View {
     @State private var showBalanceEntryView: Bool = false
 
     @State private var showDeleteConfirmation: Bool = false
+    @State private var showConvertConfirmation: Bool = false
 
     @State private var subscriptionLevel: SubscriptionLevel = .none
     private let subscriptionLevelProvider: SubscriptionLevelProvider
@@ -101,6 +102,37 @@ struct EditRecurringExpenseView: View {
         dismiss()
     }
 
+    /// Debts are being folded into liability accounts. Existing debts have `.debt` available; new
+    /// recurring expenses are limited to bills and subscriptions.
+    private var availableKinds: [RecurringExpense.Kind] {
+        expenseToEdit.expense?.kind == .debt
+            ? RecurringExpense.Kind.allCases
+            : RecurringExpense.Kind.allCases.filter { $0 != .debt }
+    }
+
+    private var canConvertToAccount: Bool {
+        expenseToEdit.expense?.kind == .debt
+    }
+
+    /// Turns a recurring debt into a liability `Account` — its remaining balance becomes the
+    /// account balance and its price becomes the monthly payment — then removes the debt.
+    private func convertDebtToAccount() {
+        guard let expense = expenseToEdit.expense, expense.kind == .debt else { return }
+        guard let accountName = Account.Name(expense.name.value) else { return }
+
+        let account = Account(
+            id: Account.Id(),
+            name: accountName,
+            kind: .loan,
+            trackingMode: .snapshot,
+            balance: expense.remainingBalance ?? .zero,
+            monthlyPayment: expense.price.amount > 0 ? expense.price : nil
+        )
+        budget.save(account: account)
+        budget.remove(recurringExpense: expense)
+        dismiss()
+    }
+
     private func setNameInstructions(_ nameString: String) {
         withAnimation(.snappy) {
             if nameString.isEmpty { nameInstructions = ""; return }
@@ -150,6 +182,7 @@ struct EditRecurringExpenseView: View {
             }
             BalanceSection()
             CategorySection()
+            ConvertToAccountSection()
             DeleteSection()
         }
         .scrollDismissesKeyboard(.immediately)
@@ -168,6 +201,16 @@ struct EditRecurringExpenseView: View {
         ) {
             Button("Delete", role: .destructive) {
                 deleteExpense()
+            }
+            Button("Cancel", role: .cancel) { }
+        }
+        .confirmationDialog(
+            "Convert '\(expenseToEdit.expense?.name.value ?? "")' to a liability account?",
+            isPresented: $showConvertConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Convert") {
+                convertDebtToAccount()
             }
             Button("Cancel", role: .cancel) { }
         }
@@ -234,7 +277,7 @@ struct EditRecurringExpenseView: View {
                 .foregroundStyle(Color.text)
             Spacer(minLength: 0)
             Menu {
-                ForEach(RecurringExpense.Kind.allCases, id: \.self) { option in
+                ForEach(availableKinds, id: \.self) { option in
                     Button {
                         kind = option
                     } label: {
@@ -379,6 +422,27 @@ struct EditRecurringExpenseView: View {
     private var selectedCategoryName: String {
         guard let categoryId else { return String(localized: "None") }
         return budget.getCategoryBy(id: categoryId).name.value
+    }
+
+    @ViewBuilder private func ConvertToAccountSection() -> some View {
+        if canConvertToAccount {
+            Section {
+                Button {
+                    showConvertConfirmation = true
+                } label: {
+                    HStack {
+                        Image(systemName: "building.columns")
+                        Text("Convert to Liability Account")
+                        Spacer(minLength: 0)
+                    }
+                }
+                .listRow()
+                .accessibilityIdentifier("EditRecurringExpenseView.ConvertButton")
+            } footer: {
+                Text("Track this debt as a liability account instead — its balance counts toward your net worth, and its price becomes the monthly payment.")
+                    .foregroundStyle(Color.text.opacity(.opacityMutedText))
+            }
+        }
     }
 
     @ViewBuilder private func DeleteSection() -> some View {

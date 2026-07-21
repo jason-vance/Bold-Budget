@@ -92,6 +92,10 @@ struct NetWorthListContent: View {
                 HStack {
                     Text(accountClass.pluralName)
                     Spacer()
+                    if accountClass == .liability, accounts.totalMonthlyPayments.amount > 0 {
+                        Text("\(accounts.totalMonthlyPayments.formatted())/mo · ")
+                            .foregroundStyle(Color.text.opacity(.opacityMutedText))
+                    }
                     Text(total.formatted())
                 }
                 .foregroundStyle(Color.text)
@@ -125,6 +129,9 @@ struct NetWorthListContent: View {
     }
 
     private func rowSubtitle(for account: Account) -> String {
+        if let payment = account.monthlyPayment, payment.amount > 0 {
+            return String(localized: "\(account.kind.name) · \(payment.formatted())/mo")
+        }
         let mode = account.trackingMode == .snapshot
             ? String(localized: "manual")
             : String(localized: "transactions")

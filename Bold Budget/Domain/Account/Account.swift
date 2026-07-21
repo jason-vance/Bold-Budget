@@ -127,6 +127,9 @@ struct Account: Identifiable {
     let balance: Money
     /// Manual balance history, most useful for `.snapshot` accounts. Kept sorted by date.
     let snapshots: [BalanceSnapshot]
+    /// Optional recurring monthly payment, for liabilities (a loan/mortgage/card payment).
+    /// This is what a recurring "debt" folds into.
+    let monthlyPayment: Money?
 
     init(
         id: Id,
@@ -134,7 +137,8 @@ struct Account: Identifiable {
         kind: Kind,
         trackingMode: TrackingMode,
         balance: Money,
-        snapshots: [BalanceSnapshot] = []
+        snapshots: [BalanceSnapshot] = [],
+        monthlyPayment: Money? = nil
     ) {
         self.id = id
         self.name = name
@@ -142,6 +146,7 @@ struct Account: Identifiable {
         self.trackingMode = trackingMode
         self.balance = balance
         self.snapshots = snapshots.sorted { $0.date > $1.date }
+        self.monthlyPayment = monthlyPayment
     }
 
     var accountClass: Class { kind.accountClass }
@@ -167,7 +172,8 @@ struct Account: Identifiable {
             kind: kind,
             trackingMode: trackingMode,
             balance: balance,
-            snapshots: snapshots
+            snapshots: snapshots,
+            monthlyPayment: monthlyPayment
         )
     }
 
@@ -191,7 +197,8 @@ struct Account: Identifiable {
             kind: kind,
             trackingMode: trackingMode,
             balance: value,
-            snapshots: updated
+            snapshots: updated,
+            monthlyPayment: monthlyPayment
         )
     }
 }
@@ -245,7 +252,8 @@ extension Account {
         name: .init("CX-30 Loan")!,
         kind: .loan,
         trackingMode: .snapshot,
-        balance: Money(28179)!
+        balance: Money(28179)!,
+        monthlyPayment: Money(458)!
     )
 
     static let samples: [Account] = [
@@ -277,6 +285,11 @@ extension Collection where Element == Account {
 
     var totalAssets: Money { assets.reduce(.zero) { $0 + $1.balance } }
     var totalLiabilities: Money { liabilities.reduce(.zero) { $0 + $1.balance } }
+
+    /// Sum of all recurring monthly payments across accounts (loans, mortgages, cards).
+    var totalMonthlyPayments: Money {
+        reduce(.zero) { $0 + ($1.monthlyPayment ?? .zero) }
+    }
 
     /// Assets minus liabilities. May be negative.
     var netWorth: SignedMoney {

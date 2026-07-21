@@ -21,6 +21,7 @@ struct FirebaseAccountDoc: Codable {
     var trackingMode: String?
     var balance: Double?
     var snapshots: [SnapshotDoc]?
+    var monthlyPayment: Double?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -29,6 +30,7 @@ struct FirebaseAccountDoc: Codable {
         case trackingMode
         case balance
         case snapshots
+        case monthlyPayment
     }
 
     static func from(_ account: Account) -> FirebaseAccountDoc {
@@ -40,7 +42,8 @@ struct FirebaseAccountDoc: Codable {
             balance: account.balance.amount,
             snapshots: account.snapshots.map {
                 SnapshotDoc(date: Int($0.date.rawValue), value: $0.value.amount)
-            }
+            },
+            monthlyPayment: account.monthlyPayment?.amount
         )
     }
 
@@ -64,7 +67,8 @@ struct FirebaseAccountDoc: Codable {
             kind: kind,
             trackingMode: trackingMode,
             balance: balance,
-            snapshots: snapshots
+            snapshots: snapshots,
+            monthlyPayment: Money(monthlyPayment)
         )
     }
 }

@@ -92,9 +92,14 @@ Sequenced so nothing breaks and the spreadsheet dies early. The current shipping
 
 **Deferred:** category-reassignment via *category deletion* can flip a transaction's income↔expense direction without re-adjusting the linked balance — left for v2.3 reconcile (normal editor edits handle it correctly). No unit tests yet for the balance math.
 
-### v2.2 — Fold recurring debts into liabilities
-- Migrate `RecurringExpense` debts into liability accounts; a payment becomes a recurring transfer that draws down the balance.
-- Bills/subscriptions become scheduled transactions.
+### v2.2 — Fold recurring debts into liabilities ✅ **Complete**
+- ✅ Liability `Account`s gain an optional `monthlyPayment` (what a recurring debt's price folds into); persisted in `FirebaseAccountDoc`, editable in `EditAccountView` (liabilities only).
+- ✅ **User-driven migration** (chosen over auto-migrate): `EditRecurringExpenseView` shows a "Convert to Liability Account" action on existing debts — remaining balance → account balance, price → monthly payment, then the recurring debt is removed. Existing data is never rewritten without an explicit tap.
+- ✅ New recurring expenses are limited to bills/subscriptions (`.debt` dropped from the type picker); existing debts keep `.debt` available.
+- ✅ Net Worth screen shows each liability's payment and a `…/mo` total in the Liabilities header; `Account` collection gains `totalMonthlyPayments`.
+- ✅ App + test targets build clean.
+
+**Deferred:** "bills/subscriptions → scheduled transactions" needs a transaction scheduler (auto-posting on a cadence — background posting, dedup, catch-up) and is pulled into its own future release; bills/subscriptions remain recurring expenses for now.
 
 ### v2.3 — Reconcile & polish
 - Reconcile flow for ledger accounts; drift indicators; history editing; ledger account detail refinements.
