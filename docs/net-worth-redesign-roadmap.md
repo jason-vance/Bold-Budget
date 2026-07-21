@@ -81,11 +81,16 @@ Sequenced so nothing breaks and the spreadsheet dies early. The current shipping
 
 **⚠️ Ops before release:** update the **deployed** Firestore rules to allow the new `Accounts` subcollection — the repo `firestore.rules` is stale and the live rules live elsewhere. Accounts will not persist on real devices until this is done.
 
-### v2.1 — Link transactions to accounts + Transfers
-- `Transaction` gains `kind` (`.expense`/`.income`/`.transfer`) + `accountId` / `fromAccountId` / `toAccountId`.
-- `save(transaction:)` / `remove(transaction:)` also adjust the affected account's stored balance.
-- Add-transaction UI: From-Account chip + Transfer mode.
-- Spending rows show an account chip; transfers render as net-worth-neutral.
+### v2.1 — Link transactions to accounts + Transfers ✅ **Complete**
+- ✅ `Transaction` gains explicit `kind` (`.expense`/`.income`/`.transfer`) + `accountId` / `fromAccountId` / `toAccountId`. Income vs. expense stays category-derived, so legacy rows need no migration; only transfers are behaviorally new.
+- ✅ `FirebaseTransactionDoc` persists the new fields; legacy rows decode as account-less expenses.
+- ✅ `save(transaction:)` / `remove(transaction:)` apply/reverse the effect on any **ledger** account balances touched (asset/liability aware, clamped at zero) and persist the changed accounts. Snapshot accounts stay manual.
+- ✅ Transfers excluded from all spending aggregations (pie, income/expense totals, envelopes, group sums).
+- ✅ `EditTransactionView`: Expense/Income/Transfer segmented control; account picker for expense/income; From/To pickers for transfers.
+- ✅ Transaction rows + detail show the linked account or the transfer route (From → To) with a transfer icon.
+- ✅ App + test targets build clean (Account types added to UITests membership).
+
+**Deferred:** category-reassignment via *category deletion* can flip a transaction's income↔expense direction without re-adjusting the linked balance — left for v2.3 reconcile (normal editor edits handle it correctly). No unit tests yet for the balance math.
 
 ### v2.2 — Fold recurring debts into liabilities
 - Migrate `RecurringExpense` debts into liability accounts; a payment becomes a recurring transfer that draws down the balance.
