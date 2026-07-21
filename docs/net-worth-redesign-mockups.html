@@ -1,0 +1,503 @@
+<title>Bold Budget — Net Worth Redesign</title>
+<style>
+  :root {
+    --page-bg: #f4f5f4;
+    --page-surface: #ffffff;
+    --page-ink: #14201f;
+    --page-muted: #5e6b6a;
+    --page-line: #e0e4e3;
+    --brand: #009193;
+    --brand-ink: #00757a;
+    --pos: #1f9d57;
+    --neg: #d1483b;
+    --maxw: 1180px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --page-bg: #0c0e0e;
+      --page-surface: #16191a;
+      --page-ink: #eef2f1;
+      --page-muted: #93a09e;
+      --page-line: #262b2b;
+      --brand: #19b4b6;
+      --brand-ink: #4fd0d1;
+      --pos: #3ec77e;
+      --neg: #ff6a5c;
+    }
+  }
+  :root[data-theme="light"] {
+    --page-bg: #f4f5f4; --page-surface: #ffffff; --page-ink: #14201f;
+    --page-muted: #5e6b6a; --page-line: #e0e4e3; --brand: #009193;
+    --brand-ink: #00757a; --pos: #1f9d57; --neg: #d1483b;
+  }
+  :root[data-theme="dark"] {
+    --page-bg: #0c0e0e; --page-surface: #16191a; --page-ink: #eef2f1;
+    --page-muted: #93a09e; --page-line: #262b2b; --brand: #19b4b6;
+    --brand-ink: #4fd0d1; --pos: #3ec77e; --neg: #ff6a5c;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--page-bg);
+    color: var(--page-ink);
+    font-family: ui-sans-serif, -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 56px 24px 96px; }
+
+  header.hero { max-width: 760px; }
+  .eyebrow {
+    font-size: 12px; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--brand-ink); font-weight: 700; margin: 0 0 14px;
+  }
+  h1 {
+    font-size: clamp(30px, 5vw, 46px); line-height: 1.04; margin: 0 0 18px;
+    letter-spacing: -.02em; text-wrap: balance; font-weight: 800;
+  }
+  h1 .tint { color: var(--brand); }
+  .lede { font-size: 18px; color: var(--page-muted); margin: 0; max-width: 62ch; }
+
+  .rail {
+    display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 26px;
+    font-size: 13.5px; color: var(--page-muted);
+  }
+  .rail b { color: var(--page-ink); font-weight: 650; }
+
+  .section-head { margin: 72px 0 4px; max-width: 720px; }
+  .section-head h2 {
+    font-size: 13px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--brand-ink); font-weight: 700; margin: 0 0 6px;
+  }
+  .section-head p { margin: 0; font-size: 15px; color: var(--page-muted); }
+
+  .gallery {
+    display: grid; gap: 34px 30px; margin-top: 34px;
+    grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+  }
+  figure {
+    margin: 0; background: var(--page-surface);
+    border: 1px solid var(--page-line); border-radius: 20px;
+    padding: 22px 22px 20px; display: flex; flex-direction: column;
+  }
+  .phone-wrap { display: flex; justify-content: center; }
+  figure svg.phone { width: 100%; height: auto; max-width: 288px; display: block; }
+  figcaption { margin-top: 18px; }
+  .cap-num {
+    font-size: 11px; letter-spacing: .12em; font-weight: 700;
+    color: var(--brand); text-transform: uppercase;
+  }
+  figcaption h3 { margin: 5px 0 6px; font-size: 17px; letter-spacing: -.01em; }
+  figcaption p { margin: 0; font-size: 13.5px; color: var(--page-muted); line-height: 1.55; }
+  figcaption .tag {
+    display: inline-block; margin-top: 12px; font-size: 11.5px; font-weight: 600;
+    color: var(--brand-ink); border: 1px solid var(--page-line);
+    padding: 3px 9px; border-radius: 999px;
+  }
+
+  .legend {
+    margin-top: 40px; display: flex; flex-wrap: wrap; gap: 10px 22px;
+    font-size: 13px; color: var(--page-muted); align-items: center;
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .dot { width: 11px; height: 11px; border-radius: 3px; }
+
+  footer.note {
+    margin-top: 80px; padding-top: 24px; border-top: 1px solid var(--page-line);
+    font-size: 13.5px; color: var(--page-muted); max-width: 70ch;
+  }
+  footer.note b { color: var(--page-ink); }
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <p class="eyebrow">Bold Budget · Product Direction</p>
+    <h1>From a spending ledger to a picture of your <span class="tint">whole net worth</span>.</h1>
+    <p class="lede">Accounts become first-class. Transactions move real balances. The retirement spreadsheet moves inside the app — and the fastest thing to do is still add a transaction.</p>
+    <div class="rail">
+      <span><b>New primitive:</b> Account (asset / liability)</span>
+      <span><b>Balances:</b> stored + reconcile</span>
+      <span><b>Money:</b> Money + SignedMoney</span>
+      <span><b>Transaction kinds:</b> expense · income · transfer</span>
+    </div>
+  </header>
+
+  <div class="legend">
+    <span><span class="dot" style="background:var(--brand)"></span> Brand teal · #009193</span>
+    <span><span class="dot" style="background:var(--pos)"></span> Income / asset / gain</span>
+    <span><span class="dot" style="background:var(--neg)"></span> Expense / liability / loss</span>
+    <span>Screens shown in the app's signature dark theme.</span>
+  </div>
+
+  <div class="section-head" style="margin-top:56px">
+    <h2>The five screens</h2>
+    <p>Ordered by how often you'll touch them: add, check net worth, drill into an account, review spending, move money.</p>
+  </div>
+
+  <div class="gallery">
+
+    <!-- ============ 1. ADD TRANSACTION (keypad) ============ -->
+    <figure>
+      <div class="phone-wrap">
+      <svg class="phone" viewBox="0 0 320 660" role="img" aria-label="Add transaction screen with keypad">
+        <defs>
+          <clipPath id="scr1"><rect x="12" y="12" width="296" height="636" rx="34"/></clipPath>
+        </defs>
+        <rect x="6" y="6" width="308" height="648" rx="42" fill="#000" stroke="#2c2f2f" stroke-width="2"/>
+        <g clip-path="url(#scr1)">
+          <rect x="12" y="12" width="296" height="636" fill="#0a0b0b"/>
+          <!-- status bar -->
+          <text x="30" y="42" fill="#fff" font-size="12" font-weight="700">9:41</text>
+          <g fill="#fff"><rect x="250" y="33" width="16" height="10" rx="2"/><rect x="270" y="31" width="24" height="12" rx="3" opacity=".4"/><rect x="272" y="33" width="18" height="8" rx="2"/></g>
+          <!-- top bar -->
+          <text x="30" y="78" fill="#8b9695" font-size="13">Cancel</text>
+          <text x="160" y="78" fill="#fff" font-size="14" font-weight="700" text-anchor="middle">New Transaction</text>
+          <!-- segmented kind -->
+          <rect x="30" y="94" width="260" height="34" rx="10" fill="#17191a"/>
+          <rect x="123" y="98" width="80" height="26" rx="8" fill="#d1483b"/>
+          <text x="70" y="115" fill="#8b9695" font-size="12.5" text-anchor="middle">Income</text>
+          <text x="163" y="115" fill="#fff" font-size="12.5" font-weight="700" text-anchor="middle">Expense</text>
+          <text x="255" y="115" fill="#8b9695" font-size="12.5" text-anchor="middle">Transfer</text>
+          <!-- amount -->
+          <text x="160" y="196" fill="#fff" font-size="52" font-weight="800" text-anchor="middle" font-variant-numeric="tabular-nums">$87.63</text>
+          <!-- account + category chips -->
+          <rect x="34" y="224" width="118" height="46" rx="12" fill="#141617" stroke="#262a2a"/>
+          <text x="48" y="245" fill="#6f7a79" font-size="9.5" letter-spacing=".08em">FROM ACCOUNT</text>
+          <circle cx="50" cy="258" r="4" fill="#19b4b6"/>
+          <text x="60" y="262" fill="#fff" font-size="12.5" font-weight="600">Checking</text>
+          <rect x="168" y="224" width="118" height="46" rx="12" fill="#141617" stroke="#262a2a"/>
+          <text x="182" y="245" fill="#6f7a79" font-size="9.5" letter-spacing=".08em">CATEGORY</text>
+          <text x="182" y="262" fill="#fff" font-size="12.5" font-weight="600">🛒 Groceries</text>
+          <!-- keypad -->
+          <g fill="#fff" font-size="26" font-weight="600" text-anchor="middle" font-family="ui-sans-serif,system-ui">
+            <text x="80" y="330">1</text><text x="160" y="330">2</text><text x="240" y="330">3</text>
+            <text x="80" y="392">4</text><text x="160" y="392">5</text><text x="240" y="392">6</text>
+            <text x="80" y="454">7</text><text x="160" y="454">8</text><text x="240" y="454">9</text>
+            <text x="80" y="516" font-size="22">.</text><text x="160" y="516">0</text>
+          </g>
+          <path d="M228 500 h18 a4 4 0 0 1 4 4 v10 a4 4 0 0 1 -4 4 h-18 l-8 -9 z" fill="none" stroke="#8b9695" stroke-width="1.6"/>
+          <!-- save -->
+          <rect x="30" y="548" width="260" height="52" rx="16" fill="#19b4b6"/>
+          <text x="160" y="580" fill="#04201f" font-size="16" font-weight="800" text-anchor="middle">Add Expense</text>
+          <!-- home indicator -->
+          <rect x="128" y="628" width="64" height="5" rx="2.5" fill="#3a3f3f"/>
+        </g>
+      </svg>
+      </div>
+      <figcaption>
+        <div class="cap-num">01 · Opens here by default</div>
+        <h3>Add — keypad first</h3>
+        <p>The app's most common action gets zero friction: launch straight into the amount keypad. The Expense / Income / Transfer switch and a From-Account chip are the only new controls — everything else is your existing entry flow.</p>
+        <span class="tag">Account link = the cohesion you asked for</span>
+      </figcaption>
+    </figure>
+
+    <!-- ============ 2. NET WORTH HOME ============ -->
+    <figure>
+      <div class="phone-wrap">
+      <svg class="phone" viewBox="0 0 320 660" role="img" aria-label="Net worth home screen">
+        <defs><clipPath id="scr2"><rect x="12" y="12" width="296" height="636" rx="34"/></clipPath></defs>
+        <rect x="6" y="6" width="308" height="648" rx="42" fill="#000" stroke="#2c2f2f" stroke-width="2"/>
+        <g clip-path="url(#scr2)">
+          <rect x="12" y="12" width="296" height="636" fill="#0a0b0b"/>
+          <text x="30" y="42" fill="#fff" font-size="12" font-weight="700">9:41</text>
+          <g fill="#fff"><rect x="250" y="33" width="16" height="10" rx="2"/><rect x="270" y="31" width="24" height="12" rx="3" opacity=".4"/></g>
+          <!-- title -->
+          <text x="30" y="82" fill="#fff" font-size="20" font-weight="800">Net Worth</text>
+          <circle cx="278" cy="76" r="14" fill="#17191a"/><text x="278" y="81" fill="#8b9695" font-size="13" text-anchor="middle">⋯</text>
+          <!-- big number -->
+          <text x="30" y="126" fill="#fff" font-size="38" font-weight="800" font-variant-numeric="tabular-nums">$592,153</text>
+          <text x="30" y="150" fill="#3ec77e" font-size="13" font-weight="700">▲ $39,489</text>
+          <text x="118" y="150" fill="#6f7a79" font-size="13">this month</text>
+          <!-- chart card -->
+          <rect x="24" y="164" width="272" height="150" rx="16" fill="#111314"/>
+          <!-- baseline grid -->
+          <line x1="44" y1="290" x2="284" y2="290" stroke="#22292a" stroke-width="1"/>
+          <line x1="44" y1="250" x2="284" y2="250" stroke="#1a2021" stroke-width="1"/>
+          <line x1="44" y1="210" x2="284" y2="210" stroke="#1a2021" stroke-width="1"/>
+          <!-- area fill under net worth line (18 months, real data) -->
+          <path d="M44,201.6 60.5,166 76.9,160 93.4,162.8 109.9,182.5 126.4,174.4 142.8,197.6 159.3,213.7 175.8,212.6 192.2,207.4 208.7,219.7 225.2,217 241.6,211.2 258.1,231.3 274.6,270 284,259.7 284,290 44,290 Z" fill="#19b4b6" fill-opacity="0.13"/>
+          <polyline points="44,201.6 60.5,166 76.9,160 93.4,162.8 109.9,182.5 126.4,174.4 142.8,197.6 159.3,213.7 175.8,212.6 192.2,207.4 208.7,219.7 225.2,217 241.6,211.2 258.1,231.3 274.6,270 284,259.7" fill="none" stroke="#19b4b6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+          <circle cx="284" cy="259.7" r="3.4" fill="#19b4b6"/>
+          <text x="44" y="182" fill="#4a5453" font-size="9">Jan '24</text>
+          <text x="252" y="182" fill="#4a5453" font-size="9">Jun '25</text>
+          <!-- assets / liabilities split -->
+          <rect x="24" y="326" width="132" height="60" rx="14" fill="#111314"/>
+          <text x="40" y="348" fill="#6f7a79" font-size="10" letter-spacing=".06em">ASSETS</text>
+          <text x="40" y="372" fill="#3ec77e" font-size="18" font-weight="800" font-variant-numeric="tabular-nums">$620,332</text>
+          <rect x="164" y="326" width="132" height="60" rx="14" fill="#111314"/>
+          <text x="180" y="348" fill="#6f7a79" font-size="10" letter-spacing=".06em">LIABILITIES</text>
+          <text x="180" y="372" fill="#ff6a5c" font-size="18" font-weight="800" font-variant-numeric="tabular-nums">$28,179</text>
+          <!-- accounts list -->
+          <text x="30" y="414" fill="#8b9695" font-size="11" letter-spacing=".08em">CASH &amp; INVESTMENTS</text>
+          <!-- row -->
+          <g font-family="ui-sans-serif,system-ui">
+            <circle cx="42" cy="435" r="9" fill="#17323a"/><text x="42" y="439" font-size="9" text-anchor="middle">🏦</text>
+            <text x="60" y="432" fill="#fff" font-size="13" font-weight="600">America First</text>
+            <text x="60" y="447" fill="#6f7a79" font-size="10.5">Checking · ledger</text>
+            <text x="290" y="440" fill="#fff" font-size="13.5" font-weight="700" text-anchor="end" font-variant-numeric="tabular-nums">$12,727</text>
+
+            <circle cx="42" cy="470" r="9" fill="#17323a"/><text x="42" y="474" font-size="9" text-anchor="middle">📈</text>
+            <text x="60" y="467" fill="#fff" font-size="13" font-weight="600">Robinhood</text>
+            <text x="60" y="482" fill="#6f7a79" font-size="10.5">Brokerage · snapshot</text>
+            <text x="290" y="475" fill="#fff" font-size="13.5" font-weight="700" text-anchor="end" font-variant-numeric="tabular-nums">$324,870</text>
+
+            <circle cx="42" cy="505" r="9" fill="#17323a"/><text x="42" y="509" font-size="9" text-anchor="middle">🏛️</text>
+            <text x="60" y="502" fill="#fff" font-size="13" font-weight="600">401k</text>
+            <text x="60" y="517" fill="#6f7a79" font-size="10.5">Retirement · snapshot</text>
+            <text x="290" y="510" fill="#fff" font-size="13.5" font-weight="700" text-anchor="end" font-variant-numeric="tabular-nums">$218,757</text>
+          </g>
+          <text x="30" y="548" fill="#8b9695" font-size="11" letter-spacing=".08em">LIABILITIES</text>
+          <circle cx="42" cy="569" r="9" fill="#3a1d1c"/><text x="42" y="573" font-size="9" text-anchor="middle">🚗</text>
+          <text x="60" y="566" fill="#fff" font-size="13" font-weight="600">CX-30 Loan</text>
+          <text x="60" y="581" fill="#6f7a79" font-size="10.5">Auto loan · $458/mo</text>
+          <text x="290" y="574" fill="#ff6a5c" font-size="13.5" font-weight="700" text-anchor="end" font-variant-numeric="tabular-nums">−$28,179</text>
+          <!-- tab bar -->
+          <rect x="12" y="606" width="296" height="42" fill="#0e1010"/>
+          <line x1="12" y1="606" x2="308" y2="606" stroke="#1e2323"/>
+          <g text-anchor="middle" font-size="8.5">
+            <text x="72" y="632" fill="#19b4b6" font-size="15">＋</text><text x="72" y="644" fill="#19b4b6">Add</text>
+            <text x="160" y="631" font-size="14">◔</text><text x="160" y="644" fill="#fff">Net Worth</text>
+            <text x="248" y="631" font-size="14" fill="#6f7a79">▤</text><text x="248" y="644" fill="#6f7a79">Spending</text>
+          </g>
+          <rect x="128" y="628" width="64" height="5" rx="2.5" fill="#3a3f3f" opacity="0"/>
+        </g>
+      </svg>
+      </div>
+      <figcaption>
+        <div class="cap-num">02 · Replaces the spreadsheet</div>
+        <h3>Net Worth home</h3>
+        <p>Real numbers from your sheet: $592,153 net worth, the 18-month Total line as an area chart, assets vs. liabilities, and every account grouped. Snapshot accounts (Robinhood, 401k) sit right next to ledger accounts (checking).</p>
+        <span class="tag">Chart data = your actual Jan '24–Jun '25 totals</span>
+      </figcaption>
+    </figure>
+
+    <!-- ============ 3. ACCOUNT DETAIL (snapshot) ============ -->
+    <figure>
+      <div class="phone-wrap">
+      <svg class="phone" viewBox="0 0 320 660" role="img" aria-label="Account detail screen">
+        <defs><clipPath id="scr3"><rect x="12" y="12" width="296" height="636" rx="34"/></clipPath></defs>
+        <rect x="6" y="6" width="308" height="648" rx="42" fill="#000" stroke="#2c2f2f" stroke-width="2"/>
+        <g clip-path="url(#scr3)">
+          <rect x="12" y="12" width="296" height="636" fill="#0a0b0b"/>
+          <text x="30" y="42" fill="#fff" font-size="12" font-weight="700">9:41</text>
+          <g fill="#fff"><rect x="250" y="33" width="16" height="10" rx="2"/><rect x="270" y="31" width="24" height="12" rx="3" opacity=".4"/></g>
+          <text x="30" y="80" fill="#19b4b6" font-size="13">‹ Net Worth</text>
+          <text x="278" y="80" fill="#8b9695" font-size="13" text-anchor="middle">Edit</text>
+          <!-- account header -->
+          <text x="30" y="126" font-size="24">📈</text>
+          <text x="66" y="118" fill="#fff" font-size="18" font-weight="800">Robinhood</text>
+          <text x="66" y="136" fill="#6f7a79" font-size="12">Brokerage · Snapshot tracking</text>
+          <text x="30" y="176" fill="#fff" font-size="34" font-weight="800" font-variant-numeric="tabular-nums">$324,870</text>
+          <text x="30" y="198" fill="#3ec77e" font-size="12.5" font-weight="700">▲ $33,422 <tspan fill="#6f7a79" font-weight="400">since May</tspan></text>
+          <!-- chart -->
+          <rect x="24" y="212" width="272" height="120" rx="16" fill="#111314"/>
+          <path d="M40,246 66,225 92,227 118,247 144,268 170,278 196,296 222,262 248,238 274,250 274,314 40,314 Z" fill="#19b4b6" fill-opacity=".12"/>
+          <polyline points="40,246 66,225 92,227 118,247 144,268 170,278 196,296 222,262 248,238 274,250" fill="none" stroke="#19b4b6" stroke-width="2.2" stroke-linecap="round"/>
+          <circle cx="274" cy="250" r="3.4" fill="#19b4b6"/>
+          <!-- segmented range -->
+          <rect x="90" y="322" width="140" height="0" fill="none"/>
+          <!-- update balance CTA -->
+          <rect x="24" y="346" width="272" height="46" rx="14" fill="#17191a" stroke="#262a2a"/>
+          <text x="160" y="374" fill="#19b4b6" font-size="14" font-weight="700" text-anchor="middle">＋  Update balance</text>
+          <!-- snapshot history -->
+          <text x="30" y="420" fill="#8b9695" font-size="11" letter-spacing=".08em">BALANCE HISTORY</text>
+          <g font-variant-numeric="tabular-nums">
+            <text x="30" y="446" fill="#fff" font-size="13">Jun 2025</text>
+            <text x="290" y="446" fill="#fff" font-size="13" font-weight="700" text-anchor="end">$324,870</text>
+            <text x="220" y="446" fill="#3ec77e" font-size="11" text-anchor="end">+33,422</text>
+            <line x1="30" y1="458" x2="290" y2="458" stroke="#1c2121"/>
+
+            <text x="30" y="480" fill="#fff" font-size="13">May 2025</text>
+            <text x="290" y="480" fill="#fff" font-size="13" font-weight="700" text-anchor="end">$291,448</text>
+            <text x="220" y="480" fill="#3ec77e" font-size="11" text-anchor="end">+48,911</text>
+            <line x1="30" y1="492" x2="290" y2="492" stroke="#1c2121"/>
+
+            <text x="30" y="514" fill="#fff" font-size="13">Apr 2025</text>
+            <text x="290" y="514" fill="#fff" font-size="13" font-weight="700" text-anchor="end">$242,537</text>
+            <text x="220" y="514" fill="#3ec77e" font-size="11" text-anchor="end">+28,915</text>
+            <line x1="30" y1="526" x2="290" y2="526" stroke="#1c2121"/>
+
+            <text x="30" y="548" fill="#fff" font-size="13">Mar 2025</text>
+            <text x="290" y="548" fill="#fff" font-size="13" font-weight="700" text-anchor="end">$213,622</text>
+            <text x="220" y="548" fill="#ff6a5c" font-size="11" text-anchor="end">−124,664</text>
+            <line x1="30" y1="560" x2="290" y2="560" stroke="#1c2121"/>
+
+            <text x="30" y="582" fill="#fff" font-size="13">Feb 2025</text>
+            <text x="290" y="582" fill="#fff" font-size="13" font-weight="700" text-anchor="end">$338,286</text>
+            <text x="220" y="582" fill="#ff6a5c" font-size="11" text-anchor="end">−78,038</text>
+          </g>
+          <!-- tab bar -->
+          <rect x="12" y="606" width="296" height="42" fill="#0e1010"/>
+          <line x1="12" y1="606" x2="308" y2="606" stroke="#1e2323"/>
+          <g text-anchor="middle" font-size="8.5">
+            <text x="72" y="631" fill="#6f7a79" font-size="15">＋</text><text x="72" y="644" fill="#6f7a79">Add</text>
+            <text x="160" y="631" font-size="14" fill="#19b4b6">◔</text><text x="160" y="644" fill="#19b4b6">Net Worth</text>
+            <text x="248" y="631" font-size="14" fill="#6f7a79">▤</text><text x="248" y="644" fill="#6f7a79">Spending</text>
+          </g>
+        </g>
+      </svg>
+      </div>
+      <figcaption>
+        <div class="cap-num">03 · The spreadsheet, per account</div>
+        <h3>Account detail — snapshot</h3>
+        <p>Tap Robinhood and you get exactly what your sheet's columns held: a value-over-time chart and the month-by-month history. "Update balance" is the monthly ritual — punch in one number, done. Ledger accounts show transactions here instead.</p>
+        <span class="tag">Monthly deltas shown just like your sheet's change rows</span>
+      </figcaption>
+    </figure>
+
+    <!-- ============ 4. SPENDING (evolved current) ============ -->
+    <figure>
+      <div class="phone-wrap">
+      <svg class="phone" viewBox="0 0 320 660" role="img" aria-label="Spending screen">
+        <defs><clipPath id="scr4"><rect x="12" y="12" width="296" height="636" rx="34"/></clipPath></defs>
+        <rect x="6" y="6" width="308" height="648" rx="42" fill="#000" stroke="#2c2f2f" stroke-width="2"/>
+        <g clip-path="url(#scr4)">
+          <rect x="12" y="12" width="296" height="636" fill="#0a0b0b"/>
+          <text x="30" y="42" fill="#fff" font-size="12" font-weight="700">9:41</text>
+          <g fill="#fff"><rect x="250" y="33" width="16" height="10" rx="2"/><rect x="270" y="31" width="24" height="12" rx="3" opacity=".4"/></g>
+          <!-- timeframe bar (existing pattern) -->
+          <text x="30" y="80" fill="#8b9695" font-size="15">‹</text>
+          <text x="160" y="80" fill="#fff" font-size="14" font-weight="700" text-anchor="middle">June 2025</text>
+          <text x="288" y="80" fill="#8b9695" font-size="15" text-anchor="middle">›</text>
+          <text x="278" y="46" fill="#8b9695" font-size="14" text-anchor="middle" opacity="0"></text>
+          <!-- donut -->
+          <g transform="translate(160,168)">
+            <circle r="58" fill="none" stroke="#17191a" stroke-width="20"/>
+            <circle r="58" fill="none" stroke="#19b4b6" stroke-width="20" stroke-dasharray="150 214" transform="rotate(-90)"/>
+            <circle r="58" fill="none" stroke="#3ec77e" stroke-width="20" stroke-dasharray="70 294" stroke-dashoffset="-150" transform="rotate(-90)"/>
+            <circle r="58" fill="none" stroke="#d1483b" stroke-width="20" stroke-dasharray="60 304" stroke-dashoffset="-220" transform="rotate(-90)"/>
+            <circle r="58" fill="none" stroke="#c9a227" stroke-width="20" stroke-dasharray="40 324" stroke-dashoffset="-280" transform="rotate(-90)"/>
+            <text y="-4" fill="#6f7a79" font-size="9.5" text-anchor="middle">SPENT</text>
+            <text y="14" fill="#fff" font-size="18" font-weight="800" text-anchor="middle">$3,214</text>
+          </g>
+          <!-- income/expense totals (existing) -->
+          <text x="30" y="258" fill="#6f7a79" font-size="10" letter-spacing=".06em">INCOME</text>
+          <text x="30" y="278" fill="#3ec77e" font-size="16" font-weight="700">$4,200</text>
+          <text x="290" y="258" fill="#6f7a79" font-size="10" letter-spacing=".06em" text-anchor="end">EXPENSES</text>
+          <text x="290" y="278" fill="#fff" font-size="16" font-weight="700" text-anchor="end">$3,214</text>
+          <line x1="24" y1="296" x2="296" y2="296" stroke="#1c2121"/>
+          <!-- transaction rows w/ account chip -->
+          <text x="30" y="320" fill="#8b9695" font-size="11">Jun 18, 2025</text>
+          <g font-family="ui-sans-serif,system-ui">
+            <circle cx="44" cy="344" r="12" fill="#17323a"/><text x="44" y="348" font-size="11" text-anchor="middle">🛒</text>
+            <text x="66" y="340" fill="#fff" font-size="13.5" font-weight="600">Walmart</text>
+            <text x="66" y="356" fill="#6f7a79" font-size="10.5">Groceries</text>
+            <rect x="116" y="347" width="52" height="14" rx="7" fill="#141d1d"/><text x="142" y="357" fill="#7fb3b3" font-size="8.5" text-anchor="middle">Checking</text>
+            <text x="290" y="348" fill="#fff" font-size="13.5" font-weight="700" text-anchor="end">−$87.63</text>
+
+            <circle cx="44" cy="382" r="12" fill="#17323a"/><text x="44" y="386" font-size="11" text-anchor="middle">🎬</text>
+            <text x="66" y="378" fill="#fff" font-size="13.5" font-weight="600">Movie Tickets</text>
+            <text x="66" y="394" fill="#6f7a79" font-size="10.5">Entertainment</text>
+            <rect x="146" y="385" width="66" height="14" rx="7" fill="#231d2e"/><text x="179" y="395" fill="#b39ad6" font-size="8.5" text-anchor="middle">Amex Card</text>
+            <text x="290" y="386" fill="#fff" font-size="13.5" font-weight="700" text-anchor="end">−$47.52</text>
+
+            <!-- transfer row (new kind) -->
+            <circle cx="44" cy="420" r="12" fill="#182a2b"/><text x="44" y="424" font-size="11" text-anchor="middle">⇄</text>
+            <text x="66" y="416" fill="#fff" font-size="13.5" font-weight="600">Transfer to Savings</text>
+            <text x="66" y="432" fill="#6f7a79" font-size="10.5">Checking → HYSA</text>
+            <rect x="182" y="423" width="46" height="14" rx="7" fill="#17191a"/><text x="205" y="433" fill="#8b9695" font-size="8.5" text-anchor="middle">neutral</text>
+            <text x="290" y="424" fill="#8b9695" font-size="13.5" font-weight="700" text-anchor="end">$500.00</text>
+
+            <text x="30" y="464" fill="#8b9695" font-size="11">Jun 15, 2025</text>
+            <circle cx="44" cy="488" r="12" fill="#1c3324"/><text x="44" y="492" font-size="11" text-anchor="middle">💵</text>
+            <text x="66" y="484" fill="#fff" font-size="13.5" font-weight="600">Paycheck</text>
+            <text x="66" y="500" fill="#6f7a79" font-size="10.5">Income</text>
+            <rect x="116" y="491" width="52" height="14" rx="7" fill="#141d1d"/><text x="142" y="501" fill="#7fb3b3" font-size="8.5" text-anchor="middle">Checking</text>
+            <text x="290" y="492" fill="#3ec77e" font-size="13.5" font-weight="700" text-anchor="end">+$4,200</text>
+
+            <circle cx="44" cy="526" r="12" fill="#17323a"/><text x="44" y="530" font-size="11" text-anchor="middle">⛽</text>
+            <text x="66" y="522" fill="#fff" font-size="13.5" font-weight="600">Gas</text>
+            <text x="66" y="538" fill="#6f7a79" font-size="10.5">Vehicle</text>
+            <rect x="116" y="529" width="52" height="14" rx="7" fill="#141d1d"/><text x="142" y="539" fill="#7fb3b3" font-size="8.5" text-anchor="middle">Checking</text>
+            <text x="290" y="530" fill="#fff" font-size="13.5" font-weight="700" text-anchor="end">−$57.30</text>
+          </g>
+          <line x1="24" y1="556" x2="296" y2="556" stroke="#1c2121"/>
+          <!-- view mode row (existing envelopes/chart/recurring) -->
+          <text x="70" y="586" fill="#19b4b6" font-size="10" text-anchor="middle">◔ Chart</text>
+          <text x="160" y="586" fill="#6f7a79" font-size="10" text-anchor="middle">✉ Envelopes</text>
+          <text x="252" y="586" fill="#6f7a79" font-size="10" text-anchor="middle">↻ Recurring</text>
+          <!-- tab bar -->
+          <rect x="12" y="606" width="296" height="42" fill="#0e1010"/>
+          <line x1="12" y1="606" x2="308" y2="606" stroke="#1e2323"/>
+          <g text-anchor="middle" font-size="8.5">
+            <text x="72" y="631" fill="#6f7a79" font-size="15">＋</text><text x="72" y="644" fill="#6f7a79">Add</text>
+            <text x="160" y="631" font-size="14" fill="#6f7a79">◔</text><text x="160" y="644" fill="#6f7a79">Net Worth</text>
+            <text x="248" y="631" font-size="14" fill="#19b4b6">▤</text><text x="248" y="644" fill="#19b4b6">Spending</text>
+          </g>
+        </g>
+      </svg>
+      </div>
+      <figcaption>
+        <div class="cap-num">04 · Your current screen, evolved</div>
+        <h3>Spending</h3>
+        <p>Everything you have today — pie, income/expense totals, timeframe stepper, Envelopes and Recurring modes — kept intact. The one addition: each transaction now shows an account chip, and Transfers appear as net-worth-neutral rows so they don't distort spending.</p>
+        <span class="tag">Nothing you built gets thrown away</span>
+      </figcaption>
+    </figure>
+
+    <!-- ============ 5. TRANSFER / MOVE MONEY ============ -->
+    <figure>
+      <div class="phone-wrap">
+      <svg class="phone" viewBox="0 0 320 660" role="img" aria-label="Transfer money screen">
+        <defs><clipPath id="scr5"><rect x="12" y="12" width="296" height="636" rx="34"/></clipPath></defs>
+        <rect x="6" y="6" width="308" height="648" rx="42" fill="#000" stroke="#2c2f2f" stroke-width="2"/>
+        <g clip-path="url(#scr5)">
+          <rect x="12" y="12" width="296" height="636" fill="#0a0b0b"/>
+          <text x="30" y="42" fill="#fff" font-size="12" font-weight="700">9:41</text>
+          <g fill="#fff"><rect x="250" y="33" width="16" height="10" rx="2"/><rect x="270" y="31" width="24" height="12" rx="3" opacity=".4"/></g>
+          <text x="30" y="78" fill="#8b9695" font-size="13">Cancel</text>
+          <text x="160" y="78" fill="#fff" font-size="14" font-weight="700" text-anchor="middle">New Transaction</text>
+          <!-- segmented: transfer selected -->
+          <rect x="30" y="94" width="260" height="34" rx="10" fill="#17191a"/>
+          <rect x="209" y="98" width="77" height="26" rx="8" fill="#19b4b6"/>
+          <text x="70" y="115" fill="#8b9695" font-size="12.5" text-anchor="middle">Income</text>
+          <text x="160" y="115" fill="#8b9695" font-size="12.5" text-anchor="middle">Expense</text>
+          <text x="247" y="115" fill="#04201f" font-size="12.5" font-weight="700" text-anchor="middle">Transfer</text>
+          <!-- amount -->
+          <text x="160" y="188" fill="#fff" font-size="48" font-weight="800" text-anchor="middle" font-variant-numeric="tabular-nums">$500.00</text>
+          <!-- from -> to visual -->
+          <rect x="34" y="214" width="252" height="52" rx="14" fill="#111314"/>
+          <circle cx="58" cy="240" r="11" fill="#17323a"/><text x="58" y="244" font-size="10" text-anchor="middle">🏦</text>
+          <text x="76" y="236" fill="#6f7a79" font-size="9">FROM</text>
+          <text x="76" y="250" fill="#fff" font-size="13" font-weight="600">Checking</text>
+          <text x="270" y="245" fill="#ff6a5c" font-size="12.5" font-weight="700" text-anchor="end">−$500</text>
+          <!-- arrow -->
+          <circle cx="160" cy="278" r="13" fill="#0a0b0b" stroke="#262a2a"/><text x="160" y="283" fill="#19b4b6" font-size="14" text-anchor="middle">↓</text>
+          <rect x="34" y="290" width="252" height="52" rx="14" fill="#111314"/>
+          <circle cx="58" cy="316" r="11" fill="#1c3324"/><text x="58" y="320" font-size="10" text-anchor="middle">🏆</text>
+          <text x="76" y="312" fill="#6f7a79" font-size="9">TO</text>
+          <text x="76" y="326" fill="#fff" font-size="13" font-weight="600">Ally HYSA</text>
+          <text x="270" y="321" fill="#3ec77e" font-size="12.5" font-weight="700" text-anchor="end">+$500</text>
+          <!-- explainer -->
+          <rect x="34" y="356" width="252" height="34" rx="10" fill="#141d1d"/>
+          <text x="160" y="377" fill="#7fb3b3" font-size="11" text-anchor="middle">Net worth unchanged — money just moved.</text>
+          <!-- keypad compact -->
+          <g fill="#fff" font-size="24" font-weight="600" text-anchor="middle">
+            <text x="80" y="436">1</text><text x="160" y="436">2</text><text x="240" y="436">3</text>
+            <text x="80" y="482">4</text><text x="160" y="482">5</text><text x="240" y="482">6</text>
+            <text x="80" y="528">7</text><text x="160" y="528">8</text><text x="240" y="528">9</text>
+            <text x="160" y="574">0</text>
+          </g>
+          <!-- save -->
+          <rect x="30" y="596" width="260" height="0" opacity="0"/>
+          <!-- tab bar area replaced by save in modal; keep home indicator -->
+          <rect x="128" y="628" width="64" height="5" rx="2.5" fill="#3a3f3f"/>
+        </g>
+      </svg>
+      </div>
+      <figcaption>
+        <div class="cap-num">05 · The new transaction kind</div>
+        <h3>Transfer — move money</h3>
+        <p>Transfers are the mechanism that keeps balances honest: paycheck into checking, checking into your HYSA, a credit-card payment. One debits, one credits, net worth doesn't budge — so your spending totals never get polluted by money you just shuffled.</p>
+        <span class="tag">Debts fold in here too: a loan payment is a transfer</span>
+      </figcaption>
+    </figure>
+
+  </div>
+
+  <footer class="note">
+    <p><b>How this maps to your code.</b> <b>Account</b> and <b>SignedMoney</b> are new domain types alongside <code>Money</code> / <code>Transaction</code>. <code>Budget</code> gains an <code>accounts</code> dictionary and an <code>AccountFetcher/Saver</code> pair mirroring the existing worker pattern — plus a Firestore <code>accounts</code> subcollection (remember to update the deployed rules, not the stale repo file). <code>Transaction</code> gains <code>kind</code> + <code>accountId</code> / <code>fromAccountId</code> / <code>toAccountId</code>; existing rows migrate as account-less, and <code>save(transaction:)</code> also nudges the affected account's stored balance. Your <b>RecurringExpense</b> debts graduate into liability accounts. Nothing about the current spending views has to change to ship v2.0.</p>
+  </footer>
+</div>
