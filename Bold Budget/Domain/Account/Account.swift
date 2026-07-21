@@ -308,4 +308,33 @@ extension Collection where Element == Account {
     var netWorth: SignedMoney {
         .init(totalAssets.amount - totalLiabilities.amount)
     }
+
+    /// Net worth at each date any account has a balance point, carrying each account's most recent
+    /// snapshot forward. Accounts with no snapshot yet as of a date contribute nothing (they didn't
+    /// exist); accounts with no history at all contribute their current balance throughout.
+    func netWorthHistory() -> [(date: SimpleDate, value: SignedMoney)] {
+        let dates = Set(flatMap { $0.snapshots.map(\.date) }).sorted()
+        guard !dates.isEmpty else { return [] }
+
+        return dates.map { date in
+            let total = reduce(SignedMoney.zero) { running, account in
+                let asOf = account.snapshots
+                    .filter { $0.date <= date }
+                    .max { $0.date < $1.date }
+                let magnitude: Money
+                if let asOf {
+                    magnitude = asOf.value
+                } else if account.snapshots.isEmpty {
+                    magnitude = account.balance
+                } else {
+                    magnitude = .zero
+                }
+                let signed = account.accountClass == .asset
+                    ? SignedMoney(magnitude.amount)
+                    : SignedMoney(-magnitude.amount)
+                return running + signed
+            }
+            return (date, total)
+        }
+    }
 }

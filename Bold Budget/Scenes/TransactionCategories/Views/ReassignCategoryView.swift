@@ -21,12 +21,8 @@ struct ReassignCategoryView: View {
 
     private var candidates: [Transaction.Category] {
         budget.transactionCategories.values
-            .filter { $0.id != categoryToDelete.id && $0.kind == categoryToDelete.kind }
+            .filter { $0.id != categoryToDelete.id }
             .sorted { $0.name.value < $1.name.value }
-    }
-
-    private var kindLabel: String {
-        categoryToDelete.kind == .income ? String(localized: "income") : String(localized: "expense")
     }
 
     private func selectReplacement(_ category: Transaction.Category) {
@@ -95,9 +91,9 @@ struct ReassignCategoryView: View {
 
     @ViewBuilder private func NoCandidatesView() -> some View {
         ContentUnavailableView(
-            "No Other \(categoryToDelete.kind.name) Categories",
+            "No Other Categories",
             systemImage: "exclamationmark.triangle",
-            description: Text("Create another \(kindLabel) category before deleting this one, so its transactions have somewhere to go.")
+            description: Text("Create another category before deleting this one, so its transactions have somewhere to go.")
         )
     }
 

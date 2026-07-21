@@ -180,7 +180,7 @@ struct TransactionDetailView: View {
                     Spacer(minLength: 0)
                     Text(transaction.isTransfer
                          ? (budget.transferRouteDescription(for: transaction) ?? Transaction.Kind.transfer.name)
-                         : category.kind.name)
+                         : transaction.kind.name)
                         .font(.body.weight(.light))
                         .foregroundStyle(Color.text)
                         .multilineTextAlignment(.center)

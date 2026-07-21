@@ -28,6 +28,20 @@ extension FirebaseTransactionCategoryRepository: TransactionCategoryFetcher {
             .documents
             .compactMap { try? $0.data(as: FirebaseTransactionCategoryDoc.self).toCategory() }
     }
+
+    func fetchLegacyCategoryKinds(in budget: BudgetInfo) async throws -> [Transaction.Category.Id: Transaction.Kind] {
+        let docs = try await categoriesCollection(in: budget)
+            .getDocuments()
+            .documents
+            .compactMap { try? $0.data(as: FirebaseTransactionCategoryDoc.self) }
+
+        return docs.reduce(into: [:]) { result, doc in
+            guard let idString = doc.id,
+                  let id = Transaction.Category.Id(uuidString: idString),
+                  let kind = doc.legacyKind() else { return }
+            result[id] = kind
+        }
+    }
 }
 
 extension FirebaseTransactionCategoryRepository: TransactionCategorySaver {

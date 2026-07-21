@@ -179,7 +179,6 @@ struct TransactionCategoryPickerView: View {
     
     @ViewBuilder private func CategoryButtonLabel(_ category: Transaction.Category) -> some View {
         HStack {
-            KindIndicator(category.kind)
             HStack {
                 Image(systemName: category.sfSymbol.value)
                 Text(category.name.value)
@@ -195,24 +194,6 @@ struct TransactionCategoryPickerView: View {
             Image(systemName: "pencil")
                 .bold()
                 .frame(width: 22, height: 22)
-        }
-    }
-    
-    @ViewBuilder func KindIndicator(_ kind: Transaction.Category.Kind) -> some View {
-        HStack(spacing: 0) {
-            Image(systemName: "dollarsign")
-                .offset(x: 2)
-        }
-        .overlay {
-            Image(systemName: kind == .expense ? "minus" : "plus")
-                .font(.caption2.bold())
-                .offset(x: -7)
-        }
-        .frame(width: 22, height: 22)
-        .foregroundStyle(Color.background)
-        .padding(.paddingSmall)
-        .background {
-            Circle().foregroundStyle(Color.text)
         }
     }
     

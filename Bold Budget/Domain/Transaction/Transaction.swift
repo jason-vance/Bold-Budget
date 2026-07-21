@@ -92,6 +92,22 @@ extension Transaction {
             toAccountId: toAccountId
         )
     }
+
+    func with(kind: Kind) -> Transaction {
+        .init(
+            id: id,
+            title: title,
+            amount: amount,
+            date: date,
+            categoryId: categoryId,
+            location: location,
+            tags: tags,
+            kind: kind,
+            accountId: accountId,
+            fromAccountId: fromAccountId,
+            toAccountId: toAccountId
+        )
+    }
 }
 
 extension Transaction: Equatable { }

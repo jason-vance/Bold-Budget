@@ -13,6 +13,12 @@ struct EnvelopesView: View {
         var id: Transaction.Category.Id { category.id }
         let category: Transaction.Category
         let transactions: [Transaction]
+
+        /// Categories are no longer income/expense-typed, so an envelope is treated as income
+        /// only when every transaction in it is income.
+        var isIncome: Bool {
+            !transactions.isEmpty && transactions.allSatisfy { $0.kind == .income }
+        }
     }
     
     @StateObject var budget: Budget
@@ -22,10 +28,10 @@ struct EnvelopesView: View {
     
     var displayCategories: [Category] {
         budget.transactionsByCategory
-            .sorted { $0.key.name.value < $1.key.name.value }
-            .sorted { $0.key.limit != nil && $1.key.limit == nil }
-            .sorted { $0.key.kind == .income && $1.key.kind != .income }
             .map(Category.init)
+            .sorted { $0.category.name.value < $1.category.name.value }
+            .sorted { $0.category.limit != nil && $1.category.limit == nil }
+            .sorted { $0.isIncome && !$1.isIncome }
     }
     
     var body: some View {
@@ -46,6 +52,7 @@ struct EnvelopesView: View {
         Section {
             CategoryHeader(
                 category: category.category,
+                isIncome: category.isIncome,
                 totalAmount: totalAmount,
                 transactionCount: transactions.count
             )
@@ -58,7 +65,7 @@ struct EnvelopesView: View {
         }
     }
     
-    @ViewBuilder private func CategoryHeader(category: Transaction.Category, totalAmount: Money, transactionCount: Int) -> some View {
+    @ViewBuilder private func CategoryHeader(category: Transaction.Category, isIncome: Bool, totalAmount: Money, transactionCount: Int) -> some View {
         Button {
             withAnimation(.snappy) {
                 if expandedCategories.contains(category) {
@@ -77,7 +84,7 @@ struct EnvelopesView: View {
                             .font(.headline)
                     }
                     HStack {
-                        Text("\(category.kind == .income ? "+" : "")\(totalAmount.formatted())")
+                        Text("\(isIncome ? "+" : "")\(totalAmount.formatted())")
                             .font(.title3.bold())
                     }
                     if let limit = category.limit {
@@ -87,7 +94,7 @@ struct EnvelopesView: View {
                                 Text("Average: \(avgPerPeriod.formatted())/\(limit.period.toUiString())")
                                 Spacer()
                             }
-                            let goalOrLimit = category.kind == .income ? "Goal" : "Limit"
+                            let goalOrLimit = isIncome ? "Goal" : "Limit"
                             Text("\(goalOrLimit): \(limit.amount.formatted())/\(limit.period.toUiString())")
                         }
                         .font(.caption2.bold())
@@ -126,7 +133,7 @@ struct EnvelopesView: View {
                         let multiplier = limit.period.number(in: timeFrame.period)
                         let limitAmount = limit.amount * multiplier
                         
-                        if category.kind == .expense {
+                        if !isIncome {
                             if let overAmount = totalAmount - limitAmount {
                                 Text("\(overAmount.formatted()) over limit!")
                                     .bold()

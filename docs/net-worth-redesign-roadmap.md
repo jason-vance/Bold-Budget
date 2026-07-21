@@ -108,9 +108,13 @@ Sequenced so nothing breaks and the spreadsheet dies early. The current shipping
 - ✅ **Correctness fix:** deleting a category that reassigns transactions across an income↔expense boundary now re-points the linked ledger account balances (the v2.1 deferred edge case).
 - ✅ App + test targets build clean.
 
-### v2.4 - Misc
-- Remove expense/income property from categories
-- Net worth over time area chart
+### v2.4 - Misc ✅ **Complete**
+- ✅ **Removed `kind` from `Transaction.Category`** — income/expense now lives solely on `Transaction.kind`, set by the editor's Expense/Income/Transfer segmented control. Categories are pure labels, reusable in either direction (a "Gifts" category can be income or expense).
+  - **Backfill migration** (chosen over destructive auto-migrate): on first load per budget, each transaction's `kind` is set from its category's legacy kind (read from the category doc, which retains the field), then persisted — guarded by a `UserDefaults` flag. Preserves all historical income/expense classification.
+  - Reworked every consumer to use `transaction.kind`: income/expense totals, per-day sums, the **pie chart** (slices now keyed by category × kind; `PieChart.Slice` carries its own `kind`), **envelopes** (an envelope is "income" only if all its transactions are), transaction detail, and balance-direction logic. The v2.3 category-deletion balance fix became unnecessary and was removed (reassigning a category is now a pure label change).
+  - Dropped the kind UI from the category editor, picker (`KindIndicator`), and reassign screen.
+- ✅ **Net-worth-over-time area chart** (`NetWorthChartView`): hand-drawn, monochrome, with area fill, zero baseline, and an emphasized endpoint. Driven by `Account.netWorthHistory()` (carry-forward alignment across accounts' snapshot dates). Shown atop the Net Worth screen when ≥2 history points exist.
+- ✅ App + unit + UI test targets build clean.
 
 ### v2.5 - UI
 - Implement UI and styling from mockup

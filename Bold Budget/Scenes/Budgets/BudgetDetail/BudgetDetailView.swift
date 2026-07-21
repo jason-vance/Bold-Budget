@@ -58,8 +58,7 @@ struct BudgetDetailView: View {
         func formattedAmountSum(budget: Budget) -> String {
             let sum: Double = transactions.reduce(0) {
                 guard !$1.isTransfer else { return $0 }
-                let category = budget.getCategoryBy(id: $1.categoryId)
-                let sign = (category.kind == .income) ? 1.0 : -1.0
+                let sign = ($1.kind == .income) ? 1.0 : -1.0
                 return $0 + (sign * $1.amount.amount)
             }
             
@@ -142,16 +141,25 @@ struct BudgetDetailView: View {
     }
     
     private var pieSlices: [PieChart.Slice] {
-        var sliceDict = [Transaction.Category.Id:Money]()
+        // Key by category *and* kind: a category can now hold both income and expense
+        // transactions, and the pie separates them into distinct slices.
+        struct SliceKey: Hashable {
+            let categoryId: Transaction.Category.Id
+            let kind: Transaction.Kind
+        }
+
+        var sliceDict = [SliceKey:Money]()
 
         for transaction in filteredTransactions where !transaction.isTransfer {
-            sliceDict[transaction.categoryId] = sliceDict[transaction.categoryId, default: .zero] + transaction.amount
+            let key = SliceKey(categoryId: transaction.categoryId, kind: transaction.kind)
+            sliceDict[key] = sliceDict[key, default: .zero] + transaction.amount
         }
-        
+
         return sliceDict.map { key, value in
             PieChart.Slice(
                 value: value.amount,
-                category: budget.getCategoryBy(id: key)
+                category: budget.getCategoryBy(id: key.categoryId),
+                kind: key.kind
             )
         }
     }
@@ -479,7 +487,7 @@ struct BudgetDetailView: View {
     
     @ViewBuilder private func IncomeTotal() -> some View {
         let money = filteredTransactions
-            .filter { !$0.isTransfer && budget.getCategoryBy(id: $0.categoryId).kind == .income }
+            .filter { $0.kind == .income }
             .reduce(into: Money.zero) { $0  = $0 + $1.amount }
         
         VStack(alignment: .leading, spacing: 2) {
@@ -495,7 +503,7 @@ struct BudgetDetailView: View {
     
     @ViewBuilder private func ExpensesTotal() -> some View {
         let money = filteredTransactions
-            .filter { !$0.isTransfer && budget.getCategoryBy(id: $0.categoryId).kind == .expense }
+            .filter { $0.kind == .expense }
             .reduce(into: Money.zero) { $0  = $0 + $1.amount }
         
         VStack(alignment: .trailing, spacing: 2) {

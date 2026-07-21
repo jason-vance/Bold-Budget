@@ -71,6 +71,11 @@ class Budget: ObservableObject {
 
     /// Assets minus liabilities across all accounts. May be negative.
     var netWorth: SignedMoney { Array(accounts.values).netWorth }
+
+    /// Net worth over time, from account snapshot history.
+    var netWorthHistory: [(date: SimpleDate, value: SignedMoney)] {
+        Array(accounts.values).netWorthHistory()
+    }
     
     var popupNotificationCenter: PopupNotificationCenter? {
         iocContainer.resolve(PopupNotificationCenter.self)
@@ -174,6 +179,8 @@ class Budget: ObservableObject {
                 }
             }
 
+            await self.backfillTransactionKindsIfNeeded()
+
             RunLoop.main.perform { isLoading_False() }
         }
     }
@@ -212,6 +219,41 @@ class Budget: ObservableObject {
         } catch {
             onError("Failed to fetch accounts.", error: error)
         }
+    }
+
+    /// One-time backfill of `Transaction.kind` from the legacy category kind, for rows that predate
+    /// transaction-level kinds. After this, income/expense lives on the transaction, not the
+    /// category. Runs once per budget; legacy rows are account-less, so balances are unaffected.
+    private func backfillTransactionKindsIfNeeded() async {
+        let doneKey = "kindBackfillDone.\(info.id)"
+        guard !UserDefaults.standard.bool(forKey: doneKey) else { return }
+
+        let legacyKinds: [Transaction.Category.Id: Transaction.Kind]
+        do {
+            legacyKinds = try await categoryFetcher.fetchLegacyCategoryKinds(in: info)
+        } catch {
+            return // Leave the flag unset so it retries on the next launch.
+        }
+
+        guard !legacyKinds.isEmpty else {
+            UserDefaults.standard.set(true, forKey: doneKey)
+            return
+        }
+
+        var toPersist: [Transaction] = []
+        for transaction in transactions.values where !transaction.isTransfer {
+            guard let legacyKind = legacyKinds[transaction.categoryId],
+                  legacyKind != transaction.kind else { continue }
+            let updated = transaction.with(kind: legacyKind)
+            transactions[transaction.id] = updated
+            toPersist.append(updated)
+        }
+
+        for transaction in toPersist {
+            try? await transactionSaver.save(transaction: transaction, to: info)
+        }
+
+        UserDefaults.standard.set(true, forKey: doneKey)
     }
 
     func save(transaction: Transaction) {
@@ -267,8 +309,7 @@ class Budget: ObservableObject {
             flow(transaction.fromAccountId, isInflow: false)
             flow(transaction.toAccountId, isInflow: true)
         } else {
-            let isIncome = getCategoryBy(id: transaction.categoryId).kind == .income
-            flow(transaction.accountId, isInflow: isIncome)
+            flow(transaction.accountId, isInflow: transaction.kind == .income)
         }
 
         for id in touched {
@@ -359,23 +400,14 @@ class Budget: ObservableObject {
 
         if !affected.isEmpty && replacement == nil { return }
 
-        // If the replacement flips income<->expense, the direction of any linked ledger balance
-        // effect flips too. Reverse the old effect while the old category still resolves, before
-        // it's removed from the dictionary.
-        let kindChanged = replacement != nil && replacement?.kind != category.kind
-        if kindChanged {
-            for txn in affected { applyBalanceEffects(of: txn, reverse: true) }
-        }
-
         let removedCategory = transactionCategories.removeValue(forKey: category.id)
         let originals = affected
 
+        // Reassigning a category is now purely a label change — income/expense lives on the
+        // transaction, so linked account balances are unaffected.
         if let replacement {
             for txn in affected {
-                let updated = txn.with(categoryId: replacement.id)
-                transactions[txn.id] = updated
-                // Re-apply with the replacement's kind now that it's the current category.
-                if kindChanged { applyBalanceEffects(of: updated, reverse: false) }
+                transactions[txn.id] = txn.with(categoryId: replacement.id)
             }
         }
 
@@ -410,8 +442,7 @@ class Budget: ObservableObject {
 
     func amountString(for transaction: Transaction) -> String {
         if transaction.isTransfer { return transaction.amount.formatted() }
-        let isIncome = getCategoryBy(id: transaction.categoryId).kind == .income
-        return (isIncome ? "+" : "") + transaction.amount.formatted()
+        return (transaction.kind == .income ? "+" : "") + transaction.amount.formatted()
     }
 
     /// A short "Checking → Savings" style summary of a transfer's route, when both ends resolve.

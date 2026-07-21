@@ -22,7 +22,6 @@ struct EditTransactionCategoryView: View {
     @State private var ad: Ad?
     
     @State private var screenTitle: String = String(localized: "Add Category")
-    @State private var kind: Transaction.Category.Kind = .expense
     @State private var symbolString: String? = nil
     @State private var nameString: String = ""
     @State private var nameInstructions: String = ""
@@ -79,7 +78,6 @@ struct EditTransactionCategoryView: View {
 
         return .init(
             id: categoryToEdit.category?.id ?? Transaction.Category.Id(),
-            kind: kind,
             name: name,
             sfSymbol: sfSymbol,
             limit: limit
@@ -127,7 +125,6 @@ struct EditTransactionCategoryView: View {
         guard isFormEmpty else { return }
         
         screenTitle = String(localized: "Edit Category")
-        kind = category.kind
         symbolString = category.sfSymbol.value
         nameString = category.name.value
         limitPeriod = category.limit?.period
@@ -144,7 +141,6 @@ struct EditTransactionCategoryView: View {
             AdSection()
             Section {
                 NameField()
-                KindField()
                 SymbolField()
             } header: {
                 Text("")
@@ -154,7 +150,7 @@ struct EditTransactionCategoryView: View {
                 LimitPeriodField()
                 LimitAmountField()
             } header: {
-                Text(kind == .income ? "Goal" : "Limit")
+                Text("Limit")
                     .foregroundStyle(Color.text)
                     .contentTransition(.numericText())
             }
@@ -195,7 +191,6 @@ struct EditTransactionCategoryView: View {
         .onChange(of: nameString) { _, nameString in setNameInstructions(nameString) }
         .onChange(of: categoryToEdit, initial: true) { _, category in populateFields(category) }
         .onReceive(subscriptionLevelProvider.subscriptionLevelPublisher) { subscriptionLevel = $0 }
-        .animation(.snappy, value: kind)
         .animation(.snappy, value: limitPeriod)
     }
 
@@ -241,36 +236,6 @@ struct EditTransactionCategoryView: View {
                     .listRow()
             }
         }
-    }
-    
-    @ViewBuilder func KindField() -> some View {
-        HStack {
-            Text("Income or Expense")
-                .foregroundStyle(Color.text)
-            Spacer(minLength: 0)
-            Menu {
-                Button {
-                    kind = .expense
-                } label: {
-                    HStack {
-                        Text(Transaction.Category.Kind.expense.name)
-                        if kind == .expense { Image(systemName: "checkmark") }
-                    }
-                }
-                Button {
-                    kind = .income
-                } label: {
-                    HStack {
-                        Text(Transaction.Category.Kind.income.name)
-                        if kind == .income { Image(systemName: "checkmark") }
-                    }
-                }
-            } label: {
-                Text(kind.name)
-                    .buttonLabelSmall()
-            }
-        }
-        .listRow()
     }
     
     @ViewBuilder func NameField() -> some View {
@@ -396,7 +361,6 @@ struct EditTransactionCategoryView: View {
         )
         .editing(.init(
             id: Transaction.Category.Id(),
-            kind: .income,
             name: .init("Category To Edit")!,
             sfSymbol: .init("pencil.and.outline")!,
             limit: .init(amount: Money(100)!, period: .month)

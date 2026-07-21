@@ -28,9 +28,23 @@ struct NetWorthListContent: View {
             NoAccountsView()
         } else {
             NetWorthSection()
+            NetWorthChartSection()
             ForEach(Account.Class.allCases, id: \.self) { accountClass in
                 ClassSection(accountClass)
             }
+        }
+    }
+
+    @ViewBuilder private func NetWorthChartSection() -> some View {
+        let history = budget.netWorthHistory
+        if history.count >= 2 {
+            Section {
+                NetWorthChartView(history: history)
+                    .listRowBackground(Color.background)
+                    .listRowSeparator(.hidden)
+            }
+            .listSectionSeparator(.hidden)
+            .listSectionSpacing(0)
         }
     }
 

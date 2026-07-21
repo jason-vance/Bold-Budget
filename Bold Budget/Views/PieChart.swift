@@ -12,24 +12,27 @@ struct PieChart: View {
     public struct Slice: Equatable {
         let value: Double
         let category: Transaction.Category
-        
+        /// Income vs. expense for this slice — supplied by the caller (from the transactions'
+        /// kinds), since categories are no longer income/expense-typed.
+        let kind: Transaction.Kind
+
         static let samples: [Slice] = [
-            .init(value: 600, category: Transaction.Category.samples[0]),
-            .init(value: 2500, category: Transaction.Category.samples[1]),
-            .init(value: 1500, category: Transaction.Category.samples[4]),
-            .init(value: 250, category: Transaction.Category.samples[3]),
-            .init(value: 125, category: Transaction.Category.samples[2]),
-            .init(value: 7, category: .init(id: .init(), kind: .expense, name: .init("Candy Bar")!, sfSymbol: .init("ellipsis.rectangle.fill")!, limit: nil)),
-            .init(value: 5, category: .init(id: .init(), kind: .income, name: .init("Candy Bar")!, sfSymbol: .init("ellipsis.rectangle.fill")!, limit: nil)),
-            .init(value: 1700, category: .init(id: .init(), kind: .income, name: .init("Stocks")!, sfSymbol: .init("chart.bar.xaxis.ascending")!, limit: nil)),
-            .init(value: 2700, category: .init(id: .init(), kind: .income, name: .init("Paycheck")!, sfSymbol: .init("banknote.fill")!, limit: nil))
+            .init(value: 600, category: Transaction.Category.samples[0], kind: .expense),
+            .init(value: 2500, category: Transaction.Category.samples[1], kind: .expense),
+            .init(value: 1500, category: Transaction.Category.samples[4], kind: .expense),
+            .init(value: 250, category: Transaction.Category.samples[3], kind: .income),
+            .init(value: 125, category: Transaction.Category.samples[2], kind: .expense),
+            .init(value: 7, category: .init(id: .init(), name: .init("Candy Bar")!, sfSymbol: .init("ellipsis.rectangle.fill")!, limit: nil), kind: .expense),
+            .init(value: 5, category: .init(id: .init(), name: .init("Candy Bar")!, sfSymbol: .init("ellipsis.rectangle.fill")!, limit: nil), kind: .income),
+            .init(value: 1700, category: .init(id: .init(), name: .init("Stocks")!, sfSymbol: .init("chart.bar.xaxis.ascending")!, limit: nil), kind: .income),
+            .init(value: 2700, category: .init(id: .init(), name: .init("Paycheck")!, sfSymbol: .init("banknote.fill")!, limit: nil), kind: .income)
         ]
     }
     
     private struct _Slice: Identifiable {
         var id: Int { index }
         let index: Int
-        let kind: Transaction.Category.Kind
+        let kind: Transaction.Kind
         let name: String
         let sfSymbol: Transaction.Category.SfSymbol
         let value: Double
@@ -73,9 +76,9 @@ struct PieChart: View {
         var previousCumulativeValue: CGFloat = 0
         return slicesState
             .sorted {
-                if $0.category.kind != $1.category.kind {
-                    $0.category.kind == .expense
-                } else if $0.category.kind == .expense {
+                if $0.kind != $1.kind {
+                    $0.kind == .expense
+                } else if $0.kind == .expense {
                     $0.value > $1.value
                 } else {
                     $0.value < $1.value
@@ -92,7 +95,7 @@ struct PieChart: View {
                 
                 return .init(
                     index: index,
-                    kind: slice.category.kind,
+                    kind: slice.kind,
                     name: slice.category.name.value,
                     sfSymbol: slice.category.sfSymbol,
                     value: slice.value,
@@ -172,7 +175,7 @@ struct PieChart: View {
     private var grossTotal: Double { slicesState.reduce(0, { $0 + $1.value }) }
     
     private var netTotal: Double {
-        slicesState.reduce(0, { $0 + (($1.category.kind == .income) ? $1.value : -$1.value) })
+        slicesState.reduce(0, { $0 + (($1.kind == .income) ? $1.value : -$1.value) })
     }
     
     private func onTouchMoved(_ point: CGPoint, in frame: CGRect, slices: [_Slice]) {

@@ -56,6 +56,10 @@ extension MockTransactionCategoryRepo: TransactionCategoryFetcher {
     func fetchTransactionCategories(in budget: BudgetInfo) async throws -> [Transaction.Category] {
         categories
     }
+
+    func fetchLegacyCategoryKinds(in budget: BudgetInfo) async throws -> [Transaction.Category.Id: Transaction.Kind] {
+        [:]
+    }
 }
 
 extension MockTransactionCategoryRepo: TransactionCategoryDeleter {
