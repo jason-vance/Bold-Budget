@@ -138,6 +138,10 @@
 		5673DAAF2CA8069B007833E0 /* Exceptions for "Bold Budget" folder in "Bold BudgetUITests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Domain/Account/Account.swift,
+				Domain/Account/AccountName.swift,
+				Domain/Account/BalanceSnapshot.swift,
+				Domain/SignedMoney.swift,
 				Domain/Money.swift,
 				Domain/SimpleDate.swift,
 				Domain/Transaction/Transaction.swift,

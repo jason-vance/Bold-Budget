@@ -159,6 +159,28 @@ struct Account: Identifiable {
         return .init(snapshots[0].value.amount - snapshots[1].value.amount)
     }
 
+    /// Returns a copy with a different current balance, leaving snapshots untouched.
+    func withBalance(_ balance: Money) -> Account {
+        .init(
+            id: id,
+            name: name,
+            kind: kind,
+            trackingMode: trackingMode,
+            balance: balance,
+            snapshots: snapshots
+        )
+    }
+
+    /// Returns a copy with a cash flow applied to the balance.
+    ///
+    /// Inflow raises an asset's balance and lowers a liability's (paying it down); outflow does
+    /// the reverse. Balances are clamped at zero — reconciliation corrects any drift.
+    func applying(cashFlow amount: Money, isInflow: Bool) -> Account {
+        let raises = (accountClass == .asset) == isInflow
+        let newAmount = max(0, balance.amount + (raises ? amount.amount : -amount.amount))
+        return withBalance(Money(newAmount) ?? .zero)
+    }
+
     /// Returns a copy with a snapshot recorded for `date` and the balance set to `value`.
     func recordingSnapshot(value: Money, on date: SimpleDate) -> Account {
         var updated = snapshots.filter { $0.date != date }

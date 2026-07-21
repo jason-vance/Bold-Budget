@@ -21,8 +21,12 @@ struct TransactionRowView: View {
         .foregroundStyle(Color.text)
     }
     
+    private var iconSymbol: String {
+        transaction.isTransfer ? "arrow.left.arrow.right" : category.sfSymbol.value
+    }
+
     @ViewBuilder func CategoryIcon() -> some View {
-        Image(systemName: category.sfSymbol.value)
+        Image(systemName: iconSymbol)
             .padding(.padding)
             .frame(width: 48, height: 48)
             .background {
@@ -36,9 +40,25 @@ struct TransactionRowView: View {
             }
     }
     
+    /// The transfer route ("Checking → Savings") or the linked account name, if any.
+    private var accountLine: String? {
+        budget.transferRouteDescription(for: transaction) ?? budget.accountName(for: transaction)
+    }
+
     @ViewBuilder func TransactionText() -> some View {
         VStack(spacing: 0) {
             Description()
+            if let accountLine {
+                HStack {
+                    Image(systemName: "building.columns")
+                        .font(.caption2)
+                    Text(accountLine)
+                        .font(.caption.weight(.medium))
+                        .lineLimit(1)
+                    Spacer(minLength: 0)
+                }
+                .opacity(0.7)
+            }
             HStack {
                 Text(transaction.location?.value ?? "Unknown Location")
                     .font(.caption.weight(.light))

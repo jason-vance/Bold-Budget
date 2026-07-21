@@ -27,7 +27,11 @@ struct EditTransactionView: View {
     private var onTransactionEditComplete: ((Transaction) -> Void)?
     
     @State private var screenTitle: String = String(localized: "Add Transaction")
+    @State private var kind: Transaction.Kind = .expense
     @State private var categoryId: Transaction.Category.Id? = nil
+    @State private var accountId: Account.Id? = nil
+    @State private var fromAccountId: Account.Id? = nil
+    @State private var toAccountId: Account.Id? = nil
     @State private var amount: Money = .zero
     @State private var showAmountEntryView: Bool = false
     @State private var transactionDate: Date = .now
@@ -88,29 +92,50 @@ struct EditTransactionView: View {
     }
     
     private var transaction: Transaction? {
-        guard let categoryId = categoryId else { return nil }
         guard let date = SimpleDate(date: transactionDate) else { return nil }
-        
+
         var title: Transaction.Title? = nil
         if !titleString.isEmpty {
             guard let tmpTitle = Transaction.Title(titleString) else { return nil }
             title = tmpTitle
         }
-        
+
         var location: Transaction.Location? = nil
         if !locationString.isEmpty {
             guard let tmpLocation = Transaction.Location(locationString) else { return nil }
             location = tmpLocation
         }
-        
+
+        let id = transactionToEdit.transaction?.id ?? Transaction.Id()
+
+        if kind == .transfer {
+            guard amount != .zero else { return nil }
+            guard let fromAccountId, let toAccountId, fromAccountId != toAccountId else { return nil }
+            return .init(
+                id: id,
+                title: title,
+                amount: amount,
+                date: date,
+                categoryId: Transaction.Category.transferId,
+                location: location,
+                tags: tags,
+                kind: .transfer,
+                fromAccountId: fromAccountId,
+                toAccountId: toAccountId
+            )
+        }
+
+        guard let categoryId = categoryId else { return nil }
         return .init(
-            id: transactionToEdit.transaction?.id ?? Transaction.Id(),
+            id: id,
             title: title,
             amount: amount,
             date: date,
             categoryId: categoryId,
             location: location,
-            tags: tags
+            tags: tags,
+            kind: kind,
+            accountId: accountId
         )
     }
     
@@ -121,7 +146,10 @@ struct EditTransactionView: View {
     private var hasFormChanged: Bool {
         categoryId != nil ||
         amount != .zero ||
-        !titleString.isEmpty
+        !titleString.isEmpty ||
+        accountId != nil ||
+        fromAccountId != nil ||
+        toAccountId != nil
     }
     
     private var transactionTitleInstructions: String {
@@ -152,13 +180,17 @@ struct EditTransactionView: View {
         guard let transaction = transaction.transaction else { return }
         
         screenTitle = String(localized: "Edit Transaction")
-        categoryId = transaction.categoryId
+        kind = transaction.kind
+        categoryId = transaction.isTransfer ? nil : transaction.categoryId
+        accountId = transaction.accountId
+        fromAccountId = transaction.fromAccountId
+        toAccountId = transaction.toAccountId
         amount = transaction.amount
         transactionDate = transaction.date.toDate() ?? .now
         titleString = transaction.title?.value ?? ""
         locationString = transaction.location?.value ?? ""
         tags = transaction.tags
-        
+
         hasPopulatedFields = true
     }
     
@@ -185,7 +217,14 @@ struct EditTransactionView: View {
         Form {
             AdSection()
             Section {
-                CategoryField()
+                KindField()
+                if kind == .transfer {
+                    AccountField(title: "From", selection: $fromAccountId, exclude: toAccountId)
+                    AccountField(title: "To", selection: $toAccountId, exclude: fromAccountId)
+                } else {
+                    CategoryField()
+                    AccountField(title: "Account", selection: $accountId, exclude: nil)
+                }
                 AmountField()
                 TransactionDateField()
                 TransactionDatePicker()
@@ -204,6 +243,7 @@ struct EditTransactionView: View {
         }
         .animation(.snappy, value: suggestions)
         .animation(.snappy, value: partialTransaction)
+        .animation(.snappy, value: kind)
         .scrollDismissesKeyboard(.immediately)
         .formStyle(.grouped)
         .scrollContentBackground(.hidden)
@@ -281,6 +321,76 @@ struct EditTransactionView: View {
         }
     }
     
+    @ViewBuilder func KindField() -> some View {
+        Picker("Type", selection: $kind) {
+            ForEach(Transaction.Kind.allCases, id: \.self) { kind in
+                Text(kind.name).tag(kind)
+            }
+        }
+        .pickerStyle(.segmented)
+        .listRow()
+        .accessibilityIdentifier("EditTransactionView.KindField")
+    }
+
+    private func sortedAccounts(in accountClass: Account.Class, excluding excluded: Account.Id?) -> [Account] {
+        budget.accounts.values
+            .filter { $0.accountClass == accountClass && $0.id != excluded }
+            .sorted { $0.name.value < $1.name.value }
+    }
+
+    @ViewBuilder func AccountField(title: LocalizedStringKey, selection: Binding<Account.Id?>, exclude: Account.Id?) -> some View {
+        HStack {
+            Text(title)
+                .foregroundStyle(Color.text)
+            Spacer(minLength: 0)
+            Menu {
+                Button {
+                    selection.wrappedValue = nil
+                } label: {
+                    HStack {
+                        Text("None")
+                        if selection.wrappedValue == nil { Image(systemName: "checkmark") }
+                    }
+                }
+                ForEach(Account.Class.allCases, id: \.self) { accountClass in
+                    let accounts = sortedAccounts(in: accountClass, excluding: exclude)
+                    if !accounts.isEmpty {
+                        Section(accountClass.pluralName) {
+                            ForEach(accounts) { account in
+                                Button {
+                                    selection.wrappedValue = account.id
+                                } label: {
+                                    HStack {
+                                        Image(systemName: account.kind.sfSymbol)
+                                        Text(account.name.value)
+                                        if selection.wrappedValue == account.id { Image(systemName: "checkmark") }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } label: {
+                AccountFieldLabel(selection.wrappedValue)
+            }
+        }
+        .listRow()
+        .accessibilityIdentifier("EditTransactionView.AccountField")
+    }
+
+    @ViewBuilder private func AccountFieldLabel(_ id: Account.Id?) -> some View {
+        if let id, let account = budget.accounts[id] {
+            HStack {
+                Image(systemName: account.kind.sfSymbol)
+                Text(account.name.value)
+            }
+            .buttonLabelSmall()
+        } else {
+            Text(kind == .transfer ? "Select" : "None")
+                .buttonLabelSmall()
+        }
+    }
+
     @ViewBuilder func CategoryField() -> some View {
         NavigationLink {
             TransactionCategoryPickerView(

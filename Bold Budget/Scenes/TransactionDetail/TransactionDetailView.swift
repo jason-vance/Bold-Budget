@@ -170,15 +170,17 @@ struct TransactionDetailView: View {
                 }
                 HStack {
                     Spacer(minLength: 0)
-                    Image(systemName: category.sfSymbol.value)
-                    Text(category.name.value)
+                    Image(systemName: transaction.isTransfer ? "arrow.left.arrow.right" : category.sfSymbol.value)
+                    Text(transaction.isTransfer ? String(localized: "Transfer") : category.name.value)
                     Spacer(minLength: 0)
                 }
                 .font(.body.weight(.semibold))
                 .foregroundStyle(Color.text)
                 HStack {
                     Spacer(minLength: 0)
-                    Text(category.kind.name)
+                    Text(transaction.isTransfer
+                         ? (budget.transferRouteDescription(for: transaction) ?? Transaction.Kind.transfer.name)
+                         : category.kind.name)
                         .font(.body.weight(.light))
                         .foregroundStyle(Color.text)
                         .multilineTextAlignment(.center)

@@ -8,7 +8,26 @@
 import Foundation
 
 struct Transaction: Identifiable {
-    
+
+    /// What the transaction does to net worth.
+    ///
+    /// `expense` / `income` move money in or out and are also distinguished by their
+    /// category's kind (the historical source of truth). `transfer` moves money between two
+    /// accounts and is net-worth-neutral — it carries no spending category.
+    enum Kind: String, Codable, CaseIterable {
+        case expense
+        case income
+        case transfer
+
+        var name: String {
+            switch self {
+            case .expense: String(localized: "Expense")
+            case .income: String(localized: "Income")
+            case .transfer: String(localized: "Transfer")
+            }
+        }
+    }
+
     let id: Id
     let title: Transaction.Title?
     let amount: Money
@@ -16,7 +35,14 @@ struct Transaction: Identifiable {
     let categoryId: Transaction.Category.Id
     let location: Transaction.Location?
     let tags: Set<Transaction.Tag>
-    
+    let kind: Kind
+    /// The account affected by an `expense` / `income`. Optional: legacy rows are account-less.
+    let accountId: Account.Id?
+    /// The account money leaves, for a `transfer`.
+    let fromAccountId: Account.Id?
+    /// The account money lands in, for a `transfer`.
+    let toAccountId: Account.Id?
+
     init(
         id: Id,
         title: Transaction.Title? = nil,
@@ -24,7 +50,11 @@ struct Transaction: Identifiable {
         date: SimpleDate,
         categoryId: Transaction.Category.Id,
         location: Transaction.Location? = nil,
-        tags: Set<Transaction.Tag> = []
+        tags: Set<Transaction.Tag> = [],
+        kind: Kind = .expense,
+        accountId: Account.Id? = nil,
+        fromAccountId: Account.Id? = nil,
+        toAccountId: Account.Id? = nil
     ) {
         self.id = id
         self.title = title
@@ -33,7 +63,13 @@ struct Transaction: Identifiable {
         self.categoryId = categoryId
         self.location = location
         self.tags = tags
+        self.kind = kind
+        self.accountId = accountId
+        self.fromAccountId = fromAccountId
+        self.toAccountId = toAccountId
     }
+
+    var isTransfer: Bool { kind == .transfer }
 }
 
 extension Transaction {
@@ -49,7 +85,11 @@ extension Transaction {
             date: date,
             categoryId: categoryId,
             location: location,
-            tags: tags
+            tags: tags,
+            kind: kind,
+            accountId: accountId,
+            fromAccountId: fromAccountId,
+            toAccountId: toAccountId
         )
     }
 }

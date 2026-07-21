@@ -57,6 +57,7 @@ class Budget: ObservableObject {
     
     var transactionsByCategory: [Transaction.Category:[Transaction]] {
         transactions.reduce(into: [:]) { result, transaction in
+            guard !transaction.value.isTransfer else { return }
             let category = getCategoryBy(id: transaction.value.categoryId)
             result[category, default: []].append(transaction.value)
         }
@@ -214,7 +215,14 @@ class Budget: ObservableObject {
     }
 
     func save(transaction: Transaction) {
+        let previous = transactions[transaction.id]
         let tmp = transactions.updateValue(transaction, forKey: transaction.id)
+
+        // Keep ledger account balances in sync: undo the prior version's effect, then apply
+        // the new one. Snapshot accounts are manual and left untouched.
+        if let previous { applyBalanceEffects(of: previous, reverse: true) }
+        applyBalanceEffects(of: transaction, reverse: false)
+
         Task {
             do {
                 try await transactionSaver.save(transaction: transaction, to: info)
@@ -225,9 +233,11 @@ class Budget: ObservableObject {
             }
         }
     }
-    
+
     func remove(transaction: Transaction) {
         let tmp = transactions.removeValue(forKey: transaction.id)
+        applyBalanceEffects(of: transaction, reverse: true)
+
         Task {
             do {
                 try await transactionDeleter.delete(transaction: transaction, from: info)
@@ -235,6 +245,45 @@ class Budget: ObservableObject {
                 onError("Failed to delete transaction.", error: error)
 
                 transactions[transaction.id] = tmp
+            }
+        }
+    }
+
+    /// Applies (or reverses) a transaction's effect on the balances of any `.ledger` accounts it
+    /// touches, and persists the changed accounts. Income/expense direction is category-derived
+    /// (the historical source of truth); transfers move money out of `from` and into `to`.
+    private func applyBalanceEffects(of transaction: Transaction, reverse: Bool) {
+        guard !accounts.isEmpty else { return }
+
+        var touched: Set<Account.Id> = []
+        func flow(_ id: Account.Id?, isInflow: Bool) {
+            guard let id, let account = accounts[id], account.trackingMode == .ledger else { return }
+            let inflow = reverse ? !isInflow : isInflow
+            accounts[id] = account.applying(cashFlow: transaction.amount, isInflow: inflow)
+            touched.insert(id)
+        }
+
+        if transaction.isTransfer {
+            flow(transaction.fromAccountId, isInflow: false)
+            flow(transaction.toAccountId, isInflow: true)
+        } else {
+            let isIncome = getCategoryBy(id: transaction.categoryId).kind == .income
+            flow(transaction.accountId, isInflow: isIncome)
+        }
+
+        for id in touched {
+            if let account = accounts[id] { persist(account: account) }
+        }
+    }
+
+    /// Persists an already-updated account (the in-memory dictionary is the source of truth here,
+    /// unlike `save(account:)` which is the optimistic entry point from the account editor).
+    private func persist(account: Account) {
+        Task {
+            do {
+                try await accountSaver.save(account: account, to: info)
+            } catch {
+                onError("Failed to update account balance.", error: error)
             }
         }
     }
@@ -342,12 +391,31 @@ class Budget: ObservableObject {
     }
     
     func description(of transaction: Transaction) -> String {
-        transaction.title?.value ?? getCategoryBy(id: transaction.categoryId).name.value
+        if transaction.isTransfer {
+            return transaction.title?.value ?? String(localized: "Transfer")
+        }
+        return transaction.title?.value ?? getCategoryBy(id: transaction.categoryId).name.value
     }
-    
+
     func amountString(for transaction: Transaction) -> String {
+        if transaction.isTransfer { return transaction.amount.formatted() }
         let isIncome = getCategoryBy(id: transaction.categoryId).kind == .income
         return (isIncome ? "+" : "") + transaction.amount.formatted()
+    }
+
+    /// A short "Checking → Savings" style summary of a transfer's route, when both ends resolve.
+    func transferRouteDescription(for transaction: Transaction) -> String? {
+        guard transaction.isTransfer else { return nil }
+        let from = transaction.fromAccountId.flatMap { accounts[$0]?.name.value }
+        let to = transaction.toAccountId.flatMap { accounts[$0]?.name.value }
+        guard let from, let to else { return nil }
+        return "\(from) → \(to)"
+    }
+
+    /// The name of the single account an expense/income is tied to, if any.
+    func accountName(for transaction: Transaction) -> String? {
+        guard !transaction.isTransfer, let id = transaction.accountId else { return nil }
+        return accounts[id]?.name.value
     }
     
     func set(name: BudgetInfo.Name) {

@@ -56,7 +56,12 @@ extension Transaction.Category: Equatable { }
 extension Transaction.Category: Hashable { }
 
 extension Transaction.Category {
-    
+
+    /// A fixed, persistable id used as the `categoryId` of transfers, which have no real
+    /// spending category. Resolves to `.unknown` via `getCategoryBy(id:)`; transfer rows are
+    /// rendered specially and excluded from spending totals, so its kind is never used.
+    static let transferId = Transaction.Category.Id(uuidString: "00000000-0000-0000-0000-000000000000")!
+
     static let unknown = Transaction.Category(
         id: Id(),
         kind: .expense,

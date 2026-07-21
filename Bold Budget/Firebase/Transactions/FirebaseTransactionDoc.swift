@@ -17,6 +17,10 @@ struct FirebaseTransactionDoc: Codable {
     var categoryId: String?
     var location: String?
     var tags: [String]?
+    var kind: String?
+    var accountId: String?
+    var fromAccountId: String?
+    var toAccountId: String?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -26,8 +30,12 @@ struct FirebaseTransactionDoc: Codable {
         case categoryId
         case location
         case tags
+        case kind
+        case accountId
+        case fromAccountId
+        case toAccountId
     }
-    
+
     static func from(_ transaction: Transaction) -> FirebaseTransactionDoc {
         FirebaseTransactionDoc(
             id: transaction.id.uuidString,
@@ -36,10 +44,14 @@ struct FirebaseTransactionDoc: Codable {
             intDate: Int(transaction.date.rawValue),
             categoryId: transaction.categoryId.uuidString,
             location: transaction.location?.value,
-            tags: transaction.tags.map { $0.value }
+            tags: transaction.tags.map { $0.value },
+            kind: transaction.kind.rawValue,
+            accountId: transaction.accountId?.uuidString,
+            fromAccountId: transaction.fromAccountId?.uuidString,
+            toAccountId: transaction.toAccountId?.uuidString
         )
     }
-    
+
     func toTransaction() -> Transaction? {
         guard let id = Transaction.Id(uuidString: id ?? "") else { return nil }
         let title = Transaction.Title(title)
@@ -49,6 +61,9 @@ struct FirebaseTransactionDoc: Codable {
         guard let categoryId = Transaction.Category.Id(uuidString: categoryId ?? "") else { return nil }
         let location = Transaction.Location(location)
         let tags = Set((tags ?? []).compactMap { Transaction.Tag($0) })
+        // Legacy rows have no `kind` — they are never transfers, so `.expense` is a safe default
+        // (income vs. expense stays category-derived for non-transfers).
+        let kind = Transaction.Kind(rawValue: kind ?? "") ?? .expense
 
         return .init(
             id: id,
@@ -57,7 +72,11 @@ struct FirebaseTransactionDoc: Codable {
             date: date,
             categoryId: categoryId,
             location: location,
-            tags: tags
+            tags: tags,
+            kind: kind,
+            accountId: Account.Id(uuidString: accountId ?? ""),
+            fromAccountId: Account.Id(uuidString: fromAccountId ?? ""),
+            toAccountId: Account.Id(uuidString: toAccountId ?? "")
         )
     }
 }
