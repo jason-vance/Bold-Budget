@@ -25,6 +25,7 @@ class Budget: ObservableObject {
     @Published var transactions: [Transaction.Id:Transaction] = [:]
     @Published var transactionCategories: [Transaction.Category.Id:Transaction.Category] = [:]
     @Published var recurringExpenses: [RecurringExpense.Id:RecurringExpense] = [:]
+    @Published var accounts: [Account.Id:Account] = [:]
     
     var transactionTags: Set<Transaction.Tag> {
         transactions
@@ -60,6 +61,15 @@ class Budget: ObservableObject {
             result[category, default: []].append(transaction.value)
         }
     }
+
+    var assetAccounts: [Account] { Array(accounts.values).assets }
+    var liabilityAccounts: [Account] { Array(accounts.values).liabilities }
+
+    var totalAssets: Money { Array(accounts.values).totalAssets }
+    var totalLiabilities: Money { Array(accounts.values).totalLiabilities }
+
+    /// Assets minus liabilities across all accounts. May be negative.
+    var netWorth: SignedMoney { Array(accounts.values).netWorth }
     
     var popupNotificationCenter: PopupNotificationCenter? {
         iocContainer.resolve(PopupNotificationCenter.self)
@@ -79,6 +89,10 @@ class Budget: ObservableObject {
     let recurringExpenseSaver: RecurringExpenseSaver
     let recurringExpenseDeleter: RecurringExpenseDeleter
 
+    let accountFetcher: AccountFetcher
+    let accountSaver: AccountSaver
+    let accountDeleter: AccountDeleter
+
     convenience init(
         info: BudgetInfo
     ) {
@@ -93,7 +107,10 @@ class Budget: ObservableObject {
             categoryDeleter: iocContainer~>TransactionCategoryDeleter.self,
             recurringExpenseFetcher: iocContainer~>RecurringExpenseFetcher.self,
             recurringExpenseSaver: iocContainer~>RecurringExpenseSaver.self,
-            recurringExpenseDeleter: iocContainer~>RecurringExpenseDeleter.self
+            recurringExpenseDeleter: iocContainer~>RecurringExpenseDeleter.self,
+            accountFetcher: iocContainer~>AccountFetcher.self,
+            accountSaver: iocContainer~>AccountSaver.self,
+            accountDeleter: iocContainer~>AccountDeleter.self
         )
     }
 
@@ -108,7 +125,10 @@ class Budget: ObservableObject {
         categoryDeleter: TransactionCategoryDeleter,
         recurringExpenseFetcher: RecurringExpenseFetcher,
         recurringExpenseSaver: RecurringExpenseSaver,
-        recurringExpenseDeleter: RecurringExpenseDeleter
+        recurringExpenseDeleter: RecurringExpenseDeleter,
+        accountFetcher: AccountFetcher,
+        accountSaver: AccountSaver,
+        accountDeleter: AccountDeleter
     ) {
         self.id = info.id
         self.info = info
@@ -122,6 +142,9 @@ class Budget: ObservableObject {
         self.recurringExpenseFetcher = recurringExpenseFetcher
         self.recurringExpenseSaver = recurringExpenseSaver
         self.recurringExpenseDeleter = recurringExpenseDeleter
+        self.accountFetcher = accountFetcher
+        self.accountSaver = accountSaver
+        self.accountDeleter = accountDeleter
 
         fetchData()
     }
@@ -145,8 +168,11 @@ class Budget: ObservableObject {
                 group.addTask {
                     await self.fetchRecurringExpenses()
                 }
+                group.addTask {
+                    await self.fetchAccounts()
+                }
             }
-            
+
             RunLoop.main.perform { isLoading_False() }
         }
     }
@@ -175,6 +201,15 @@ class Budget: ObservableObject {
             self.recurringExpenses = Dictionary(uniqueKeysWithValues: recurringExpenses.map { ($0.id, $0) })
         } catch {
             onError("Failed to fetch recurring expenses.", error: error)
+        }
+    }
+
+    private func fetchAccounts() async {
+        do {
+            let accounts = try await accountFetcher.fetchAccounts(in: info)
+            self.accounts = Dictionary(uniqueKeysWithValues: accounts.map { ($0.id, $0) })
+        } catch {
+            onError("Failed to fetch accounts.", error: error)
         }
     }
 
@@ -226,6 +261,32 @@ class Budget: ObservableObject {
                 onError("Failed to delete recurring expense.", error: error)
 
                 recurringExpenses[recurringExpense.id] = tmp
+            }
+        }
+    }
+
+    func save(account: Account) {
+        let tmp = accounts.updateValue(account, forKey: account.id)
+        Task {
+            do {
+                try await accountSaver.save(account: account, to: info)
+            } catch {
+                onError("Failed to save account.", error: error)
+
+                accounts[account.id] = tmp
+            }
+        }
+    }
+
+    func remove(account: Account) {
+        let tmp = accounts.removeValue(forKey: account.id)
+        Task {
+            do {
+                try await accountDeleter.delete(account: account, from: info)
+            } catch {
+                onError("Failed to delete account.", error: error)
+
+                accounts[account.id] = tmp
             }
         }
     }
@@ -321,13 +382,17 @@ extension Budget {
     /// A Budget backed entirely by mocks, pre-populated with sample data, for SwiftUI previews.
     static func previewSample(
         transactions: [Transaction] = [],
-        recurringExpenses: [RecurringExpense] = []
+        recurringExpenses: [RecurringExpense] = [],
+        accounts: [Account] = []
     ) -> Budget {
         let transactionFetcher = MockTransactionFetcher()
         transactionFetcher.transactions = transactions
 
         let recurringExpenseFetcher = MockRecurringExpenseFetcher()
         recurringExpenseFetcher.recurringExpenses = recurringExpenses
+
+        let accountFetcher = MockAccountFetcher()
+        accountFetcher.accounts = accounts
 
         let categoryRepo = MockTransactionCategoryRepo(initialCategories: Transaction.Category.samples)
 
@@ -342,7 +407,10 @@ extension Budget {
             categoryDeleter: categoryRepo,
             recurringExpenseFetcher: recurringExpenseFetcher,
             recurringExpenseSaver: MockRecurringExpenseSaver(),
-            recurringExpenseDeleter: MockRecurringExpenseDeleter()
+            recurringExpenseDeleter: MockRecurringExpenseDeleter(),
+            accountFetcher: accountFetcher,
+            accountSaver: MockAccountSaver(),
+            accountDeleter: MockAccountDeleter()
         )
     }
 }

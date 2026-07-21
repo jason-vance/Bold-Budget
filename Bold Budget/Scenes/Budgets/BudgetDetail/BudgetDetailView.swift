@@ -15,12 +15,14 @@ struct BudgetDetailView: View {
         case pieChart
         case envelopes
         case recurringExpenses
+        case netWorth
 
         var sfSymbol: String {
             switch self {
             case .pieChart: "chart.pie"
             case .envelopes: "envelope"
             case .recurringExpenses: "calendar.badge.clock"
+            case .netWorth: "chart.line.uptrend.xyaxis"
             }
         }
 
@@ -29,6 +31,15 @@ struct BudgetDetailView: View {
             case .pieChart: String(localized: "Chart")
             case .envelopes: String(localized: "Envelopes")
             case .recurringExpenses: String(localized: "Recurring")
+            case .netWorth: String(localized: "Net Worth")
+            }
+        }
+
+        /// View modes that summarize spending over a time frame, vs. standalone ledgers.
+        var isTimeFramed: Bool {
+            switch self {
+            case .pieChart, .envelopes: true
+            case .recurringExpenses, .netWorth: false
             }
         }
     }
@@ -214,6 +225,9 @@ struct BudgetDetailView: View {
                 case .recurringExpenses:
                     AdSection()
                     RecurringExpensesListContent(budget: budget)
+                case .netWorth:
+                    AdSection()
+                    NetWorthListContent(budget: budget)
                 }
             }
             .refreshable { budget.refresh() }
@@ -257,9 +271,12 @@ struct BudgetDetailView: View {
 
     @ViewBuilder private func AddButton() -> some View {
         NavigationLink {
-            if viewMode == .recurringExpenses {
+            switch viewMode {
+            case .recurringExpenses:
                 EditRecurringExpenseView(budget: budget)
-            } else {
+            case .netWorth:
+                EditAccountView(budget: budget)
+            default:
                 EditTransactionView(budget: budget)
             }
         } label: {
@@ -324,6 +341,8 @@ struct BudgetDetailView: View {
     @ViewBuilder func TopBar() -> some View {
         if viewMode == .recurringExpenses {
             ScreenTitleBar("Recurring Expenses")
+        } else if viewMode == .netWorth {
+            ScreenTitleBar("Net Worth")
         } else {
             ScreenTitleBar(
                 primaryContent: {
@@ -345,6 +364,7 @@ struct BudgetDetailView: View {
             TabBarButton(.pieChart)
             TabBarButton(.envelopes)
             TabBarButton(.recurringExpenses)
+            TabBarButton(.netWorth)
         }
         .padding(.top, .paddingSmall)
         .background(Color.background)

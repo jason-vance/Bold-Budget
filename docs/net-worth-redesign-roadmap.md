@@ -69,14 +69,17 @@ Each account stores a balance that every transaction adjusts (matches the app's 
 
 Sequenced so nothing breaks and the spreadsheet dies early. The current shipping version is **1.11**; this redesign opens the **2.x** line.
 
-### v2.0 — Accounts + Net Worth home _(retire the spreadsheet)_
-- New domain types: `Account`, `SignedMoney`, `BalanceSnapshot`, `NetWorthSnapshot`.
-- `Budget` gains an `accounts: [Account.Id: Account]` dictionary + `AccountFetcher` / `AccountSaver` / `AccountDeleter` workers mirroring the existing pattern.
-- Firestore `accounts` subcollection under each budget (`FirebaseAccountRepository` / `FirebaseAccountDoc`).
-- **Net Worth home** screen: total, assets/liabilities split, grouped account list, net-worth area chart.
-- **Account detail** for snapshot accounts: value chart + "Update balance" + snapshot history.
-- Seed by entering current spreadsheet values as snapshot accounts.
-- **No changes to existing spending views required.**
+### v2.0 — Accounts + Net Worth home _(retire the spreadsheet)_ ✅ **Complete**
+- ✅ New domain types: `Account` (+ `Class` / `Kind` / `TrackingMode`), `AccountName`, `BalanceSnapshot`, `SignedMoney`.
+- ✅ `Budget` gains an `accounts: [Account.Id: Account]` dictionary + `AccountFetcher` / `AccountSaver` / `AccountDeleter` workers mirroring the existing pattern, with optimistic `save`/`remove` and net-worth computed helpers.
+- ✅ Firestore `Accounts` subcollection under each budget (`FirebaseAccountRepository` / `FirebaseAccountDoc`).
+- ✅ **Net Worth screen** (`NetWorthListContent`): net-worth total, assets/liabilities split, grouped account list — added as a new tab in `BudgetDetailView`.
+- ✅ **Add / edit account** (`EditAccountView`): type picker grouped by class, keypad balance entry, snapshot balance history, delete.
+- ✅ No changes to existing spending views; app + test targets build clean.
+
+**Deferred out of v2.0** (tracked, not blocking): net-worth-over-time area chart (needs cross-account monthly alignment); the elevated Add / Net Worth / Spending 3-tab IA (v2.1 territory); unit tests for `Account` / `SignedMoney`.
+
+**⚠️ Ops before release:** update the **deployed** Firestore rules to allow the new `Accounts` subcollection — the repo `firestore.rules` is stale and the live rules live elsewhere. Accounts will not persist on real devices until this is done.
 
 ### v2.1 — Link transactions to accounts + Transfers
 - `Transaction` gains `kind` (`.expense`/`.income`/`.transfer`) + `accountId` / `fromAccountId` / `toAccountId`.

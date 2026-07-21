@@ -54,7 +54,12 @@ func setup(iocContainer: Container) {
     registerRecurringExpenseFetcher()
     registerRecurringExpenseSaver()
     registerRecurringExpenseDeleter()
-    
+
+    // Accounts
+    registerAccountFetcher()
+    registerAccountSaver()
+    registerAccountDeleter()
+
     // UserFeedback
     registerFeedbackSender()
     registerFeedbackFetcher()
@@ -269,6 +274,32 @@ fileprivate func registerRecurringExpenseDeleter() {
         service = mock
     }
     iocContainer.autoregister(RecurringExpenseDeleter.self, initializer: { service })
+}
+
+//MARK: Accounts
+
+fileprivate func registerAccountFetcher() {
+    var service: AccountFetcher = FirebaseAccountRepository()
+    if let mock = MockAccountFetcher.getTestInstance() {
+        service = mock
+    }
+    iocContainer.autoregister(AccountFetcher.self, initializer: { service })
+}
+
+fileprivate func registerAccountSaver() {
+    var service: AccountSaver = FirebaseAccountRepository()
+    if let mock = MockAccountSaver.getTestInstance() {
+        service = mock
+    }
+    iocContainer.autoregister(AccountSaver.self, initializer: { service })
+}
+
+fileprivate func registerAccountDeleter() {
+    var service: AccountDeleter = FirebaseAccountRepository()
+    if let mock = MockAccountDeleter.getTestInstance() {
+        service = mock
+    }
+    iocContainer.autoregister(AccountDeleter.self, initializer: { service })
 }
 
 //MARK: UserFeedback
