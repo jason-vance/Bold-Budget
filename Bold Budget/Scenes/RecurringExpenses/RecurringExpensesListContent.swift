@@ -23,6 +23,25 @@ struct RecurringExpensesListContent: View {
             .sorted { $0.name.value < $1.name.value }
     }
 
+    /// Liability accounts with a monthly payment are shown alongside recurring debts.
+    private var debtAccounts: [Account] {
+        budget.accounts.values
+            .filter { $0.accountClass == .liability && ($0.monthlyPayment?.amount ?? 0) > 0 }
+            .sorted { $0.name.value < $1.name.value }
+    }
+
+    private var hasContent: Bool {
+        !allExpenses.isEmpty || !debtAccounts.isEmpty
+    }
+
+    private var totalMonthly: Money {
+        allExpenses.totalMonthlyCost + debtAccounts.totalMonthlyPayments
+    }
+
+    private var totalOwed: Money {
+        allExpenses.totalRemainingBalance + debtAccounts.reduce(Money.zero) { $0 + $1.balance }
+    }
+
     private func billingNote(for expense: RecurringExpense) -> String? {
         switch expense.monthsPerCycle {
         case 1:
@@ -35,7 +54,7 @@ struct RecurringExpensesListContent: View {
     }
 
     var body: some View {
-        if allExpenses.isEmpty {
+        if !hasContent {
             NoExpensesView()
         } else {
             TotalsSection()
@@ -53,7 +72,7 @@ struct RecurringExpensesListContent: View {
                         .font(.caption2.weight(.semibold))
                         .textCase(.uppercase)
                         .foregroundStyle(Color.text.opacity(0.5))
-                    Text(allExpenses.totalMonthlyCost.formatted())
+                    Text(totalMonthly.formatted())
                         .foregroundStyle(Color.text)
                         .contentTransition(.numericText())
                 }
@@ -63,7 +82,7 @@ struct RecurringExpensesListContent: View {
                         .font(.caption2.bold())
                         .textCase(.uppercase)
                         .foregroundStyle(Color.text.opacity(0.5))
-                    Text(allExpenses.totalRemainingBalance.formatted())
+                    Text(totalOwed.formatted())
                         .foregroundStyle(Color.text)
                         .contentTransition(.numericText())
                 }
@@ -77,22 +96,50 @@ struct RecurringExpensesListContent: View {
 
     @ViewBuilder private func KindSection(_ kind: RecurringExpense.Kind) -> some View {
         let expenses = expenses(of: kind)
-        if !expenses.isEmpty {
+        let accounts = kind == .debt ? debtAccounts : []
+        if !expenses.isEmpty || !accounts.isEmpty {
+            let monthly = expenses.totalMonthlyCost + accounts.totalMonthlyPayments
             Section {
                 ForEach(expenses) { expense in
                     ExpenseRow(expense)
+                }
+                ForEach(accounts) { account in
+                    AccountRow(account)
                 }
             } header: {
                 HStack {
                     Text(kind.pluralName)
                     Spacer()
-                    Text("\(expenses.totalMonthlyCost.formatted())/mo")
+                    Text("\(monthly.formatted())/mo")
                 }
                 .foregroundStyle(Color.text)
             }
             .listSectionSeparator(.hidden)
             .listSectionSpacing(0)
         }
+    }
+
+    @ViewBuilder private func AccountRow(_ account: Account) -> some View {
+        NavigationLink {
+            EditAccountView(budget: budget).editing(account)
+        } label: {
+            HStack(spacing: .padding) {
+                IconCircle(systemName: account.kind.sfSymbol, size: 40)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(account.name.value)
+                        .fontWeight(.semibold)
+                    Text("\(account.balance.formatted()) still owed")
+                        .font(.caption)
+                        .foregroundStyle(Color.text.opacity(.opacityMutedText))
+                        .lineLimit(1)
+                }
+                Spacer(minLength: 0)
+                Text("\((account.monthlyPayment ?? .zero).formatted())/mo")
+                    .fontWeight(.semibold)
+                    .contentTransition(.numericText())
+            }
+        }
+        .listRow()
     }
 
     @ViewBuilder private func ExpenseRow(_ expense: RecurringExpense) -> some View {
