@@ -39,10 +39,10 @@ struct KeypadGrid: View {
     @ViewBuilder private func Key(_ key: String) -> some View {
         if key == "delete.left" {
             Image(systemName: key)
-                .font(.title3)
+                .font(.system(size: 26, weight: .regular))
+                .foregroundStyle(Color.appText)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, .paddingVerticalButtonMedium)
-                .buttonLabelMedium()
                 .contentShape(Rectangle())
                 .onTapGesture { onDelete() }
                 .onLongPressGesture(minimumDuration: 0.5) { onClear() }
@@ -54,11 +54,13 @@ struct KeypadGrid: View {
                 onDigit(key)
             } label: {
                 Text(key)
-                    .font(.title3.bold())
+                    .font(.system(size: 32, weight: .regular))
+                    .foregroundStyle(Color.appText)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, .paddingVerticalButtonMedium)
+                    .contentShape(Rectangle())
             }
-            .buttonLabelMedium()
+            .buttonStyle(.plain)
             .accessibilityIdentifier("KeypadGrid.\(key)")
         }
     }

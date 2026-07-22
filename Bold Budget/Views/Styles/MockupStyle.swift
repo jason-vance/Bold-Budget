@@ -18,6 +18,16 @@ extension ShapeStyle where Self == Color {
 }
 
 extension View {
+    /// A tappable pill used for inline suggestions in the redesign palette.
+    func redesignPill() -> some View {
+        self
+            .font(.subheadline.weight(.medium))
+            .foregroundStyle(Color.appText)
+            .padding(.horizontal, .paddingHorizontalButtonSmall)
+            .padding(.vertical, .paddingVerticalButtonXSmall)
+            .background { Capsule().foregroundStyle(Color.appSurface) }
+    }
+
     /// Wraps content in a rounded, padded surface card.
     func card(_ padding: CGFloat = .padding, cornerRadius: CGFloat = .cornerRadiusMedium) -> some View {
         self
@@ -70,11 +80,13 @@ struct Chip: View {
     }
 }
 
-/// A full-width, prominent primary action button (filled with the foreground color).
+/// A full-width, prominent primary action button.
 struct PrimaryButtonLabel: View {
     let title: String
     var systemName: String? = nil
     var enabled: Bool = true
+    var background: Color = .text
+    var foreground: Color = .background
 
     var body: some View {
         HStack(spacing: .paddingSmall) {
@@ -82,23 +94,24 @@ struct PrimaryButtonLabel: View {
             Text(title)
         }
         .font(.headline)
-        .foregroundStyle(Color.background)
+        .foregroundStyle(foreground)
         .frame(maxWidth: .infinity)
         .padding(.vertical, .paddingVerticalButtonMedium)
         .background {
             RoundedRectangle(cornerRadius: .cornerRadiusMedium, style: .continuous)
-                .foregroundStyle(Color.text)
+                .foregroundStyle(background)
         }
         .opacity(enabled ? 1 : .opacityButtonBackground)
     }
 }
 
-/// A pill segmented control bound to a `Hashable` selection.
+/// A pill segmented control bound to a `Hashable` selection. The selected segment is filled with
+/// its tint and shows white text; unselected segments are muted, over a dark-gray container.
 struct PillSegmentedControl<Value: Hashable>: View {
     @Binding var selection: Value
     let options: [Value]
     let title: (Value) -> String
-    var tint: (Value) -> Color = { _ in .text }
+    var tint: (Value) -> Color = { _ in .brandTeal }
 
     var body: some View {
         HStack(spacing: 0) {
@@ -109,9 +122,9 @@ struct PillSegmentedControl<Value: Hashable>: View {
                 } label: {
                     Text(title(option))
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(isSelected ? Color.background : Color.text)
+                        .foregroundStyle(isSelected ? .white : Color.appMutedText)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, .paddingVerticalButtonSmall)
+                        .padding(.vertical, .paddingVerticalButtonXSmall)
                         .background {
                             if isSelected {
                                 RoundedRectangle(cornerRadius: .cornerRadiusSmall, style: .continuous)
@@ -125,7 +138,7 @@ struct PillSegmentedControl<Value: Hashable>: View {
         .padding(.paddingCircleButtonSmall)
         .background {
             RoundedRectangle(cornerRadius: .cornerRadiusMedium, style: .continuous)
-                .foregroundStyle(Color.surface)
+                .foregroundStyle(Color.appSurface)
         }
     }
 }
