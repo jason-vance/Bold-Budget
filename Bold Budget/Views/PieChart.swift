@@ -87,9 +87,14 @@ struct PieChart: View {
             .map { slice in
                 let touchFrom = (previousCumulativeValue / total)
                 let touchTo = touchFrom + (slice.value / total)
-                let from = touchFrom + lineCap + (padding / 2)
-                let to = touchTo - lineCap - (padding / 2)
-                
+                let rawFrom = touchFrom + lineCap + (padding / 2)
+                let rawTo = touchTo - lineCap - (padding / 2)
+                // Guard against a sliver too small to inset (an un-mergeable lone slice): a `from`
+                // greater than `to` makes `trim` wrap the long way around into a huge wrong arc.
+                let midpoint = (touchFrom + touchTo) / 2
+                let from = rawFrom <= rawTo ? rawFrom : midpoint
+                let to = rawFrom <= rawTo ? rawTo : midpoint
+
                 previousCumulativeValue += slice.value
                 index += 1
                 
@@ -108,9 +113,11 @@ struct PieChart: View {
     }
     
     private func mergeSmallSlicesIfNecessary(_ slices: [_Slice], pieCircumference: CGFloat) -> [_Slice] {
+        // A slice needs enough arc for the outer ring *and* the inner (background) ring to render
+        // with their round caps; `minSliceViewSize` (2 * lineWidth) is that floor.
         let wontBeVisible: (_Slice) -> Bool = { slice in
             let length = (slice.touchTo - slice.touchFrom) * pieCircumference
-            return length < (lineWidth + paddingPoints)
+            return length < (minSliceViewSize + paddingPoints)
         }
         
         let merge: (_Slice, _Slice) -> _Slice = { lhs, rhs in
@@ -159,7 +166,7 @@ struct PieChart: View {
     
     private func makeSlices(pieCircumference: CGFloat) -> [_Slice] {
         let slices = mapSlicesTo_Slice(pieCircumference: pieCircumference)
-        
+
         let incomes = mergeSmallSlicesIfNecessary(
             slices.filter { $0.kind == .income },
             pieCircumference: pieCircumference
@@ -168,8 +175,115 @@ struct PieChart: View {
             slices.filter { $0.kind == .expense },
             pieCircumference: pieCircumference
         )
-        
-        return incomes + expenses
+
+        // Give every surviving sector at least a visible minimum span (stealing proportionally from
+        // the larger ones), then re-inset each from its final touch range so the padding gap is
+        // symmetric on both ends — `min`/`max` of the pre-merge insets can leave one end flush.
+        let balanced = enforceMinimumSpans(incomes + expenses, pieCircumference: pieCircumference)
+        return balanced.map { insetArc($0, pieCircumference: pieCircumference) }
+    }
+
+    /// Ensures each sector's touch span is at least large enough to render at `minSliceViewSize`
+    /// with padding on both sides. Sub-minimum sectors (a lone merged sliver that can't consolidate
+    /// away) are pinned to the floor; the remaining sectors shrink proportionally to make room, and
+    /// the sectors are re-laid contiguously in arc order so neighbors actually step back.
+    private func enforceMinimumSpans(_ slices: [_Slice], pieCircumference: CGFloat) -> [_Slice] {
+        guard slices.count > 1 else { return slices }
+
+        let ordered = slices.sorted { $0.touchFrom < $1.touchFrom }
+        let n = ordered.count
+        let total = ordered.reduce(0.0) { $0 + $1.value }
+        guard total > 0 else { return slices }
+
+        // A span must cover the min view size plus the padding that the inset later carves out.
+        let minSpan = (minSliceViewSize + paddingPoints) / pieCircumference
+
+        // Not enough circle for everyone's minimum — fall back to equal spans.
+        guard Double(n) * minSpan < 1.0 else {
+            return reassign(ordered, spans: Array(repeating: 1.0 / Double(n), count: n))
+        }
+
+        var pinned = Array(repeating: false, count: n)
+        var spans = Array(repeating: 0.0, count: n)
+        while true {
+            let pinnedCount = pinned.filter { $0 }.count
+            let remaining = 1.0 - Double(pinnedCount) * minSpan
+            let freeValueSum = (0..<n).reduce(0.0) { pinned[$1] ? $0 : $0 + ordered[$1].value }
+            guard remaining > 0, freeValueSum > 0 else {
+                spans = Array(repeating: 1.0 / Double(n), count: n)
+                break
+            }
+            for i in 0..<n {
+                spans[i] = pinned[i] ? minSpan : (ordered[i].value / freeValueSum) * remaining
+            }
+            // Pin any free sector that fell below the floor and iterate; otherwise we've converged.
+            var newlyPinned = false
+            for i in 0..<n where !pinned[i] && spans[i] < minSpan {
+                pinned[i] = true
+                newlyPinned = true
+            }
+            if !newlyPinned { break }
+        }
+
+        return reassign(ordered, spans: spans)
+    }
+
+    /// Re-lays sectors contiguously around the circle using the given per-sector spans, preserving
+    /// arc order. `from`/`to` are placeholders here; `insetArc` recomputes them afterward.
+    private func reassign(_ ordered: [_Slice], spans: [Double]) -> [_Slice] {
+        var cumulative = 0.0
+        return zip(ordered, spans).map { slice, span in
+            let touchFrom = cumulative
+            cumulative += span
+            return .init(
+                index: slice.index,
+                kind: slice.kind,
+                name: slice.name,
+                sfSymbol: slice.sfSymbol,
+                value: slice.value,
+                touchFrom: touchFrom,
+                touchTo: cumulative,
+                from: slice.from,
+                to: slice.to
+            )
+        }
+    }
+
+    /// Recomputes a sector's visible `from`/`to` from its touch range, insetting each end by half
+    /// the padding plus the round-cap radius. Collapses to a point if the sector is too small to
+    /// inset (rather than letting `from > to` wrap into a full-circle arc).
+    private func insetArc(_ slice: _Slice, pieCircumference: CGFloat) -> _Slice {
+        let padding = paddingPoints / pieCircumference
+        let lineCap = (lineWidth / 2) / pieCircumference
+        let rawFrom = slice.touchFrom + lineCap + (padding / 2)
+        let rawTo = slice.touchTo - lineCap - (padding / 2)
+        let midpoint = (slice.touchFrom + slice.touchTo) / 2
+
+        // A slice too thin to inset (an un-mergeable lone sliver) would give `from > to`, which
+        // `trim` wraps the long way into a huge wrong arc. Rather than collapse it to an invisible
+        // point, render a `minSliceViewSize` lozenge centered on its midpoint so it stays visible.
+        let from: CGFloat
+        let to: CGFloat
+        if rawFrom <= rawTo {
+            from = rawFrom
+            to = rawTo
+        } else {
+            let halfFloor = ((minSliceViewSize - lineWidth) / 2) / pieCircumference
+            from = midpoint - halfFloor
+            to = midpoint + halfFloor
+        }
+
+        return .init(
+            index: slice.index,
+            kind: slice.kind,
+            name: slice.name,
+            sfSymbol: slice.sfSymbol,
+            value: slice.value,
+            touchFrom: slice.touchFrom,
+            touchTo: slice.touchTo,
+            from: from,
+            to: to
+        )
     }
     
     private var grossTotal: Double { slicesState.reduce(0, { $0 + $1.value }) }
@@ -297,7 +411,7 @@ struct PieChart: View {
                 lineWidth: lineWidth,
                 lineCap: .round
             ))
-            .foregroundStyle(Color.appText)
+            .foregroundStyle(Color.brandTeal)
             .opacity(0.5)
     }
     
@@ -307,7 +421,7 @@ struct PieChart: View {
                 lineWidth: lineWidth,
                 lineCap: .round
             ))
-            .foregroundStyle(Color.appText)
+            .foregroundStyle(Color.brandTeal)
             .overlay {
                 if slice.kind == .expense {
                     Circle()
@@ -339,7 +453,7 @@ struct PieChart: View {
                 lineWidth: lineWidth,
                 lineCap: .round
             ))
-            .foregroundStyle(Color.appText)
+            .foregroundStyle(Color.brandTeal)
             .opacity(isHighlighted ? 1 : 0.5)
             .overlay {
                 if slice.kind == .expense {
