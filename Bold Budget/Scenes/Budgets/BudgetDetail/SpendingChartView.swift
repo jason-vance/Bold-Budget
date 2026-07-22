@@ -86,13 +86,7 @@ struct SpendingChartView: View {
         }
         .foregroundStyle(Color.appText)
         .background(Color.appBackground.ignoresSafeArea())
-        .sheet(isPresented: $showPeriodPicker) {
-            TimeFramePicker(budget: budget, timeFrame: $timeFrame)
-                .foregroundStyle(Color.text)
-                .background(Color.background.ignoresSafeArea())
-                .presentationDetents([.height(220), .medium])
-                .presentationBackground(Color.background)
-        }
+        .overlay(alignment: .top) { PeriodDropdown() }
         .sheet(isPresented: $showFilter) {
             TransactionsFilterMenu(
                 budget: budget,
@@ -104,6 +98,31 @@ struct SpendingChartView: View {
             .background(Color.background.ignoresSafeArea())
             .presentationDetents([.medium, .large])
             .presentationBackground(Color.background)
+        }
+    }
+
+    // MARK: - Period dropdown
+
+    /// The timeframe picker as a panel dropping in under the toolbar, over the content. Anchored at
+    /// the top so switching periods only grows/shrinks the bottom, keeping it stable.
+    @ViewBuilder private func PeriodDropdown() -> some View {
+        if showPeriodPicker {
+            ZStack(alignment: .top) {
+                // Full-screen tap-catcher to dismiss when tapping outside the panel.
+                Rectangle()
+                    .fill(Color.appBackground.opacity(0.01))
+                    .ignoresSafeArea()
+                    .onTapGesture { withAnimation(.snappy) { showPeriodPicker = false } }
+
+                TimeFramePicker(budget: budget, timeFrame: $timeFrame)
+                    .background(Color.appBackground)
+                    .overlay(alignment: .bottom) {
+                        Rectangle().fill(Color.appMutedText.opacity(0.2)).frame(height: 1)
+                    }
+                    .shadow(color: .black.opacity(0.12), radius: 12, y: 6)
+                    .padding(.top, .barHeight)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
         }
     }
 
@@ -130,13 +149,19 @@ struct SpendingChartView: View {
             HStack(spacing: .paddingSmall) {
                 StepButton(systemName: "chevron.left", disabled: !canGoBack) { timeFrame = timeFrame.previous }
                 Button {
-                    showPeriodPicker = true
+                    withAnimation(.snappy) { showPeriodPicker.toggle() }
                 } label: {
-                    Text(timeFrame.toUiString())
-                        .font(.headline)
-                        .foregroundStyle(Color.appText)
-                        .contentTransition(.numericText())
-                        .frame(minWidth: timeFrame.period == .week ? nil : 120)
+                    HStack(spacing: 4) {
+                        Text(timeFrame.toUiString())
+                            .font(.headline)
+                            .foregroundStyle(Color.appText)
+                            .contentTransition(.numericText())
+                        Image(systemName: "chevron.down")
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(Color.appMutedText)
+                            .rotationEffect(.degrees(showPeriodPicker ? 180 : 0))
+                    }
+                    .frame(minWidth: timeFrame.period == .week ? nil : 120)
                 }
                 StepButton(systemName: "chevron.right", disabled: !canGoForward) { timeFrame = timeFrame.next }
             }

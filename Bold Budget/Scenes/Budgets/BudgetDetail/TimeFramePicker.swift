@@ -8,10 +8,10 @@
 import SwiftUI
 
 struct TimeFramePicker: View {
-    
+
     @StateObject var budget: Budget
     @Binding var timeFrame: TimeFrame
-    
+
     @State private var period: TimeFrame.Period = .month
     @State private var year: Int = SimpleDate.now.year
     @State private var month: Int = SimpleDate.now.month
@@ -23,56 +23,76 @@ struct TimeFramePicker: View {
         month = (period != .year) ? timeFrame.start.month : SimpleDate.now.month
         day = (period == .week) ? timeFrame.start.day : SimpleDate.now.day
     }
-    
+
     private func setTimeFrame(period: TimeFrame.Period, year: Int, month: Int, day: Int) {
         guard let date = SimpleDate(year: year, month: month, day: day) else { return }
         timeFrame = .init(period: period, containing: date)
     }
-    
+
     private var oldestTransactionDate: SimpleDate {
         guard let oldestTransaction = (budget.transactions.values.min { $0.date < $1.date }) else { return .now }
         return oldestTransaction.date
     }
-    
+
     var body: some View {
-        VStack(spacing: .paddingSmall) {
-            PeriodPicker()
-                .padding(.horizontal, .paddingSmall)
-            BarDivider()
-            YearAndMonthPicker()
+        VStack(spacing: .padding) {
+            // Period picker anchors the top; the more-granular sections reveal downward as the
+            // timeframe narrows (year → month → week). Presented as a dropdown under the toolbar,
+            // so the top stays fixed and only the bottom grows/shrinks when switching periods.
+            PillSegmentedControl(
+                selection: $period,
+                options: [.week, .month, .year],
+                title: { $0.toUiString() }
+            )
+            LabeledSection("Year") { YearPicker() }
+            if period != .year {
+                LabeledSection("Month") { MonthPicker() }
+                    .transition(.opacity)
+            }
+            if period == .week {
+                LabeledSection("Week") { WeekPicker() }
+                    .transition(.opacity)
+            }
         }
-        .padding(.vertical, .paddingSmall)
-        .background(Color.background)
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .top)
+        .foregroundStyle(Color.appText)
         .onAppear { setState(timeFrame) }
         .onChange(of: timeFrame) { _, timeFrame in setState(timeFrame) }
         .onChange(of: period) { _, period in setTimeFrame(period: period, year: year, month: month, day: day) }
         .onChange(of: year) { _, year in setTimeFrame(period: period, year: year, month: month, day: day) }
         .onChange(of: month) { _, month in setTimeFrame(period: period, year: year, month: month, day: day) }
     }
-    
-    @ViewBuilder func PeriodPicker() -> some View {
-        HStack(spacing: .paddingSmall) {
-            PeriodButton(.week)
-            PeriodButton(.month)
-            PeriodButton(.year)
-        }
+
+    // MARK: - Reusable selectable pill
+
+    @ViewBuilder private func Pill<Label: View>(isSelected: Bool, fill: Bool = true, @ViewBuilder label: () -> Label) -> some View {
+        label()
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(isSelected ? .white : Color.appText)
+            .frame(maxWidth: fill ? .infinity : nil)
+            .padding(.vertical, .paddingVerticalButtonSmall)
+            .background {
+                RoundedRectangle(cornerRadius: .cornerRadiusSmall, style: .continuous)
+                    .foregroundStyle(isSelected ? Color.brandTeal : Color.appSurface)
+            }
     }
-    
-    @ViewBuilder func PeriodButton(_ period: TimeFrame.Period) -> some View {
-        let isSelected = period == self.period
-        Button {
-            withAnimation(.snappy) { self.period = period }
-        } label: {
-            Text(period.toUiString())
-                .frame(maxWidth: .infinity)
-                .buttonLabelSmall(isProminent: isSelected)
-        }
+
+    private func SectionLabel(_ text: LocalizedStringKey) -> some View {
+        Text(text)
+            .font(.caption2.weight(.semibold))
+            .textCase(.uppercase)
+            .kerning(0.6)
+            .foregroundStyle(Color.appMutedText)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
-    
+
+    // MARK: - Year
+
     @ViewBuilder func YearPicker() -> some View {
         ScrollViewReader { value in
             ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack {
+                LazyHStack(spacing: .paddingSmall) {
                     ForEach((oldestTransactionDate.year...SimpleDate.now.year).map { $0 }, id: \.self) { year in
                         Button {
                             withAnimation(.snappy) {
@@ -80,19 +100,26 @@ struct TimeFramePicker: View {
                                 value.scrollTo(year, anchor: .center)
                             }
                         } label: {
-                            Text(String(year))
-                                .buttonLabelSmall(isProminent: year == self.year)
-                                .id(year)
+                            Pill(isSelected: year == self.year, fill: false) {
+                                Text(String(year))
+                                    .fixedSize()
+                                    .padding(.horizontal, .padding)
+                            }
+                            .id(year)
                         }
+                        .buttonStyle(.plain)
                     }
                 }
-                .padding(.horizontal, .paddingSmall)
             }
             .onAppear { value.scrollTo(year, anchor: .center) }
         }
+        // A horizontal ScrollView is vertically flexible and collapses when space is tight (the
+        // taller week form). Pin its height so the year pills always stay visible.
         .frame(height: .barHeight)
     }
-    
+
+    // MARK: - Month
+
     @ViewBuilder func MonthPicker() -> some View {
         VStack(spacing: .paddingSmall) {
             ForEach((0..<3).map { $0 }, id: \.self) { row in
@@ -103,9 +130,27 @@ struct TimeFramePicker: View {
                 }
             }
         }
-        .padding(.horizontal, .paddingSmall)
     }
-    
+
+    @ViewBuilder func MonthButton(_ month: Int) -> some View {
+        let text: String = {
+            let reference = SimpleDate.startOfYear(containing: .now).toDate()!
+            let date = Calendar.current.date(byAdding: .month, value: month - 1, to: reference)!
+            let formatter = DateFormatter()
+            formatter.dateFormat = "MMM"
+            return formatter.string(from: date)
+        }()
+
+        Button {
+            withAnimation(.snappy) { self.month = month }
+        } label: {
+            Pill(isSelected: month == self.month) { Text(text) }
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Week
+
     @ViewBuilder func WeekPicker() -> some View {
         let weekDates = {
             var weekDates = stride(from: 1, to: 31, by: 7)
@@ -126,35 +171,34 @@ struct TimeFramePicker: View {
             }
             return weekDates
         }()
-        
+
         let dayLabels = {
             let formatter = DateFormatter()
             formatter.setLocalizedDateFormatFromTemplate("E")
-            
+
             let firstDate = weekDates.first!.toDate()!
             return (0...6).map { day in
                 let date = Calendar.current.date(byAdding: .day, value: day, to: firstDate)!
                 return formatter.string(from: date)
             }
         }()
-        
+
         VStack(spacing: .paddingSmall) {
-            HStack {
+            HStack(spacing: 0) {
                 ForEach(dayLabels, id: \.self) { dayLabel in
                     Text(dayLabel)
-                        .font(.caption2)
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(Color.appMutedText)
                         .frame(maxWidth: .infinity)
                 }
             }
-            .padding(.horizontal, .paddingHorizontalButtonSmall)
-            .padding(.top, .paddingVerticalButtonSmall)
+            .padding(.horizontal, .paddingSmall)
             ForEach(weekDates, id: \.self) { weekDate in
                 WeekButton(weekDate)
             }
         }
-        .padding(.horizontal, .paddingSmall)
     }
-    
+
     @ViewBuilder func WeekButton(_ weekDate: SimpleDate) -> some View {
         let weekStart = SimpleDate.startOfWeek(containing: weekDate)
         let days = (0...6)
@@ -164,57 +208,39 @@ struct TimeFramePicker: View {
             }
         let monthStart = SimpleDate.startOfMonth(containing: SimpleDate(year: year, month: month, day: 1)!)
         let monthEnd = SimpleDate.endOfMonth(containing: monthStart)
+        let isSelected = days.contains(timeFrame.start.toDate()!)
 
         Button {
             withAnimation(.snappy) {
                 setTimeFrame(period: period, year: weekStart.year, month: weekStart.month, day: weekStart.day)
             }
         } label: {
-            HStack {
-                ForEach(days, id: \.self) { day in
-                    let isInCurrentMonth: Bool = day >= monthStart.toDate()! && day <= monthEnd.toDate()!
-                    
-                    Text(SimpleDate(date: day)!.day.formatted())
-                        .frame(maxWidth: .infinity)
-                        .font(isInCurrentMonth ? .body : .footnote)
-                        .bold(isInCurrentMonth)
-                }
-            }
-            .buttonLabelSmall(isProminent: days.contains(timeFrame.start.toDate()!))
-        }
-    }
-    
-    @ViewBuilder func MonthButton(_ month: Int) -> some View {
-        let text: String = {
-            let reference = SimpleDate.startOfYear(containing: .now).toDate()!
-            let date = Calendar.current.date(byAdding: .month, value: month - 1, to: reference)!
-            let formatter = DateFormatter()
-            formatter.dateFormat = "MMM"
-            return formatter.string(from: date)
-        }()
+            Pill(isSelected: isSelected) {
+                HStack(spacing: 0) {
+                    ForEach(days, id: \.self) { day in
+                        let isInCurrentMonth: Bool = day >= monthStart.toDate()! && day <= monthEnd.toDate()!
 
-        Button {
-            withAnimation(.snappy) {
-                self.month = month
-            }
-        } label: {
-            Text(text)
-                .frame(maxWidth: .infinity)
-                .buttonLabelSmall(isProminent: month == self.month)
-        }
-    }
-    
-    @ViewBuilder func YearAndMonthPicker() -> some View {
-        VStack(spacing: .paddingSmall) {
-            YearPicker()
-            if period != .year {
-                BarDivider()
-                MonthPicker()
-                if period != .month {
-                    BarDivider()
-                    WeekPicker()
+                        Text(SimpleDate(date: day)!.day.formatted())
+                            .frame(maxWidth: .infinity)
+                            .font(isInCurrentMonth ? .subheadline.weight(.semibold) : .footnote)
+                            .foregroundStyle(
+                                isSelected ? .white
+                                : isInCurrentMonth ? Color.appText : Color.appMutedText
+                            )
+                    }
                 }
             }
+        }
+        .buttonStyle(.plain)
+    }
+
+    @ViewBuilder private func LabeledSection<Content: View>(
+        _ label: LocalizedStringKey,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(spacing: .paddingSmall) {
+            SectionLabel(label)
+            content()
         }
     }
 }
