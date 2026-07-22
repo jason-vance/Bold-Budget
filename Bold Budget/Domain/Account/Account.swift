@@ -187,6 +187,21 @@ struct Account: Identifiable {
         return withBalance(Money(newAmount) ?? .zero)
     }
 
+    /// Returns a copy with a replaced snapshot set; the current balance is recomputed from the
+    /// most recent snapshot (so editing older entries doesn't disturb the live balance).
+    func withSnapshots(_ snapshots: [BalanceSnapshot]) -> Account {
+        let sorted = snapshots.sorted { $0.date > $1.date }
+        return .init(
+            id: id,
+            name: name,
+            kind: kind,
+            trackingMode: trackingMode,
+            balance: sorted.first?.value ?? balance,
+            snapshots: sorted,
+            monthlyPayment: monthlyPayment
+        )
+    }
+
     /// Returns a copy with the snapshot on `date` removed. Current balance is left unchanged.
     func removingSnapshot(on date: SimpleDate) -> Account {
         .init(

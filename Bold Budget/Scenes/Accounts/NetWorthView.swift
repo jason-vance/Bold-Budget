@@ -179,7 +179,7 @@ struct NetWorthView: View {
     @ViewBuilder private func AccountRow(_ account: Account) -> some View {
         let isLiability = account.accountClass == .liability
         NavigationLink {
-            EditAccountView(budget: budget).editing(account)
+            AccountDetailView(budget: budget, accountId: account.id)
         } label: {
             HStack(spacing: .padding) {
                 IconCircle(systemName: account.kind.sfSymbol, size: 40, tint: .brandTeal)

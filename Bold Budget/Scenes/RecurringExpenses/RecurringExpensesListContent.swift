@@ -121,7 +121,7 @@ struct RecurringExpensesListContent: View {
 
     @ViewBuilder private func AccountRow(_ account: Account) -> some View {
         NavigationLink {
-            EditAccountView(budget: budget).editing(account)
+            AccountDetailView(budget: budget, accountId: account.id)
         } label: {
             HStack(spacing: .padding) {
                 IconCircle(systemName: account.kind.sfSymbol, size: 40)
