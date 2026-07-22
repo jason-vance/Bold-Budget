@@ -70,17 +70,17 @@ struct Chip: View {
     var body: some View {
         HStack(spacing: 3) {
             if let systemName {
-                Image(systemName: systemName).font(.system(size: 9, weight: .semibold))
+                Image(systemName: systemName).font(.system(size: 9, weight: .regular))
             }
             Text(text)
-                .font(.caption2.weight(.semibold))
+                .font(.caption2.weight(.regular))
                 .lineLimit(1)
         }
-        .foregroundStyle(tint)
+        .foregroundStyle(.brandTeal)
         .padding(.horizontal, .paddingHorizontalButtonXSmall)
         .padding(.vertical, 3)
         .background {
-            Capsule().foregroundStyle(tint.opacity(.opacityButtonBackground))
+            Capsule().foregroundStyle(.brandTeal.opacity(.opacityButtonBackground))
         }
     }
 }
