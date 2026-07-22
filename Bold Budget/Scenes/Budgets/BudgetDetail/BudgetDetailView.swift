@@ -461,6 +461,7 @@ struct BudgetDetailView: View {
                     .font(.caption2)
             }
             .foregroundStyle(isSelected ? chromeText : chromeMuted)
+            .fontWeight(isSelected ? .semibold : .regular)
             .frame(maxWidth: .infinity)
         }
         .accessibilityIdentifier("BudgetDetailView.TabBar.\(tab.rawValue)")
