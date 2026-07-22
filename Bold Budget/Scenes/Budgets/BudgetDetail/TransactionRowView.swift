@@ -34,10 +34,14 @@ struct TransactionRowView: View {
     private var iconSymbol: String {
         transaction.isTransfer ? "arrow.left.arrow.right" : category.sfSymbol.value
     }
-
+    
     /// The transfer route ("Checking → Savings") or the linked account name, if any.
     private var accountChip: String? {
         budget.transferRouteDescription(for: transaction) ?? budget.accountName(for: transaction)
+    }
+    
+    private var accountChipSymbol: String {
+        transaction.isTransfer ? "arrow.left.arrow.right" : budget.accountSymbol(for: transaction) ?? "building.columns"
     }
 
     @ViewBuilder private func SubtitleLine() -> some View {
@@ -49,7 +53,7 @@ struct TransactionRowView: View {
                     .foregroundStyle(Color.appMutedText)
             }
             if let accountChip {
-                Chip(text: accountChip, systemName: transaction.isTransfer ? "arrow.left.arrow.right" : "building.columns")
+                Chip(text: accountChip, systemName: accountChipSymbol)
             }
             if showsDate {
                 Text(transaction.date.toDate()?.toBasicUiString() ?? "")

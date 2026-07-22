@@ -453,11 +453,17 @@ class Budget: ObservableObject {
         guard let from, let to else { return nil }
         return "\(from) → \(to)"
     }
-
+    
     /// The name of the single account an expense/income is tied to, if any.
     func accountName(for transaction: Transaction) -> String? {
         guard !transaction.isTransfer, let id = transaction.accountId else { return nil }
         return accounts[id]?.name.value
+    }
+    
+    /// The name of the single account an expense/income is tied to, if any.
+    func accountSymbol(for transaction: Transaction) -> String? {
+        guard !transaction.isTransfer, let id = transaction.accountId else { return nil }
+        return accounts[id]?.kind.sfSymbol
     }
     
     func set(name: BudgetInfo.Name) {
