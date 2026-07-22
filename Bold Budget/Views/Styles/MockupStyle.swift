@@ -13,8 +13,8 @@
 import SwiftUI
 
 extension ShapeStyle where Self == Color {
-    /// Adaptive surface fill for cards, chips, and icon circles.
-    static var surface: Color { Color.text.opacity(.opacityButtonBackground) }
+    /// Adaptive surface fill for cards, chips, and icon circles (redesign palette).
+    static var surface: Color { Color.appSurface }
 }
 
 extension View {
@@ -36,6 +36,11 @@ extension View {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .foregroundStyle(Color.surface)
             }
+    }
+
+    /// Redesign-palette surface card (alias of `card`, made explicit at call sites).
+    func appCard(_ padding: CGFloat = .padding, cornerRadius: CGFloat = .cornerRadiusMedium) -> some View {
+        card(padding, cornerRadius: cornerRadius)
     }
 }
 

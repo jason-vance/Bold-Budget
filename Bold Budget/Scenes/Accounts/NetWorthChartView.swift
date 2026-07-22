@@ -24,12 +24,12 @@ struct NetWorthChartView: View {
                     AreaFill(points: points, height: geo.size.height)
                     LinePath(points: points)
                         .stroke(
-                            Color.text,
+                            Color.brandTeal,
                             style: .init(lineWidth: 2, lineCap: .round, lineJoin: .round)
                         )
                     if let last = points.last {
                         Circle()
-                            .fill(Color.text)
+                            .fill(Color.brandTeal)
                             .frame(width: 6, height: 6)
                             .position(last)
                     }
@@ -43,7 +43,7 @@ struct NetWorthChartView: View {
                 Text(endpointLabel(history.last))
             }
             .font(.caption2)
-            .foregroundStyle(Color.text.opacity(.opacityMutedText))
+            .foregroundStyle(Color.appMutedText)
         }
     }
 
@@ -78,7 +78,7 @@ struct NetWorthChartView: View {
             path.move(to: CGPoint(x: 0, y: y))
             path.addLine(to: CGPoint(x: size.width, y: y))
         }
-        .stroke(Color.text.opacity(0.12), style: .init(lineWidth: 1, dash: [3, 3]))
+        .stroke(Color.appMutedText.opacity(0.3), style: .init(lineWidth: 1, dash: [3, 3]))
     }
 
     private struct AreaFill: View {
@@ -97,7 +97,7 @@ struct NetWorthChartView: View {
             }
             .fill(
                 LinearGradient(
-                    colors: [Color.text.opacity(0.18), Color.text.opacity(0.0)],
+                    colors: [Color.brandTeal.opacity(0.22), Color.brandTeal.opacity(0.0)],
                     startPoint: .top,
                     endPoint: .bottom
                 )
@@ -120,6 +120,6 @@ struct NetWorthChartView: View {
 #Preview {
     NetWorthChartView(history: Account.samples.netWorthHistory())
         .padding()
-        .background(Color.background)
-        .foregroundStyle(Color.text)
+        .background(Color.appBackground)
+        .foregroundStyle(Color.appText)
 }

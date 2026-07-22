@@ -25,6 +25,12 @@ class Money {
         let currencyCode = locale.currency?.identifier ?? "USD"
         return amount.formatted(.currency(code: currencyCode))
     }
+
+    /// Formatted to whole dollars (no cents), e.g. `$592,153`.
+    func formattedRounded(locale: Locale = .current) -> String {
+        let currencyCode = locale.currency?.identifier ?? "USD"
+        return amount.formatted(.currency(code: currencyCode).precision(.fractionLength(0)))
+    }
     
     static func + (_ lhs: Money, rhs: Money) -> Money {
         Money(lhs.amount + rhs.amount)!

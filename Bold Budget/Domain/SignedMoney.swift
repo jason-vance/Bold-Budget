@@ -39,12 +39,25 @@ struct SignedMoney {
         return amount.formatted(.currency(code: currencyCode))
     }
 
+    /// Formatted to whole dollars (no cents). Negative values keep their minus sign.
+    func formattedRounded(locale: Locale = .current) -> String {
+        let currencyCode = locale.currency?.identifier ?? "USD"
+        return amount.formatted(.currency(code: currencyCode).precision(.fractionLength(0)))
+    }
+
     /// A leading `+` / `−` sign followed by the magnitude, e.g. `+$39,489` / `−$156,538`.
     /// Zero renders without a sign.
     func formattedSigned(locale: Locale = .current) -> String {
         if amount > 0 { return "+" + magnitude.formatted(locale: locale) }
         if amount < 0 { return "−" + magnitude.formatted(locale: locale) }
         return magnitude.formatted(locale: locale)
+    }
+
+    /// `formattedSigned`, rounded to whole dollars.
+    func formattedSignedRounded(locale: Locale = .current) -> String {
+        if amount > 0 { return "+" + magnitude.formattedRounded(locale: locale) }
+        if amount < 0 { return "−" + magnitude.formattedRounded(locale: locale) }
+        return magnitude.formattedRounded(locale: locale)
     }
 
     static func + (lhs: SignedMoney, rhs: SignedMoney) -> SignedMoney {

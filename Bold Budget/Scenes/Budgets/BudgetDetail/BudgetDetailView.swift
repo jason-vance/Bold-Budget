@@ -239,53 +239,22 @@ struct BudgetDetailView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            TopBar()
-            List {
-                switch topTab {
-                case .netWorth:
-                    AdSection()
-                    NetWorthListContent(budget: budget)
-                case .spending:
-                    switch viewMode {
-                    case .envelopes:
-                        AdSection()
-                        IncomeExpenseTotals()
-                        EnvelopesView(budget: budget, timeFrame: timeFrame)
-                    case .pieChart:
-                        Chart()
-                        AdSection()
-                        TransactionList()
-                    case .recurringExpenses:
-                        AdSection()
-                        RecurringExpensesListContent(budget: budget)
+            if topTab == .netWorth {
+                NetWorthView(budget: budget)
+                    .overlay {
+                        if budget.isLoading { BlockingSpinnerView() }
                     }
-                }
-            }
-            .refreshable { budget.refresh() }
-            .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
-            .scrollIndicators(.hidden)
-            .overlay(alignment: .top) {
-                Rectangle()
-                    .opacity(0)
-                    .overlay(alignment: .top) { ExtraOptionsMenuOverlay() }
-                    .clipped()
-            }
-            .overlay {
-                if budget.isLoading {
-                    BlockingSpinnerView()
-                }
-            }
-            if topTab == .spending {
-                SpendingModeBar()
+            } else {
+                SpendingContent()
             }
             BottomTabBar()
         }
         .navigationTitle(budget.info.name.value)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar(topTab == .netWorth ? .hidden : .visible, for: .navigationBar)
         .toolbar { Toolbar() }
-        .foregroundStyle(Color.text)
-        .background(Color.background.ignoresSafeArea())
+        .foregroundStyle(chromeText)
+        .background(chromeBackground.ignoresSafeArea())
         .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
         .alert(alertMessage, isPresented: $showAlert) {}
         .animation(.snappy, value: budget.isLoading)
@@ -296,7 +265,50 @@ struct BudgetDetailView: View {
         .onReceive(subscriptionManager.subscriptionLevelPublisher) { subscriptionLevel = $0 }
         .onChange(of: scenePhase) { old, new in onChangeOf(scenePhase: new) }
     }
-    
+
+    // The Net Worth tab uses the redesign palette; Spending keeps the app palette. The shared
+    // chrome (background, tab bar) follows whichever tab is active.
+    private var chromeBackground: Color { topTab == .netWorth ? .appBackground : .background }
+    private var chromeText: Color { topTab == .netWorth ? .appText : .text }
+    private var chromeMuted: Color {
+        topTab == .netWorth ? .appMutedText : Color.text.opacity(.opacityMutedText)
+    }
+
+    @ViewBuilder private func SpendingContent() -> some View {
+        TopBar()
+        List {
+            switch viewMode {
+            case .envelopes:
+                AdSection()
+                IncomeExpenseTotals()
+                EnvelopesView(budget: budget, timeFrame: timeFrame)
+            case .pieChart:
+                Chart()
+                AdSection()
+                TransactionList()
+            case .recurringExpenses:
+                AdSection()
+                RecurringExpensesListContent(budget: budget)
+            }
+        }
+        .refreshable { budget.refresh() }
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .scrollIndicators(.hidden)
+        .overlay(alignment: .top) {
+            Rectangle()
+                .opacity(0)
+                .overlay(alignment: .top) { ExtraOptionsMenuOverlay() }
+                .clipped()
+        }
+        .overlay {
+            if budget.isLoading {
+                BlockingSpinnerView()
+            }
+        }
+        SpendingModeBar()
+    }
+
     @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
         ToolbarItemGroup(placement: .topBarTrailing) {
             ContextualAddButton()
@@ -440,7 +452,7 @@ struct BudgetDetailView: View {
             TopTabButton(.netWorth)
         }
         .padding(.top, .paddingSmall)
-        .background(Color.background)
+        .background(chromeBackground)
         .overlay(alignment: .top) { BarDivider() }
     }
 
@@ -455,7 +467,7 @@ struct BudgetDetailView: View {
                 Text(tab.label)
                     .font(.caption2)
             }
-            .foregroundStyle(Color.text.opacity(isSelected ? 1 : .opacityMutedText))
+            .foregroundStyle(isSelected ? chromeText : chromeMuted)
             .frame(maxWidth: .infinity)
         }
         .accessibilityIdentifier("BudgetDetailView.TabBar.\(tab.rawValue)")
@@ -469,15 +481,15 @@ struct BudgetDetailView: View {
             VStack(spacing: 2) {
                 Image(systemName: "plus")
                     .font(.title3.weight(.semibold))
-                    .foregroundStyle(Color.background)
+                    .foregroundStyle(chromeBackground)
                     .frame(width: 52, height: 52)
                     .background {
-                        Circle().foregroundStyle(Color.text)
+                        Circle().foregroundStyle(topTab == .netWorth ? Color.brandTeal : Color.text)
                     }
                     .offset(y: -8)
                 Text("Add")
                     .font(.caption2)
-                    .foregroundStyle(Color.text)
+                    .foregroundStyle(chromeText)
                     .offset(y: -8)
             }
             .frame(maxWidth: .infinity)
