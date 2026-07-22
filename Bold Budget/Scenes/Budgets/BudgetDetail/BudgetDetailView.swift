@@ -311,29 +311,7 @@ struct BudgetDetailView: View {
 
     @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
         ToolbarItemGroup(placement: .topBarTrailing) {
-            ContextualAddButton()
             SettingsButton()
-        }
-    }
-
-    /// Transactions are added from the prominent Add tab. This toolbar button covers the
-    /// context-specific additions — a new account on the Net Worth tab, a new recurring expense
-    /// on the Recurring sub-mode — and is hidden elsewhere.
-    @ViewBuilder private func ContextualAddButton() -> some View {
-        if topTab == .netWorth {
-            NavigationLink {
-                EditAccountView(budget: budget)
-            } label: {
-                Image(systemName: "plus")
-            }
-            .accessibilityIdentifier("BudgetDetailView.Toolbar.AddAccountButton")
-        } else if topTab == .spending && viewMode == .recurringExpenses {
-            NavigationLink {
-                EditRecurringExpenseView(budget: budget)
-            } label: {
-                Image(systemName: "plus")
-            }
-            .accessibilityIdentifier("BudgetDetailView.Toolbar.AddRecurringButton")
         }
     }
 
@@ -473,26 +451,30 @@ struct BudgetDetailView: View {
         .accessibilityIdentifier("BudgetDetailView.TabBar.\(tab.rawValue)")
     }
 
-    /// The primary action: elevated, always adds a transaction.
+    /// The primary action: elevated, and context-aware — adds an account on the Net Worth tab,
+    /// a recurring expense on the Recurring sub-mode, or a transaction otherwise.
+    @ViewBuilder private func AddDestination() -> some View {
+        if topTab == .netWorth {
+            EditAccountView(budget: budget)
+        } else if viewMode == .recurringExpenses {
+            EditRecurringExpenseView(budget: budget)
+        } else {
+            EditTransactionView(budget: budget)
+        }
+    }
+
     @ViewBuilder private func AddTabButton() -> some View {
         NavigationLink {
-            EditTransactionView(budget: budget)
+            AddDestination()
         } label: {
-            VStack(spacing: 2) {
-                Image(systemName: "plus")
-                    .font(.title3.weight(.semibold))
-                    .foregroundStyle(chromeBackground)
-                    .frame(width: 52, height: 52)
-                    .background {
-                        Circle().foregroundStyle(topTab == .netWorth ? Color.brandTeal : Color.text)
-                    }
-                    .offset(y: -8)
-                Text("Add")
-                    .font(.caption2)
-                    .foregroundStyle(chromeText)
-                    .offset(y: -8)
-            }
-            .frame(maxWidth: .infinity)
+            Image(systemName: "plus")
+                .font(.title2.weight(.heavy))
+                .foregroundStyle(chromeBackground)
+                .frame(width: 52, height: 52)
+                .background {
+                    Circle().foregroundStyle(topTab == .netWorth ? Color.brandTeal : Color.text)
+                }
+                .frame(maxWidth: .infinity)
         }
         .accessibilityIdentifier("BudgetDetailView.TabBar.add")
     }

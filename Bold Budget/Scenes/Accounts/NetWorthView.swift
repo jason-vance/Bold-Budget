@@ -63,16 +63,8 @@ struct NetWorthView: View {
             Text("Net Worth")
                 .font(.headline)
                 .foregroundStyle(Color.appText)
-            HStack(spacing: .padding) {
+            HStack {
                 Spacer(minLength: 0)
-                NavigationLink {
-                    EditAccountView(budget: budget)
-                } label: {
-                    Image(systemName: "plus")
-                        .font(.title3.weight(.semibold))
-                        .foregroundStyle(Color.brandTeal)
-                }
-                .accessibilityIdentifier("NetWorthView.AddAccountButton")
                 NavigationLink {
                     BudgetSettingsView(budget: _budget)
                 } label: {
