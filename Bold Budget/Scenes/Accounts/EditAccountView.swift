@@ -17,10 +17,6 @@ struct EditAccountView: View {
 
     @Environment(\.dismiss) private var dismiss
 
-    @EnvironmentObject private var adProviderFactory: AdProviderFactory
-    @State private var adProvider: AdProvider?
-    @State private var ad: Ad?
-
     @State private var screenTitle: String = String(localized: "Add Account")
     @State private var nameString: String = ""
     @State private var nameInstructions: String = ""
@@ -34,28 +30,12 @@ struct EditAccountView: View {
     @State private var showPaymentEntryView: Bool = false
     @State private var showDeleteConfirmation: Bool = false
 
-    @State private var subscriptionLevel: SubscriptionLevel = .none
-    private let subscriptionLevelProvider: SubscriptionLevelProvider
-
     private var accountToEdit: OptionalAccount = .none
 
     @StateObject var budget: Budget
 
-    init(
-        budget: Budget
-    ) {
-        self.init(
-            budget: budget,
-            subscriptionLevelProvider: iocContainer~>SubscriptionLevelProvider.self
-        )
-    }
-
-    init(
-        budget: Budget,
-        subscriptionLevelProvider: SubscriptionLevelProvider
-    ) {
+    init(budget: Budget) {
         self._budget = .init(wrappedValue: budget)
-        self.subscriptionLevelProvider = subscriptionLevelProvider
     }
 
     public func editing(_ account: Account) -> EditAccountView {
@@ -63,6 +43,8 @@ struct EditAccountView: View {
         view.accountToEdit = .init(account: account)
         return view
     }
+
+    private var isEditingExisting: Bool { accountToEdit.account != nil }
 
     private var account: Account? {
         guard let name = Account.Name(nameString) else { return nil }
@@ -82,14 +64,13 @@ struct EditAccountView: View {
             monthlyPayment: payment
         )
 
-        // Snapshot accounts always record this month's value. Ledger accounts record a snapshot
-        // only when their balance is reconciled to a new number — a dated checkpoint.
-        return (trackingMode == .snapshot || didReconcileBalance)
-            ? base.recordingSnapshot(value: balance, on: .now)
-            : base
+        // A new snapshot account records its opening balance; an existing account records a snapshot
+        // only when its balance was reconciled here. Editing properties never touches history.
+        let shouldRecord = (!isEditingExisting && trackingMode == .snapshot) || didReconcileBalance
+        return shouldRecord ? base.recordingSnapshot(value: balance, on: .now) : base
     }
 
-    /// True when editing a ledger account whose balance was changed in this session (a reconcile).
+    /// True when editing an existing account whose balance was changed here (a reconcile).
     private var didReconcileBalance: Bool {
         guard let original = accountToEdit.account?.balance else { return false }
         return balance != original
@@ -98,21 +79,8 @@ struct EditAccountView: View {
     private var isFormComplete: Bool { account != nil }
 
     private var balanceLabel: String {
-        kind.accountClass == .liability
-            ? String(localized: "Amount Owed")
-            : String(localized: "Balance")
+        kind.accountClass == .liability ? String(localized: "Amount Owed") : String(localized: "Balance")
     }
-
-    private var balanceFooter: String {
-        // Ledger accounts are normally driven by transactions; editing the balance here reconciles
-        // it to reality and records a dated checkpoint.
-        if trackingMode == .ledger && isEditingExisting {
-            return String(localized: "Reconcile to your real balance to correct any drift. This records a checkpoint you can review below.")
-        }
-        return trackingMode.description
-    }
-
-    private var isEditingExisting: Bool { accountToEdit.account != nil }
 
     private func saveAccount() {
         guard let account = account else { return }
@@ -136,8 +104,7 @@ struct EditAccountView: View {
 
     private func populateFields(_ account: OptionalAccount) {
         guard let account = account.account else { return }
-        let isFormEmpty = nameString.isEmpty
-        guard isFormEmpty else { return }
+        guard nameString.isEmpty else { return }
 
         screenTitle = String(localized: "Edit Account")
         nameString = account.name.value
@@ -148,165 +115,146 @@ struct EditAccountView: View {
         snapshots = account.snapshots
     }
 
+    // MARK: - Body
+
     var body: some View {
-        Form {
-            AdSection()
-            HeaderSection()
-            Section {
-                NameField()
-                KindField()
-            } header: {
-                Text("")
-                    .foregroundStyle(Color.text)
+        VStack(spacing: 0) {
+            Header()
+            ScrollView {
+                VStack(spacing: .padding) {
+                    Profile()
+                    NameField()
+                    TypeField()
+                    TrackingModeField()
+                    if !isEditingExisting {
+                        BalanceField()
+                    }
+                    if kind.accountClass == .liability {
+                        MonthlyPaymentField()
+                    }
+                    if isEditingExisting {
+                        DeleteButton()
+                    }
+                }
+                .padding()
             }
-            Section {
-                BalanceField()
-                TrackingModeField()
-            } header: {
-                Text(balanceLabel)
-                    .foregroundStyle(Color.text)
-            } footer: {
-                Text(balanceFooter)
-                    .foregroundStyle(Color.text.opacity(.opacityMutedText))
-            }
-            MonthlyPaymentSection()
-            BalanceHistorySection()
-            DeleteSection()
+            .scrollDismissesKeyboard(.immediately)
+            .scrollIndicators(.hidden)
         }
-        .scrollDismissesKeyboard(.immediately)
-        .formStyle(.grouped)
-        .scrollContentBackground(.hidden)
-        .toolbar { Toolbar() }
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationTitle(screenTitle)
-        .foregroundStyle(Color.text)
-        .background(Color.background.ignoresSafeArea())
-        .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
+        .foregroundStyle(Color.appText)
+        .background(Color.appBackground.ignoresSafeArea())
+        .toolbar(.hidden, for: .navigationBar)
+        .navigationBarBackButtonHidden()
+        .fullScreenCover(isPresented: $showBalanceEntryView) {
+            MoneyFieldEntryView(
+                title: LocalizedStringKey(balanceLabel),
+                money: $balance,
+                suggestions: budget.accounts.values.map(\.balance)
+            )
+        }
+        .fullScreenCover(isPresented: $showPaymentEntryView) {
+            MoneyFieldEntryView(
+                title: "Monthly Payment",
+                money: $monthlyPayment,
+                suggestions: budget.accounts.values.compactMap(\.monthlyPayment)
+            )
+        }
         .confirmationDialog(
             "Delete '\(accountToEdit.account?.name.value ?? "")'?",
             isPresented: $showDeleteConfirmation,
             titleVisibility: .visible
         ) {
-            Button("Delete", role: .destructive) {
-                deleteAccount()
-            }
+            Button("Delete", role: .destructive) { deleteAccount() }
             Button("Cancel", role: .cancel) { }
         }
         .onChange(of: nameString) { _, nameString in setNameInstructions(nameString) }
         .onChange(of: accountToEdit, initial: true) { _, account in populateFields(account) }
-        .onReceive(subscriptionLevelProvider.subscriptionLevelPublisher) { subscriptionLevel = $0 }
         .animation(.snappy, value: kind)
         .animation(.snappy, value: trackingMode)
     }
 
-    @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
-        ToolbarItemGroup(placement: .topBarTrailing) {
-            SaveButton()
-        }
-    }
-
-    @ViewBuilder private func SaveButton() -> some View {
-        Button {
-            saveAccount()
-        } label: {
-            Image(systemName: "checkmark")
-        }
-        .opacity(isFormComplete ? 1 : .opacityButtonBackground)
-        .disabled(!isFormComplete)
-        .accessibilityIdentifier("EditAccountView.Toolbar.SaveButton")
-    }
-
-    @ViewBuilder private func HeaderSection() -> some View {
-        if let account = accountToEdit.account {
-            let isLiability = account.accountClass == .liability
-            Section {
-                VStack(spacing: .paddingSmall) {
-                    IconCircle(systemName: kind.sfSymbol, size: 56)
-                    Text(nameString.isEmpty ? account.name.value : nameString)
-                        .font(.headline)
-                    Text(isLiability ? SignedMoney(-balance.amount).formattedSigned() : balance.formatted())
-                        .font(.system(size: 34, weight: .heavy))
-                        .foregroundStyle(isLiability ? Color.negative : Color.text)
-                        .contentTransition(.numericText())
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.6)
-                    if let change = account.latestChange {
-                        HStack(spacing: 4) {
-                            Image(systemName: change.amount >= 0 ? "arrow.up.right" : "arrow.down.right")
-                            Text(change.magnitude.formatted())
-                        }
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(change.amount >= 0 ? Color.positive : Color.negative)
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, .paddingSmall)
-                .listRowBackground(Color.background)
-                .listRowSeparator(.hidden)
+    @ViewBuilder private func Header() -> some View {
+        ZStack {
+            Text(screenTitle)
+                .font(.headline)
+                .foregroundStyle(Color.appText)
+            HStack {
+                Button("Cancel") { dismiss() }
+                    .foregroundStyle(Color.appMutedText)
+                Spacer(minLength: 0)
+                Button("Save") { saveAccount() }
+                    .fontWeight(.semibold)
+                    .foregroundStyle(Color.brandTeal)
+                    .opacity(isFormComplete ? 1 : .opacityButtonBackground)
+                    .disabled(!isFormComplete)
+                    .accessibilityIdentifier("EditAccountView.Toolbar.SaveButton")
             }
         }
+        .frame(height: .barHeight)
+        .padding(.horizontal)
     }
 
-    @ViewBuilder private func AdSection() -> some View {
-        if subscriptionLevel == SubscriptionLevel.none {
-            Section {
-                NativeAdListRow(ad: $ad, size: .small)
-                    .listRow()
+    @ViewBuilder private func Profile() -> some View {
+        IconCircle(systemName: kind.sfSymbol, size: 64, tint: .brandTeal)
+            .frame(maxWidth: .infinity)
+            .padding(.top, .paddingSmall)
+    }
+
+    @ViewBuilder private func FieldCard<Content: View>(
+        _ label: LocalizedStringKey,
+        footer: LocalizedStringKey? = nil,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label)
+                .font(.caption2.weight(.semibold))
+                .textCase(.uppercase)
+                .kerning(0.5)
+                .foregroundStyle(Color.appMutedText)
+            content()
+            if let footer {
+                Text(footer)
+                    .font(.caption2)
+                    .foregroundStyle(Color.appMutedText)
             }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background {
+            RoundedRectangle(cornerRadius: .cornerRadiusMedium, style: .continuous)
+                .foregroundStyle(Color.appSurface)
         }
     }
 
     @ViewBuilder private func NameField() -> some View {
-        VStack {
-            HStack {
-                Text("Name")
-                    .foregroundStyle(Color.text)
-                Spacer(minLength: 0)
-            }
-            TextField("Name",
-                      text: $nameString,
-                      prompt: Text(Account.Name.sample.value).foregroundStyle(Color.text.opacity(.opacityTextFieldPrompt))
+        FieldCard("Name", footer: nameInstructions.isEmpty ? nil : LocalizedStringKey(nameInstructions)) {
+            TextField(
+                "Name",
+                text: $nameString,
+                prompt: Text(Account.Name.sample.value).foregroundStyle(Color.appMutedText)
             )
-            .textFieldSmall()
+            .font(.title3)
+            .foregroundStyle(Color.appText)
+            .tint(Color.brandTeal)
             .autocapitalization(.words)
             .accessibilityIdentifier("EditAccountView.NameField.TextField")
-            HStack {
-                Spacer(minLength: 0)
-                Text(nameInstructions)
-                    .font(.caption2)
-                    .foregroundStyle(Color.text.opacity(.opacityMutedText))
-                    .padding(.horizontal, .paddingHorizontalButtonXSmall)
-            }
         }
-        .listRow()
     }
 
-    @ViewBuilder private func KindField() -> some View {
-        HStack {
-            Text("Type")
-                .foregroundStyle(Color.text)
-            Spacer(minLength: 0)
+    @ViewBuilder private func TypeField() -> some View {
+        FieldCard("Type") {
             Menu {
                 Section(Account.Class.asset.pluralName) {
-                    ForEach(Account.Kind.kinds(in: .asset), id: \.self) { option in
-                        KindOption(option)
-                    }
+                    ForEach(Account.Kind.kinds(in: .asset), id: \.self) { KindOption($0) }
                 }
                 Section(Account.Class.liability.pluralName) {
-                    ForEach(Account.Kind.kinds(in: .liability), id: \.self) { option in
-                        KindOption(option)
-                    }
+                    ForEach(Account.Kind.kinds(in: .liability), id: \.self) { KindOption($0) }
                 }
             } label: {
-                HStack(spacing: .paddingSmall) {
-                    Image(systemName: kind.sfSymbol)
-                    Text(kind.name)
-                }
-                .buttonLabelSmall()
+                MenuLabel(systemName: kind.sfSymbol, text: kind.name)
             }
             .accessibilityIdentifier("EditAccountView.KindField.Menu")
         }
-        .listRow()
     }
 
     @ViewBuilder private func KindOption(_ option: Account.Kind) -> some View {
@@ -321,39 +269,8 @@ struct EditAccountView: View {
         }
     }
 
-    @ViewBuilder private func BalanceField() -> some View {
-        HStack {
-            Text(balanceLabel)
-                .foregroundStyle(Color.text)
-            Spacer(minLength: 0)
-            Button {
-                showBalanceEntryView = true
-            } label: {
-                HStack {
-                    Spacer(minLength: 0)
-                    Text(balance.formatted())
-                        .multilineTextAlignment(.trailing)
-                }
-            }
-            .frame(width: 160)
-            .textFieldSmall()
-            .accessibilityIdentifier("EditAccountView.BalanceField.TextField")
-        }
-        .listRow()
-        .fullScreenCover(isPresented: $showBalanceEntryView) {
-            MoneyFieldEntryView(
-                title: LocalizedStringKey(balanceLabel),
-                money: $balance,
-                suggestions: budget.accounts.values.map(\.balance)
-            )
-        }
-    }
-
     @ViewBuilder private func TrackingModeField() -> some View {
-        HStack {
-            Text("Track by")
-                .foregroundStyle(Color.text)
-            Spacer(minLength: 0)
+        FieldCard("Track by", footer: LocalizedStringKey(trackingMode.description)) {
             Menu {
                 ForEach(Account.TrackingMode.allCases, id: \.self) { option in
                     Button {
@@ -366,120 +283,91 @@ struct EditAccountView: View {
                     }
                 }
             } label: {
-                Text(trackingMode.name)
-                    .buttonLabelSmall()
+                MenuLabel(systemName: trackingMode == .ledger ? "list.bullet" : "square.and.pencil", text: trackingMode.name)
             }
             .accessibilityIdentifier("EditAccountView.TrackingModeField.Menu")
         }
-        .listRow()
     }
 
-    @ViewBuilder private func MonthlyPaymentSection() -> some View {
-        if kind.accountClass == .liability {
-            Section {
-                HStack {
-                    Text("Monthly Payment")
-                        .foregroundStyle(Color.text)
-                    Spacer(minLength: 0)
-                    Button {
-                        showPaymentEntryView = true
-                    } label: {
-                        HStack {
-                            Spacer(minLength: 0)
-                            Text(monthlyPayment.formatted())
-                                .multilineTextAlignment(.trailing)
-                        }
-                    }
-                    .frame(width: 160)
-                    .textFieldSmall()
-                    .accessibilityIdentifier("EditAccountView.MonthlyPaymentField.TextField")
-                }
-                .listRow()
-                .fullScreenCover(isPresented: $showPaymentEntryView) {
-                    MoneyFieldEntryView(
-                        title: "Monthly Payment",
-                        money: $monthlyPayment,
-                        suggestions: budget.accounts.values.compactMap(\.monthlyPayment)
-                    )
-                }
-            } header: {
-                Text("Monthly Payment")
-                    .foregroundStyle(Color.text)
-            } footer: {
-                Text("What you pay toward this each month. Leave at $0.00 if there's no set payment.")
-                    .foregroundStyle(Color.text.opacity(.opacityMutedText))
+    @ViewBuilder private func BalanceField() -> some View {
+        FieldCard(LocalizedStringKey(balanceLabel)) {
+            Button {
+                showBalanceEntryView = true
+            } label: {
+                ValueLabel(text: balance.formatted())
             }
+            .accessibilityIdentifier("EditAccountView.BalanceField.TextField")
         }
     }
 
-    // Edits local state only; the change is persisted when the form is saved.
-    private func deleteSnapshot(_ snapshot: BalanceSnapshot) {
-        snapshots.removeAll { $0.date == snapshot.date }
-    }
-
-    @ViewBuilder private func BalanceHistorySection() -> some View {
-        if !snapshots.isEmpty {
-            Section {
-                ForEach(snapshots) { snapshot in
-                    HStack {
-                        Text(snapshot.date.toDate()?.toBasicUiString() ?? "—")
-                            .foregroundStyle(Color.text)
-                        Spacer(minLength: 0)
-                        Text(snapshot.value.formatted())
-                            .foregroundStyle(Color.text.opacity(.opacityMutedText))
-                    }
-                    .listRow()
-                    .swipeActions(edge: .trailing) {
-                        Button(role: .destructive) {
-                            deleteSnapshot(snapshot)
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
-                    }
-                }
-            } header: {
-                Text(trackingMode == .ledger ? "Reconciliation History" : "Balance History")
-                    .foregroundStyle(Color.text)
+    @ViewBuilder private func MonthlyPaymentField() -> some View {
+        FieldCard("Monthly Payment", footer: "What you pay toward this each month. Leave at $0.00 if there's no set payment.") {
+            Button {
+                showPaymentEntryView = true
+            } label: {
+                ValueLabel(text: monthlyPayment.formatted())
             }
+            .accessibilityIdentifier("EditAccountView.MonthlyPaymentField.TextField")
         }
     }
 
-    @ViewBuilder private func DeleteSection() -> some View {
-        if accountToEdit.account != nil {
-            Section {
-                Button(role: .destructive) {
-                    showDeleteConfirmation = true
-                } label: {
-                    HStack {
-                        Image(systemName: "trash")
-                        Text("Delete Account")
-                        Spacer(minLength: 0)
-                    }
-                }
-                .listRow()
-                .accessibilityIdentifier("EditAccountView.DeleteButton")
+    @ViewBuilder private func MenuLabel(systemName: String, text: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: systemName)
+                .foregroundStyle(Color.brandTeal)
+            Text(text)
+                .foregroundStyle(Color.appText)
+            Spacer(minLength: 0)
+            Image(systemName: "chevron.up.chevron.down")
+                .font(.caption)
+                .foregroundStyle(Color.appMutedText)
+        }
+        .font(.body.weight(.semibold))
+    }
+
+    @ViewBuilder private func ValueLabel(text: String) -> some View {
+        HStack(spacing: 8) {
+            Text(text)
+                .foregroundStyle(Color.appText)
+            Spacer(minLength: 0)
+            Image(systemName: "chevron.right")
+                .font(.caption)
+                .foregroundStyle(Color.appMutedText)
+        }
+        .font(.body.weight(.semibold))
+    }
+
+    @ViewBuilder private func DeleteButton() -> some View {
+        Button(role: .destructive) {
+            showDeleteConfirmation = true
+        } label: {
+            HStack(spacing: .paddingSmall) {
+                Image(systemName: "trash")
+                Text("Delete Account")
+            }
+            .font(.headline)
+            .foregroundStyle(Color.negative)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, .paddingVerticalButtonMedium)
+            .background {
+                RoundedRectangle(cornerRadius: .cornerRadiusMedium, style: .continuous)
+                    .foregroundStyle(Color.appSurface)
             }
         }
+        .accessibilityIdentifier("EditAccountView.DeleteButton")
+        .padding(.top, .paddingSmall)
     }
 }
 
 #Preview("New") {
     NavigationStack {
-        EditAccountView(
-            budget: .previewSample(),
-            subscriptionLevelProvider: MockSubscriptionLevelProvider(level: .boldBudgetPlus)
-        )
+        EditAccountView(budget: .previewSample())
     }
-    .environmentObject(AdProviderFactory.forScreenshots)
 }
 
-#Preview("Edit Snapshot Account") {
+#Preview("Edit") {
     NavigationStack {
-        EditAccountView(
-            budget: .previewSample(accounts: Account.samples),
-            subscriptionLevelProvider: MockSubscriptionLevelProvider(level: .boldBudgetPlus)
-        )
-        .editing(.sampleRobinhood)
+        EditAccountView(budget: .previewSample(accounts: Account.samples))
+            .editing(.sampleCarLoan)
     }
-    .environmentObject(AdProviderFactory.forScreenshots)
 }

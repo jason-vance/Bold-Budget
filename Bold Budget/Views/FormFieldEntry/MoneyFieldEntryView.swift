@@ -35,13 +35,6 @@ struct MoneyFieldEntryView: View {
 
     private static let maxDigits = 12 // caps entry at $9,999,999,999.99
 
-    private static let keypadRows: [[String]] = [
-        ["1", "2", "3"],
-        ["4", "5", "6"],
-        ["7", "8", "9"],
-        ["00", "0", "delete.left"]
-    ]
-
     private var entryAmount: Double {
         (Double(digits) ?? 0) / 100
     }
@@ -127,25 +120,21 @@ struct MoneyFieldEntryView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            VStack {
-                AmountDisplay()
-                ScrollView {
-                    Suggestions()
-                        .animation(.snappy, value: money)
-                        .padding(.top)
-                }
-                Spacer(minLength: 0)
-                Keypad()
+        VStack(spacing: .padding) {
+            Header()
+            Spacer(minLength: 0)
+            AmountDisplay()
+            ScrollView {
+                Suggestions()
+                    .animation(.snappy, value: money)
             }
-            .padding()
-            .toolbar { Toolbar() }
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationTitle(title)
-            .navigationBarBackButtonHidden()
-            .foregroundStyle(Color.text)
-            .background(Color.background.ignoresSafeArea())
+            .frame(maxHeight: 88)
+            Spacer(minLength: 0)
+            KeypadGrid(onDigit: appendDigit, onDelete: deleteLastDigit, onClear: clearAllDigits)
         }
+        .padding()
+        .foregroundStyle(Color.appText)
+        .background(Color.appBackground.ignoresSafeArea())
         .onAppear {
             let cents = Int((money.amount * 100).rounded())
             digits = cents == 0 ? "" : String(cents)
@@ -153,103 +142,50 @@ struct MoneyFieldEntryView: View {
         .alert(alertMessage, isPresented: $showAlert) { }
     }
 
-    @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
-        ToolbarItemGroup(placement: .topBarLeading) {
-            CancelButton()
+    @ViewBuilder private func Header() -> some View {
+        ZStack {
+            Text(title)
+                .font(.headline)
+                .foregroundStyle(Color.appText)
+            HStack {
+                Button("Cancel") { dismiss() }
+                    .foregroundStyle(Color.appMutedText)
+                    .accessibilityIdentifier("TextFieldEntryView.CancelButton")
+                Spacer(minLength: 0)
+                Button("Done") {
+                    money = Money(entryAmount) ?? money
+                    dismiss()
+                }
+                .fontWeight(.semibold)
+                .foregroundStyle(Color.brandTeal)
+                .accessibilityIdentifier("MoneyFieldEntryView.Toolbar.DoneButton")
+            }
         }
-        ToolbarItemGroup(placement: .topBarTrailing) {
-            DoneButton()
-        }
-    }
-
-    @ViewBuilder func CancelButton() -> some View {
-        Button {
-            dismiss()
-        } label: {
-            Image(systemName: "xmark")
-        }
-        .accessibilityIdentifier("TextFieldEntryView.CancelButton")
-    }
-
-    @ViewBuilder func DoneButton() -> some View {
-        Button {
-            money = Money(entryAmount) ?? money
-            dismiss()
-        } label: {
-            Image(systemName: "checkmark")
-        }
-        .accessibilityIdentifier("MoneyFieldEntryView.Toolbar.DoneButton")
+        .frame(height: .barHeight)
     }
 
     @ViewBuilder private func AmountDisplay() -> some View {
         Text(displayText)
-            .font(.largeTitle.bold())
+            .font(.system(size: 48, weight: .heavy))
+            .foregroundStyle(Color.appText)
             .contentTransition(.numericText())
             .animation(.snappy, value: digits)
-            .frame(maxWidth: .infinity, alignment: .trailing)
+            .frame(maxWidth: .infinity)
             .lineLimit(1)
-            .minimumScaleFactor(0.5)
-            .textFieldSmall()
+            .minimumScaleFactor(0.4)
             .shake($shakeAmount)
             .accessibilityIdentifier("MoneyFieldEntryView.AmountDisplay")
-    }
-
-    @ViewBuilder private func Keypad() -> some View {
-        VStack(spacing: .paddingCircleButtonSmall) {
-            ForEach(Self.keypadRows, id: \.self) { row in
-                HStack(spacing: .paddingCircleButtonSmall) {
-                    ForEach(row, id: \.self) { key in
-                        KeypadButton(key)
-                    }
-                }
-            }
-        }
-    }
-
-    @ViewBuilder private func KeypadButton(_ key: String) -> some View {
-        switch key {
-        case "delete.left":
-            Image(systemName: key)
-                .font(.title3)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, .paddingVerticalButtonMedium)
-                .buttonLabelMedium()
-                .contentShape(Rectangle())
-                .onTapGesture { deleteLastDigit() }
-                .onLongPressGesture(minimumDuration: 0.5) { clearAllDigits() }
-                .accessibilityIdentifier("MoneyFieldEntryView.Keypad.Delete")
-                .accessibilityLabel("Delete")
-                .accessibilityHint("Touch and hold to clear the amount")
-        default:
-            Button {
-                appendDigit(key)
-            } label: {
-                Text(key)
-                    .font(.title3.bold())
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, .paddingVerticalButtonMedium)
-            }
-            .buttonLabelMedium()
-            .accessibilityIdentifier("MoneyFieldEntryView.Keypad.\(key)")
-        }
     }
 
     @ViewBuilder private func Suggestions() -> some View {
         let filtered = filteredSuggestions
         if !filtered.isEmpty {
-            VStack {
-                HStack {
-                    Text("Suggestions:")
-                        .multilineTextAlignment(.leading)
-                    Spacer()
-                }
-                FlowLayout(
-                    mode: .scrollable,
-                    items: filtered,
-                    itemSpacing: .paddingCircleButtonSmall
-                ) { suggestion in
-                    Suggestion(suggestion)
-                }
+            FlowLayout(
+                mode: .scrollable,
+                items: filtered,
+                itemSpacing: .paddingSmall
+            ) { suggestion in
+                Suggestion(suggestion)
             }
         }
     }
@@ -259,8 +195,7 @@ struct MoneyFieldEntryView: View {
             self.money = money
             dismiss()
         } label: {
-            Text(money.formatted())
-                .buttonLabelSmall()
+            Text(money.formatted()).redesignPill()
         }
     }
 }
