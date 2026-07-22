@@ -40,7 +40,6 @@ struct EditTransactionView: View {
     @State private var showLocationEntryView: Bool = false
     @State private var tags: Set<Transaction.Tag> = []
     @State private var showTagsEditorView: Bool = false
-    @State private var showDetails: Bool = false
     @State private var showTransactionDatePicker: Bool = false
 
 
@@ -177,10 +176,6 @@ struct EditTransactionView: View {
         toAccountId != nil
     }
 
-    private var hasDetails: Bool {
-        !tags.isEmpty
-    }
-
     private var addButtonTitle: String {
         if isEditing { return String(localized: "Save") }
         switch kind {
@@ -188,10 +183,6 @@ struct EditTransactionView: View {
         case .income: return String(localized: "Add Income")
         case .transfer: return String(localized: "Add Transfer")
         }
-    }
-
-    private func remove(tag: Transaction.Tag) {
-        tags.remove(tag)
     }
 
     private func saveTransaction() {
@@ -251,13 +242,15 @@ struct EditTransactionView: View {
         .navigationBarBackButtonHidden()
         .foregroundStyle(Color.appText)
         .background(Color.appBackground.ignoresSafeArea())
-        .sheet(isPresented: $showDetails) { DetailsSheet() }
         .sheet(isPresented: $showTransactionDatePicker) { DatePickerSheet() }
         .fullScreenCover(isPresented: $showTitleEntryView) {
             TransactionTitleEntryView(titleString: $titleString, budget: budget)
         }
         .fullScreenCover(isPresented: $showLocationEntryView) {
             TransactionLocationEntryView(locationString: $locationString, budget: budget)
+        }
+        .fullScreenCover(isPresented: $showTagsEditorView) {
+            TagsEditorView(tags: $tags, budget: budget)
         }
         .onChange(of: transactionToEdit, initial: true) { _, new in populateFields(new) }
         .alert(alertMessage, isPresented: $showAlert) {}
@@ -544,9 +537,10 @@ struct EditTransactionView: View {
         .accessibilityIdentifier("EditTransactionView.Toolbar.SaveButton")
     }
 
+    /// Opens the tag editor directly — no intermediate sheet.
     @ViewBuilder private func DetailsButton() -> some View {
         Button {
-            showDetails = true
+            showTagsEditorView = true
         } label: {
             HStack(spacing: 5) {
                 Image(systemName: "tag")
@@ -556,85 +550,6 @@ struct EditTransactionView: View {
             .foregroundStyle(Color.appMutedText)
         }
         .accessibilityIdentifier("EditTransactionView.DetailsButton")
-    }
-
-    // MARK: - Tags sheet
-
-    @ViewBuilder private func DetailsSheet() -> some View {
-        NavigationStack {
-            Form {
-                Section {
-                    TagsField()
-                } header: {
-                    Text("Tags")
-                        .foregroundStyle(Color.text)
-                }
-            }
-            .scrollDismissesKeyboard(.immediately)
-            .formStyle(.grouped)
-            .scrollContentBackground(.hidden)
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationTitle("Tags")
-            .foregroundStyle(Color.text)
-            .background(Color.background.ignoresSafeArea())
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") { showDetails = false }
-                }
-            }
-        }
-        .presentationDetents([.medium, .large])
-        .presentationBackground(Color.background)
-    }
-
-    @ViewBuilder private func TagsField() -> some View {
-        VStack {
-            HStack {
-                Text("Tags")
-                    .foregroundStyle(Color.text)
-                Spacer(minLength: 0)
-                AddTagsButton()
-            }
-        }
-        .listRow()
-        ForEach(tags.sorted { $0.value < $1.value }) { tag in
-            TagRow(tag)
-        }
-    }
-
-    @ViewBuilder private func AddTagsButton() -> some View {
-        Button {
-            showTagsEditorView = true
-        } label: {
-            HStack {
-                Image(systemName: "tag")
-                    .overlay(alignment: .bottomTrailing) {
-                        Image(systemName: "plus")
-                            .font(.system(size: 8))
-                            .bold()
-                            .foregroundStyle(Color.background)
-                            .padding(.borderWidthThin)
-                            .background { Circle().foregroundStyle(Color.text) }
-                    }
-            }
-            .buttonLabelSmall()
-        }
-        .accessibilityIdentifier("EditTransactionView.TagsField.AddTagsButton")
-        .fullScreenCover(isPresented: $showTagsEditorView) {
-            TagsEditorView(tags: $tags, budget: budget)
-        }
-    }
-
-    @ViewBuilder private func TagRow(_ tag: Transaction.Tag) -> some View {
-        HStack {
-            Image(systemName: "xmark")
-                .buttonSymbolCircleSmall()
-                .onTapGesture {
-                    remove(tag: tag)
-                }
-            TransactionTagView(tag)
-        }
-        .listRow()
     }
 }
 

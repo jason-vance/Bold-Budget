@@ -9,49 +9,17 @@ import SwiftUI
 import SwiftUIFlowLayout
 
 struct TagsEditorView: View {
-    
+
     @Environment(\.dismiss) var dismiss
-    
+
     @Binding private var tags: Set<Transaction.Tag>
     @State private var budget: Budget
-    
+
     @State private var newTagString: String = ""
     @State private var entryTags: Set<Transaction.Tag> = []
-    
-    var sortedEntryTags: [Transaction.Tag] {
-        entryTags
-            .sorted { $0.value < $1.value }
-    }
-    
-    var suggestedTags: [Transaction.Tag] {
-        budget.transactionTags
-            .subtracting(entryTags)
-            .filter { newTagString.isEmpty || $0.value.lowercased().contains(newTagString.lowercased()) }
-            .sorted { $0.value < $1.value }
-    }
-    
-    private var newTagInstructions: String {
-        if newTagString.isEmpty { return "" }
-        if newTagString.count < Transaction.Tag.minTextLength { return "Too short" }
-        if newTagString.count > Transaction.Tag.maxTextLength { return "Too long" }
-        return "\(newTagString.count)/\(Transaction.Tag.maxTextLength)"
-    }
-    
-    private func saveNewTag() {
-        if let tag = Transaction.Tag(newTagString) {
-            entryTags.insert(tag)
-            newTagString = ""
-        }
-    }
-    
-    private func add(tag: Transaction.Tag) {
-        entryTags.insert(tag)
-    }
-    
-    private func remove(tag: Transaction.Tag) {
-        entryTags.remove(tag)
-    }
-    
+
+    @FocusState private var focused: Bool
+
     init(
         tags: Binding<Set<Transaction.Tag>>,
         budget: Budget
@@ -59,155 +27,153 @@ struct TagsEditorView: View {
         self._tags = tags
         self.budget = budget
     }
-    
-    var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                NewTagField()
-                    .padding()
-                BarDivider()
-                ScrollView {
-                    VStack {
-                        SelectedTags()
-                        SuggestedTags()
-                    }
-                    .padding()
-                }
-            }
-            .animation(.snappy, value: entryTags)
-            .toolbar { Toolbar() }
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationTitle("Tags")
-            .navigationBarBackButtonHidden()
-            .foregroundStyle(Color.text)
-            .background(Color.background.ignoresSafeArea())
-        }
-        .onAppear { entryTags = tags }
+
+    private var sortedEntryTags: [Transaction.Tag] {
+        entryTags.sorted { $0.value < $1.value }
     }
 
-    @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
-        ToolbarItemGroup(placement: .topBarLeading) {
-            CancelButton()
+    private var suggestedTags: [Transaction.Tag] {
+        budget.transactionTags
+            .subtracting(entryTags)
+            .filter { newTagString.isEmpty || $0.value.lowercased().contains(newTagString.lowercased()) }
+            .sorted { $0.value < $1.value }
+    }
+
+    /// Selected tags first, then matching suggestions — one flowing list of toggleable chips.
+    private var allTags: [Transaction.Tag] {
+        sortedEntryTags + suggestedTags
+    }
+
+    private var newTag: Transaction.Tag? {
+        guard let tag = Transaction.Tag(newTagString) else { return nil }
+        return entryTags.contains(tag) ? nil : tag
+    }
+
+    private func saveNewTag() {
+        guard let tag = newTag else { return }
+        entryTags.insert(tag)
+        newTagString = ""
+    }
+
+    private func add(tag: Transaction.Tag) { entryTags.insert(tag) }
+    private func remove(tag: Transaction.Tag) { entryTags.remove(tag) }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Header()
+            VStack(alignment: .leading, spacing: .padding) {
+                NewTagField()
+                ScrollView {
+                    TagFlow()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .scrollDismissesKeyboard(.immediately)
+            }
+            .padding()
         }
-        ToolbarItemGroup(placement: .topBarTrailing) {
-            DoneButton()
+        .animation(.snappy, value: entryTags)
+        .animation(.snappy, value: newTagString)
+        .foregroundStyle(Color.appText)
+        .background(Color.appBackground.ignoresSafeArea())
+        .onAppear {
+            entryTags = tags
+            focused = true
         }
     }
-    
-    @ViewBuilder func CancelButton() -> some View {
-        Button {
-            dismiss()
-        } label: {
-            Image(systemName: "xmark")
-        }
-        .accessibilityIdentifier("TagsEditorView.CancelButton")
-    }
-    
-    @ViewBuilder func DoneButton() -> some View {
-        Button {
-            tags = entryTags
-            dismiss()
-        } label: {
-            Image(systemName: "checkmark")
-        }
-        .accessibilityIdentifier("TagsEditorView.DoneButton")
-    }
-    
-    @ViewBuilder private func NewTagField() -> some View {
-        VStack {
+
+    @ViewBuilder private func Header() -> some View {
+        ZStack {
+            Text("Tags")
+                .font(.headline)
+                .foregroundStyle(Color.appText)
             HStack {
-                Text("Search for or add a Tag")
-                    .foregroundStyle(Color.text)
+                Button("Cancel") { dismiss() }
+                    .foregroundStyle(Color.appMutedText)
+                    .accessibilityIdentifier("TagsEditorView.CancelButton")
                 Spacer(minLength: 0)
-                Text(newTagInstructions)
-                    .font(.caption2)
-                    .foregroundStyle(Color.text.opacity(.opacityMutedText))
-                    .padding(.horizontal, .paddingHorizontalButtonXSmall)
-            }
-            HStack {
-                TextField("Search for or add a Tag",
-                          text: $newTagString,
-                          prompt: Text(Transaction.Tag.sample.value).foregroundStyle(Color.text.opacity(.opacityTextFieldPrompt))
-                )
-                .textFieldSmall()
-                .textInputAutocapitalization(.words)
-                .accessibilityIdentifier("TagsEditorView.NewTagField")
-                SaveNewTagButton()
-            }
-        }
-    }
-    
-    @ViewBuilder func SaveNewTagButton() -> some View {
-        Button {
-            saveNewTag()
-        } label: {
-            Text("Add")
-                .buttonLabelMedium()
-        }
-        .accessibilityIdentifier("EditTransactionView.TagsField.SaveNewTagButton")
-    }
-    
-    @ViewBuilder private func SelectedTags() -> some View {
-        VStack {
-            HStack {
-                Text("Selected Tags:")
-                    .multilineTextAlignment(.leading)
-                Spacer()
-            }
-            if entryTags.isEmpty {
-                Text("No tags selected")
-                    .padding(.paddingCircleButtonMedium)
-            } else {
-                FlowLayout(
-                    mode: .scrollable,
-                    items: sortedEntryTags,
-                    itemSpacing: .paddingCircleButtonMedium
-                ) { item in
-                    SelectedTag(item)
+                Button("Save") {
+                    tags = entryTags
+                    dismiss()
                 }
+                .fontWeight(.semibold)
+                .foregroundStyle(Color.brandTeal)
+                .accessibilityIdentifier("TagsEditorView.DoneButton")
             }
         }
+        .frame(height: .barHeight)
+        .padding(.horizontal)
     }
-    
-    @ViewBuilder private func SuggestedTags() -> some View {
-        if !suggestedTags.isEmpty {
-            VStack {
-                HStack {
-                    Text("Suggested Tags:")
-                        .multilineTextAlignment(.leading)
-                    Spacer()
+
+    @ViewBuilder private func NewTagField() -> some View {
+        HStack(spacing: .paddingSmall) {
+            TextField(
+                "Add a tag",
+                text: $newTagString,
+                prompt: Text(Transaction.Tag.sample.value).foregroundStyle(Color.appMutedText)
+            )
+            .focused($focused)
+            .foregroundStyle(Color.appText)
+            .tint(Color.brandTeal)
+            .textInputAutocapitalization(.words)
+            .submitLabel(.done)
+            .onSubmit { saveNewTag() }
+            .padding()
+            .background {
+                RoundedRectangle(cornerRadius: .cornerRadiusMedium, style: .continuous)
+                    .foregroundStyle(Color.appSurface)
+            }
+            .accessibilityIdentifier("TagsEditorView.NewTagField")
+
+            if newTag != nil {
+                Button {
+                    saveNewTag()
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.headline)
+                        .foregroundStyle(Color.appBackground)
+                        .frame(width: 48, height: 48)
+                        .background { Circle().foregroundStyle(Color.brandTeal) }
                 }
-                FlowLayout(
-                    mode: .scrollable,
-                    items: suggestedTags,
-                    itemSpacing: .paddingCircleButtonMedium
-                ) { item in
-                    SuggestionTag(item)
-                }
+                .accessibilityIdentifier("EditTransactionView.TagsField.SaveNewTagButton")
             }
         }
     }
-    
-    @ViewBuilder func SelectedTag(_ tag: Transaction.Tag) -> some View {
-        Button {
-            remove(tag: tag)
-        } label: {
-            HStack(spacing: .paddingCircleButtonSmall) {
-                Image(systemName: "checkmark.circle.fill")
-                TransactionTagView(tag)
+
+    @ViewBuilder private func TagFlow() -> some View {
+        if allTags.isEmpty {
+            Text("No tags yet — type above to add one.")
+                .font(.subheadline)
+                .foregroundStyle(Color.appMutedText)
+                .padding(.vertical, .paddingSmall)
+        } else {
+            FlowLayout(
+                mode: .scrollable,
+                items: allTags,
+                itemSpacing: .paddingSmall
+            ) { tag in
+                TagChip(tag, selected: entryTags.contains(tag))
             }
         }
     }
-    
-    @ViewBuilder func SuggestionTag(_ tag: Transaction.Tag) -> some View {
+
+    @ViewBuilder private func TagChip(_ tag: Transaction.Tag, selected: Bool) -> some View {
         Button {
-            add(tag: tag)
+            selected ? remove(tag: tag) : add(tag: tag)
         } label: {
-            HStack(spacing: .paddingCircleButtonSmall) {
-                Image(systemName: "circle")
-                TransactionTagView(tag)
+            HStack(spacing: 4) {
+                Text(tag.value)
+                Image(systemName: selected ? "xmark" : "plus")
+                    .font(.caption2.weight(.semibold))
+            }
+            .font(.subheadline.weight(.medium))
+            .foregroundStyle(selected ? Color.appBackground : Color.appText)
+            .padding(.horizontal, .paddingHorizontalButtonSmall)
+            .padding(.vertical, .paddingVerticalButtonSmall)
+            .background {
+                Capsule().foregroundStyle(selected ? Color.brandTeal : Color.appSurface)
             }
         }
+        .buttonStyle(.plain)
     }
 }
 

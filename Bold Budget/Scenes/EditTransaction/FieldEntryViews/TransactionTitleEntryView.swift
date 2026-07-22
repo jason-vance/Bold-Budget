@@ -21,7 +21,7 @@ struct TransactionTitleEntryView: View {
     
     var body: some View {
         TextFieldEntryView(
-            title: "Title",
+            title: "Note",
             prompt: Transaction.Title.sample.value,
             value: $titleString,
             suggestions: budget.transactionTitles.map(\.value),

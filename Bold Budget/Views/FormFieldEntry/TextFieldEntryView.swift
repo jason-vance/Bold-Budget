@@ -55,26 +55,32 @@ struct TextFieldEntryView: View {
     }
     
     var body: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            Header()
             ScrollView {
-                VStack {
-                    HStack {
-                        Spacer(minLength: 0)
-                        let instructions = instructions
-                        Text(instructions.isEmpty ? "Placeholder" : instructions)
-                            .font(.caption2)
-                            .foregroundStyle(Color.text.opacity(.opacityMutedText))
-                            .padding(.horizontal, .paddingHorizontalButtonXSmall)
-                            .opacity(instructions.isEmpty ? 0 : .opacityMutedText)
-                    }
+                VStack(alignment: .leading, spacing: .paddingSmall) {
                     TextField(title,
                               text: $entryValue,
-                              prompt: Text(prompt).foregroundStyle(Color.text.opacity(.opacityTextFieldPrompt))
+                              prompt: Text(prompt).foregroundStyle(Color.appMutedText)
                     )
                     .focused($focusState)
-                    .textFieldSmall()
+                    .font(.title3)
+                    .foregroundStyle(Color.appText)
+                    .tint(Color.brandTeal)
                     .autocapitalization(autocapitalization)
+                    .padding()
+                    .background {
+                        RoundedRectangle(cornerRadius: .cornerRadiusMedium, style: .continuous)
+                            .foregroundStyle(Color.appSurface)
+                    }
                     .accessibilityIdentifier("TextFieldEntryView.TextField")
+                    let instructions = instructions
+                    if !instructions.isEmpty {
+                        Text(instructions)
+                            .font(.caption2)
+                            .foregroundStyle(Color.appMutedText)
+                            .padding(.horizontal, .paddingHorizontalButtonXSmall)
+                    }
                     Suggestions()
                         .animation(.snappy, value: entryValue)
                         .padding(.top)
@@ -82,72 +88,54 @@ struct TextFieldEntryView: View {
                 .padding()
             }
             .scrollDismissesKeyboard(.immediately)
-            .scrollContentBackground(.hidden)
-            .toolbar { Toolbar() }
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationTitle(title)
-            .navigationBarBackButtonHidden()
-            .foregroundStyle(Color.text)
-            .background(Color.background.ignoresSafeArea())
         }
+        .foregroundStyle(Color.appText)
+        .background(Color.appBackground.ignoresSafeArea())
         .onAppear { focusState = true }
         .onAppear { entryValue = value }
     }
 
-    @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
-        ToolbarItemGroup(placement: .topBarLeading) {
-            CancelButton()
+    @ViewBuilder private func Header() -> some View {
+        ZStack {
+            Text(title)
+                .font(.headline)
+                .foregroundStyle(Color.appText)
+            HStack {
+                Button("Cancel") { dismiss() }
+                    .foregroundStyle(Color.appMutedText)
+                    .accessibilityIdentifier("TextFieldEntryView.CancelButton")
+                Spacer(minLength: 0)
+                Button("Save") {
+                    value = entryValue
+                    dismiss()
+                }
+                .fontWeight(.semibold)
+                .foregroundStyle(Color.brandTeal)
+                .accessibilityIdentifier("TextFieldEntryView.Toolbar.DoneButton")
+            }
         }
-        ToolbarItemGroup(placement: .topBarTrailing) {
-            DoneButton()
-        }
+        .frame(height: .barHeight)
+        .padding(.horizontal)
     }
-    
-    @ViewBuilder func CancelButton() -> some View {
-        Button {
-            dismiss()
-        } label: {
-            Image(systemName: "xmark")
-        }
-        .accessibilityIdentifier("TextFieldEntryView.CancelButton")
-    }
-    
-    @ViewBuilder func DoneButton() -> some View {
-        Button {
-            value = entryValue
-            dismiss()
-        } label: {
-            Image(systemName: "checkmark")
-        }
-        .accessibilityIdentifier("TextFieldEntryView.Toolbar.DoneButton")
-    }
-    
+
     @ViewBuilder private func Suggestions() -> some View {
         if !filteredSuggestions.isEmpty {
-            VStack {
-                HStack {
-                    Text("Suggestions:")
-                        .multilineTextAlignment(.leading)
-                    Spacer()
-                }
-                FlowLayout(
-                    mode: .scrollable,
-                    items: filteredSuggestions,
-                    itemSpacing: .paddingCircleButtonSmall
-                ) { suggestion in
-                    Suggestion(suggestion)
-                }
+            FlowLayout(
+                mode: .scrollable,
+                items: filteredSuggestions,
+                itemSpacing: .paddingCircleButtonSmall
+            ) { suggestion in
+                Suggestion(suggestion)
             }
         }
     }
-    
+
     @ViewBuilder private func Suggestion(_ text: String) -> some View {
         Button {
             value = text
             dismiss()
         } label: {
-            Text(text)
-                .buttonLabelSmall()
+            Text(text).redesignPill()
         }
     }
 }

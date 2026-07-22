@@ -21,7 +21,7 @@ struct TransactionLocationEntryView: View {
     
     var body: some View {
         TextFieldEntryView(
-            title: "Location",
+            title: "Merchant",
             prompt: Transaction.Location.sample.value,
             value: $locationString,
             suggestions: budget.transactionLocations.map(\.value),
