@@ -207,8 +207,6 @@ struct NetWorthView: View {
                     .contentTransition(.numericText())
             }
             .padding(.vertical, .paddingSmall)
-            .padding(.horizontal, .paddingSmall)
-            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }

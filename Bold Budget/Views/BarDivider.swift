@@ -10,9 +10,8 @@ import SwiftUI
 struct BarDivider: View {
     var body: some View {
         Rectangle()
-            .frame(height: 0.25)
-            .foregroundStyle(Color.text)
-            .opacity(0.25)
+            .fill(.appMutedText.opacity(0.3))
+            .frame(height: 1)
     }
 }
 

@@ -48,7 +48,7 @@ extension View {
 struct IconCircle: View {
     let systemName: String
     var size: CGFloat = 44
-    var tint: Color = .text
+    var tint: Color = .appText
 
     var body: some View {
         Image(systemName: systemName)
@@ -65,7 +65,7 @@ struct IconCircle: View {
 struct Chip: View {
     let text: String
     var systemName: String? = nil
-    var tint: Color = .text
+    var tint: Color = .appText
 
     var body: some View {
         HStack(spacing: 3) {

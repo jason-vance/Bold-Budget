@@ -251,7 +251,7 @@ struct BudgetDetailView: View {
         }
         .navigationTitle(budget.info.name.value)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar(topTab == .netWorth ? .hidden : .visible, for: .navigationBar)
+        .toolbar(usesRedesignPalette ? .hidden : .visible, for: .navigationBar)
         .toolbar { Toolbar() }
         .foregroundStyle(chromeText)
         .background(chromeBackground.ignoresSafeArea())
@@ -266,47 +266,61 @@ struct BudgetDetailView: View {
         .onChange(of: scenePhase) { old, new in onChangeOf(scenePhase: new) }
     }
 
-    // The Net Worth tab uses the redesign palette; Spending keeps the app palette. The shared
-    // chrome (background, tab bar) follows whichever tab is active.
-    private var chromeBackground: Color { topTab == .netWorth ? .appBackground : .background }
-    private var chromeText: Color { topTab == .netWorth ? .appText : .text }
+    /// Screens already migrated to the redesign palette. Net Worth and the Spending Chart mode use
+    /// the redesign (black/white) palette; Envelopes and Recurring still use the app palette.
+    private var usesRedesignPalette: Bool {
+        topTab == .netWorth || (topTab == .spending && viewMode == .pieChart)
+    }
+
+    private var chromeBackground: Color { usesRedesignPalette ? .appBackground : .background }
+    private var chromeText: Color { usesRedesignPalette ? .appText : .text }
     private var chromeMuted: Color {
-        topTab == .netWorth ? .appMutedText : Color.text.opacity(.opacityMutedText)
+        usesRedesignPalette ? .appMutedText : Color.text.opacity(.opacityMutedText)
     }
 
     @ViewBuilder private func SpendingContent() -> some View {
-        TopBar()
-        List {
-            switch viewMode {
-            case .envelopes:
-                AdSection()
-                IncomeExpenseTotals()
-                EnvelopesView(budget: budget, timeFrame: timeFrame)
-            case .pieChart:
-                Chart()
-                AdSection()
-                TransactionList()
-            case .recurringExpenses:
-                AdSection()
-                RecurringExpensesListContent(budget: budget)
+        if viewMode == .pieChart {
+            SpendingChartView(
+                budget: budget,
+                timeFrame: $timeFrame,
+                transactionsFilter: $transactionsFilter
+            )
+            .overlay {
+                if budget.isLoading { BlockingSpinnerView() }
             }
-        }
-        .refreshable { budget.refresh() }
-        .listStyle(.insetGrouped)
-        .scrollContentBackground(.hidden)
-        .scrollIndicators(.hidden)
-        .overlay(alignment: .top) {
-            Rectangle()
-                .opacity(0)
-                .overlay(alignment: .top) { ExtraOptionsMenuOverlay() }
-                .clipped()
-        }
-        .overlay {
-            if budget.isLoading {
-                BlockingSpinnerView()
+            SpendingModeBar()
+        } else {
+            TopBar()
+            List {
+                switch viewMode {
+                case .envelopes:
+                    AdSection()
+                    IncomeExpenseTotals()
+                    EnvelopesView(budget: budget, timeFrame: timeFrame)
+                case .recurringExpenses:
+                    AdSection()
+                    RecurringExpensesListContent(budget: budget)
+                case .pieChart:
+                    EmptyView()
+                }
             }
+            .refreshable { budget.refresh() }
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .scrollIndicators(.hidden)
+            .overlay(alignment: .top) {
+                Rectangle()
+                    .opacity(0)
+                    .overlay(alignment: .top) { ExtraOptionsMenuOverlay() }
+                    .clipped()
+            }
+            .overlay {
+                if budget.isLoading {
+                    BlockingSpinnerView()
+                }
+            }
+            SpendingModeBar()
         }
-        SpendingModeBar()
     }
 
     @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
@@ -398,7 +412,8 @@ struct BudgetDetailView: View {
         }
         .padding(.horizontal, .padding)
         .padding(.vertical, .paddingSmall)
-        .background(Color.background)
+        .background(chromeBackground)
+        .overlay(alignment: .top) { BarDivider() }
     }
 
     @ViewBuilder private func SpendingModeButton(_ mode: ViewMode) -> some View {
@@ -412,12 +427,12 @@ struct BudgetDetailView: View {
                 Text(mode.label)
                     .font(.caption.weight(.semibold))
             }
-            .foregroundStyle(isSelected ? Color.background : Color.text)
+            .foregroundStyle(isSelected ? .white : chromeText)
             .padding(.vertical, .paddingSmall)
             .frame(maxWidth: .infinity)
             .background {
                 RoundedRectangle(cornerRadius: .cornerRadiusMedium, style: .continuous)
-                    .foregroundStyle(isSelected ? Color.text : Color.text.opacity(.opacityButtonBackground))
+                    .foregroundStyle(isSelected ? Color.brandTeal : chromeText.opacity(.opacityButtonBackground))
             }
         }
         .accessibilityIdentifier("BudgetDetailView.SpendingModeBar.\(mode.rawValue)")
@@ -469,10 +484,10 @@ struct BudgetDetailView: View {
         } label: {
             Image(systemName: "plus")
                 .font(.title2.weight(.heavy))
-                .foregroundStyle(chromeBackground)
+                .foregroundStyle(usesRedesignPalette ? Color.appBackground : Color.background)
                 .frame(width: 52, height: 52)
                 .background {
-                    Circle().foregroundStyle(topTab == .netWorth ? Color.brandTeal : Color.text)
+                    Circle().foregroundStyle(usesRedesignPalette ? Color.brandTeal : Color.text)
                 }
                 .frame(maxWidth: .infinity)
         }
@@ -648,6 +663,9 @@ struct BudgetDetailView: View {
                 transaction: transaction,
                 category: budget.getCategoryBy(id: transaction.categoryId)
             )
+            .padding(.vertical, .paddingSmall)
+            .padding(.leading, .paddingSmall)
+            .contentShape(Rectangle())
         }
         .listRow()
     }
@@ -669,4 +687,5 @@ struct BudgetDetailView: View {
             subscriptionManager: MockSubscriptionLevelProvider(level: .boldBudgetPlus)
         )
     }
+    .environmentObject(AdProviderFactory.forScreenshots)
 }

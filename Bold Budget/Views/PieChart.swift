@@ -238,7 +238,7 @@ struct PieChart: View {
                     }
                 }
             }
-            .foregroundStyle(Color.text)
+            .foregroundStyle(Color.appText)
         }
         .padding(lineWidth / 2)
         .aspectRatio(1, contentMode: .fit)
@@ -297,7 +297,7 @@ struct PieChart: View {
                 lineWidth: lineWidth,
                 lineCap: .round
             ))
-            .foregroundStyle(Color.text)
+            .foregroundStyle(Color.appText)
             .opacity(0.5)
     }
     
@@ -307,7 +307,7 @@ struct PieChart: View {
                 lineWidth: lineWidth,
                 lineCap: .round
             ))
-            .foregroundStyle(Color.text)
+            .foregroundStyle(Color.appText)
             .overlay {
                 if slice.kind == .expense {
                     Circle()
@@ -315,7 +315,7 @@ struct PieChart: View {
                             lineWidth: lineWidth - .borderWidthMedium,
                             lineCap: .round
                         ))
-                        .foregroundStyle(Color.background)
+                        .foregroundStyle(Color.appBackground)
                 }
             }
             .overlay {
@@ -339,7 +339,7 @@ struct PieChart: View {
                 lineWidth: lineWidth,
                 lineCap: .round
             ))
-            .foregroundStyle(Color.text)
+            .foregroundStyle(Color.appText)
             .opacity(isHighlighted ? 1 : 0.5)
             .overlay {
                 if slice.kind == .expense {
@@ -349,7 +349,7 @@ struct PieChart: View {
                             lineWidth: lineWidth - .borderWidthMedium,
                             lineCap: .round
                         ))
-                        .foregroundStyle(Color.background)
+                        .foregroundStyle(Color.appBackground)
                 }
             }
             .overlay {
@@ -368,7 +368,7 @@ struct PieChart: View {
         Image(systemName: slice.sfSymbol.value)
             .font(.system(size: lineWidth * 0.65))
             .bold()
-            .foregroundStyle(slice.kind == .expense ? Color.text : Color.background)
+            .foregroundStyle(slice.kind == .expense ? Color.appText : Color.appBackground)
             .frame(width: lineWidth, height: lineWidth)
             .scaleEffect(isDimmed ? 0.75 : 1)
             .opacity(isDimmed ? 0.5 : 1)
