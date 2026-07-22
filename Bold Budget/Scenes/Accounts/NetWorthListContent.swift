@@ -23,23 +23,64 @@ struct NetWorthListContent: View {
             .sorted { $0.balance > $1.balance }
     }
 
+    private var netWorthChange: SignedMoney? {
+        let history = budget.netWorthHistory
+        guard history.count >= 2 else { return nil }
+        return history[history.count - 1].value - history[history.count - 2].value
+    }
+
     var body: some View {
         if allAccounts.isEmpty {
             NoAccountsView()
         } else {
-            NetWorthSection()
-            NetWorthChartSection()
+            HeroSection()
+            ChartCardSection()
+            StatCardsSection()
             ForEach(Account.Class.allCases, id: \.self) { accountClass in
                 ClassSection(accountClass)
             }
         }
     }
 
-    @ViewBuilder private func NetWorthChartSection() -> some View {
+    @ViewBuilder private func HeroSection() -> some View {
+        Section {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Net Worth")
+                    .font(.caption2.weight(.semibold))
+                    .textCase(.uppercase)
+                    .kerning(0.6)
+                    .foregroundStyle(Color.text.opacity(0.5))
+                Text(budget.netWorth.formatted())
+                    .font(.system(size: 40, weight: .heavy))
+                    .foregroundStyle(budget.netWorth.amount < 0 ? Color.negative : Color.text)
+                    .contentTransition(.numericText())
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+                if let change = netWorthChange {
+                    HStack(spacing: 4) {
+                        Image(systemName: change.amount >= 0 ? "arrow.up.right" : "arrow.down.right")
+                        Text(change.magnitude.formatted())
+                        Text("this period")
+                            .foregroundStyle(Color.text.opacity(.opacityMutedText))
+                    }
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(change.amount >= 0 ? Color.positive : Color.negative)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .listRowBackground(Color.background)
+            .listRowSeparator(.hidden)
+        }
+        .listSectionSeparator(.hidden)
+        .listSectionSpacing(0)
+    }
+
+    @ViewBuilder private func ChartCardSection() -> some View {
         let history = budget.netWorthHistory
         if history.count >= 2 {
             Section {
                 NetWorthChartView(history: history)
+                    .card()
                     .listRowBackground(Color.background)
                     .listRowSeparator(.hidden)
             }
@@ -48,48 +89,39 @@ struct NetWorthListContent: View {
         }
     }
 
-    @ViewBuilder private func NetWorthSection() -> some View {
+    @ViewBuilder private func StatCardsSection() -> some View {
         Section {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Net Worth")
-                    .font(.caption2.weight(.semibold))
-                    .textCase(.uppercase)
-                    .foregroundStyle(Color.text.opacity(0.5))
-                Text(budget.netWorth.formatted())
-                    .font(.largeTitle.bold())
-                    .foregroundStyle(budget.netWorth.amount < 0 ? Color.negative : Color.text)
-                    .contentTransition(.numericText())
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .listRowBackground(Color.background)
-            .listRowSeparator(.hidden)
-
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Assets")
-                        .font(.caption2.weight(.semibold))
-                        .textCase(.uppercase)
-                        .foregroundStyle(Color.text.opacity(0.5))
-                    Text(budget.totalAssets.formatted())
-                        .foregroundStyle(Color.positive)
-                        .contentTransition(.numericText())
-                }
-                Spacer()
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text("Liabilities")
-                        .font(.caption2.bold())
-                        .textCase(.uppercase)
-                        .foregroundStyle(Color.text.opacity(0.5))
-                    Text(budget.totalLiabilities.formatted())
-                        .foregroundStyle(budget.totalLiabilities.amount > 0 ? Color.negative : Color.text)
-                        .contentTransition(.numericText())
-                }
+            HStack(spacing: .padding) {
+                StatCard(title: "Assets", value: budget.totalAssets.formatted(), tint: .positive)
+                StatCard(
+                    title: "Liabilities",
+                    value: budget.totalLiabilities.formatted(),
+                    tint: budget.totalLiabilities.amount > 0 ? .negative : .text
+                )
             }
             .listRowBackground(Color.background)
             .listRowSeparator(.hidden)
         }
         .listSectionSeparator(.hidden)
         .listSectionSpacing(0)
+    }
+
+    @ViewBuilder private func StatCard(title: LocalizedStringKey, value: String, tint: Color) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.caption2.weight(.semibold))
+                .textCase(.uppercase)
+                .kerning(0.6)
+                .foregroundStyle(Color.text.opacity(0.5))
+            Text(value)
+                .font(.title3.weight(.heavy))
+                .foregroundStyle(tint)
+                .contentTransition(.numericText())
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .card()
     }
 
     @ViewBuilder private func ClassSection(_ accountClass: Account.Class) -> some View {
@@ -120,16 +152,16 @@ struct NetWorthListContent: View {
     }
 
     @ViewBuilder private func AccountRow(_ account: Account) -> some View {
+        let isLiability = account.accountClass == .liability
         NavigationLink {
             EditAccountView(budget: budget)
                 .editing(account)
         } label: {
             HStack(spacing: .padding) {
-                Image(systemName: account.kind.sfSymbol)
-                    .frame(width: 24)
-                    .foregroundStyle(Color.text.opacity(.opacityMutedText))
+                IconCircle(systemName: account.kind.sfSymbol, size: 40)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(account.name.value)
+                        .fontWeight(.semibold)
                     Text(rowSubtitle(for: account))
                         .font(.caption)
                         .foregroundStyle(Color.text.opacity(.opacityMutedText))
@@ -143,8 +175,9 @@ struct NetWorthListContent: View {
                     }
                 }
                 Spacer(minLength: 0)
-                Text(account.signedBalance.formattedSigned())
-                    .foregroundStyle(account.accountClass == .liability ? Color.negative : Color.text)
+                Text(isLiability ? account.signedBalance.formattedSigned() : account.balance.formatted())
+                    .fontWeight(.semibold)
+                    .foregroundStyle(isLiability ? Color.negative : Color.text)
                     .contentTransition(.numericText())
             }
         }

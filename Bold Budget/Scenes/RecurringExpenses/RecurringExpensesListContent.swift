@@ -100,9 +100,11 @@ struct RecurringExpensesListContent: View {
             EditRecurringExpenseView(budget: budget)
                 .editing(expense)
         } label: {
-            HStack {
+            HStack(spacing: .padding) {
+                IconCircle(systemName: symbol(for: expense.kind), size: 40)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(expense.name.value)
+                        .fontWeight(.semibold)
                     if let subtitle = rowSubtitle(for: expense) {
                         Text(subtitle)
                             .font(.caption)
@@ -111,10 +113,19 @@ struct RecurringExpensesListContent: View {
                 }
                 Spacer(minLength: 0)
                 Text("\(expense.monthlyCost.formatted())/mo")
+                    .fontWeight(.semibold)
                     .contentTransition(.numericText())
             }
         }
         .listRow()
+    }
+
+    private func symbol(for kind: RecurringExpense.Kind) -> String {
+        switch kind {
+        case .debt: "creditcard.fill"
+        case .bill: "doc.text.fill"
+        case .subscription: "arrow.triangle.2.circlepath"
+        }
     }
 
     private func rowSubtitle(for expense: RecurringExpense) -> String? {

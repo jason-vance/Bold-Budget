@@ -15,67 +15,43 @@ struct TransactionRowView: View {
     
     var body: some View {
         HStack(spacing: .padding) {
-            CategoryIcon()
+            IconCircle(systemName: iconSymbol, size: 44)
             TransactionText()
         }
         .foregroundStyle(Color.text)
     }
-    
+
     private var iconSymbol: String {
         transaction.isTransfer ? "arrow.left.arrow.right" : category.sfSymbol.value
     }
 
-    @ViewBuilder func CategoryIcon() -> some View {
-        Image(systemName: iconSymbol)
-            .padding(.padding)
-            .frame(width: 48, height: 48)
-            .background {
-                RoundedRectangle(cornerRadius: .cornerRadiusMedium, style: .continuous)
-                    .stroke(style: .init(lineWidth: .borderWidthThin))
-                    .foregroundStyle(Color.text)
-            }
-            .background {
-                RoundedRectangle(cornerRadius: .cornerRadiusMedium, style: .continuous)
-                    .foregroundStyle(Color.text.opacity(.opacityButtonBackground))
-            }
-    }
-    
     /// The transfer route ("Checking → Savings") or the linked account name, if any.
-    private var accountLine: String? {
+    private var accountChip: String? {
         budget.transferRouteDescription(for: transaction) ?? budget.accountName(for: transaction)
     }
 
     @ViewBuilder func TransactionText() -> some View {
-        VStack(spacing: 0) {
+        VStack(alignment: .leading, spacing: 3) {
             Description()
-            if let accountLine {
-                HStack {
-                    Image(systemName: "building.columns")
-                        .font(.caption2)
-                    Text(accountLine)
-                        .font(.caption.weight(.medium))
-                        .lineLimit(1)
-                    Spacer(minLength: 0)
+            HStack(spacing: .paddingSmall) {
+                if let accountChip {
+                    Chip(text: accountChip, systemName: transaction.isTransfer ? "arrow.left.arrow.right" : "building.columns")
                 }
-                .opacity(0.7)
-            }
-            HStack {
-                Text(transaction.location?.value ?? "Unknown Location")
-                    .font(.caption.weight(.light))
-                    .lineLimit(1)
-                    .opacity(transaction.location == nil ? 0 : 1)
+                if let location = transaction.location?.value {
+                    Text(location)
+                        .font(.caption.weight(.light))
+                        .lineLimit(1)
+                        .foregroundStyle(Color.text.opacity(.opacityMutedText))
+                }
                 Spacer(minLength: 0)
-            }
-            HStack {
-                Text(transaction.date.toDate()?.toBasicUiString() ?? "Unkown Date")
+                Text(transaction.date.toDate()?.toBasicUiString() ?? "")
                     .font(.caption2.weight(.semibold))
                     .lineLimit(1)
-                    .opacity(transaction.date.toDate() == nil ? 0 : 0.5)
-                Spacer(minLength: 0)
+                    .foregroundStyle(Color.text.opacity(0.5))
             }
         }
     }
-    
+
     private var amountColor: Color {
         if transaction.isTransfer { return Color.text.opacity(.opacityMutedText) }
         return transaction.kind == .income ? Color.positive : Color.text
@@ -88,7 +64,7 @@ struct TransactionRowView: View {
                 .lineLimit(1)
             Spacer(minLength: 0)
             Text(budget.amountString(for: transaction))
-                .font(.body)
+                .font(.body.weight(.semibold))
                 .foregroundStyle(amountColor)
         }
     }

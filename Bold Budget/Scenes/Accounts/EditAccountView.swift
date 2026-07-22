@@ -151,6 +151,7 @@ struct EditAccountView: View {
     var body: some View {
         Form {
             AdSection()
+            HeaderSection()
             Section {
                 NameField()
                 KindField()
@@ -213,6 +214,37 @@ struct EditAccountView: View {
         .opacity(isFormComplete ? 1 : .opacityButtonBackground)
         .disabled(!isFormComplete)
         .accessibilityIdentifier("EditAccountView.Toolbar.SaveButton")
+    }
+
+    @ViewBuilder private func HeaderSection() -> some View {
+        if let account = accountToEdit.account {
+            let isLiability = account.accountClass == .liability
+            Section {
+                VStack(spacing: .paddingSmall) {
+                    IconCircle(systemName: kind.sfSymbol, size: 56)
+                    Text(nameString.isEmpty ? account.name.value : nameString)
+                        .font(.headline)
+                    Text(isLiability ? SignedMoney(-balance.amount).formattedSigned() : balance.formatted())
+                        .font(.system(size: 34, weight: .heavy))
+                        .foregroundStyle(isLiability ? Color.negative : Color.text)
+                        .contentTransition(.numericText())
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.6)
+                    if let change = account.latestChange {
+                        HStack(spacing: 4) {
+                            Image(systemName: change.amount >= 0 ? "arrow.up.right" : "arrow.down.right")
+                            Text(change.magnitude.formatted())
+                        }
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(change.amount >= 0 ? Color.positive : Color.negative)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, .paddingSmall)
+                .listRowBackground(Color.background)
+                .listRowSeparator(.hidden)
+            }
+        }
     }
 
     @ViewBuilder private func AdSection() -> some View {

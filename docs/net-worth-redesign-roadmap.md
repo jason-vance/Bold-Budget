@@ -122,7 +122,9 @@ Sequenced so nothing breaks and the spreadsheet dies early. The current shipping
 - ✅ **Added green/red semantics** (new `PositiveColor` → `Color.positive`, `NegativeColor` → `Color.negative` assets, light + dark): assets/income/gains green, liabilities/expense/losses red. Applied to net worth (total colors by sign), assets/liabilities totals, account row balances (liabilities shown signed in red), income totals, and transaction amounts (income green, transfers muted) in rows and detail.
 - ✅ App + unit + UI test targets build clean.
 
-**Remaining visual polish (tracked):** keypad-first Add screen, card-based Net Worth layout, and donut center-total treatment from the mockup — finer styling passes on top of this structural + color foundation.
+- ✅ **Mockup restyle pass** (theme-adaptive — reuses the app's tokens so both light/teal and dark/near-black themes work): shared component layer (`MockupStyle.swift` — `card()`, `IconCircle`, `Chip`, `PrimaryButtonLabel`, `PillSegmentedControl`). Net Worth screen rebuilt to the mockup (hero number + period change, chart in a card, side-by-side Assets/Liabilities stat cards, icon-circle account rows). Transaction rows use icon circles + account/route chips. The transaction editor's kind control is a tinted pill segmented (expense/income/transfer). Account editor gained a card header (icon + name + big signed balance + change). Recurring rows gained icon circles.
+
+**Remaining polish (tracked):** keypad-first Add flow (a larger interaction change), donut center-total treatment, and Transfer From→To card visual — best confirmed against a simulator run before going deeper.
 
 ---
 

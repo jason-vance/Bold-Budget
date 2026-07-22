@@ -321,14 +321,23 @@ struct EditTransactionView: View {
         }
     }
     
-    @ViewBuilder func KindField() -> some View {
-        Picker("Type", selection: $kind) {
-            ForEach(Transaction.Kind.allCases, id: \.self) { kind in
-                Text(kind.name).tag(kind)
-            }
+    private func tint(for kind: Transaction.Kind) -> Color {
+        switch kind {
+        case .income: .positive
+        case .expense: .text
+        case .transfer: .accent
         }
-        .pickerStyle(.segmented)
-        .listRow()
+    }
+
+    @ViewBuilder func KindField() -> some View {
+        PillSegmentedControl(
+            selection: $kind,
+            options: Transaction.Kind.allCases,
+            title: { $0.name },
+            tint: { tint(for: $0) }
+        )
+        .listRowBackground(Color.background)
+        .listRowSeparator(.hidden)
         .accessibilityIdentifier("EditTransactionView.KindField")
     }
 
