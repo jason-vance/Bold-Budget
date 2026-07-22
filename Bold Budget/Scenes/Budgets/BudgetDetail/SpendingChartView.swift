@@ -73,7 +73,7 @@ struct SpendingChartView: View {
                     if !pieSlices.isEmpty {
                         PieChart(slices: pieSlices)
                             .valueFormatter { formatPieChart(value: $0) }
-                            .containerRelativeFrame(.horizontal) { length, _ in length * 0.8 }
+                            .containerRelativeFrame(.horizontal) { length, _ in length * 0.7 }
                     }
                     Totals()
                     Divider().overlay(Color.appMutedText.opacity(0.3))

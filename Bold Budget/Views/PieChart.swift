@@ -43,7 +43,7 @@ struct PieChart: View {
     }
 
     private let paddingPoints: CGFloat = 8
-    private let lineWidth: CGFloat = 16
+    private let lineWidth: CGFloat = 20
     private let tapMaxDuration: TimeInterval = 0.3
     private var minSliceViewSize: CGFloat  { 2 * lineWidth }
     
