@@ -103,12 +103,10 @@ struct BudgetDetailView: View {
     @StateObject var budget: Budget
     
     @State private var currentUserData: UserData? = nil
-    @State private var timeFrame: TimeFrame = .init(period: .month, containing: .now) {
-        didSet {
-            previousTimeFramePeriod = timeFrame.period
-            previousTimeFrameDate = Int(timeFrame.start.rawValue)
-        }
-    }
+    // Persistence is done via `.onChange(of:)` below, not a `didSet`: the timeframe is now mutated
+    // through the `$timeFrame` binding passed to the Spending chart / picker, and `didSet` on a
+    // `@State` does not fire for writes that come through a binding.
+    @State private var timeFrame: TimeFrame = .init(period: .month, containing: .now)
     @State private var transactionsFilter: TransactionsFilter = .none
     
     @State private var subscriptionLevel: SubscriptionLevel? = nil
@@ -262,6 +260,10 @@ struct BudgetDetailView: View {
         .animation(.snappy, value: topTab)
         .onAppear { promptForReview() }
         .onAppear { timeFrame = .init(period: previousTimeFramePeriod, containing: SimpleDate(rawValue: SimpleDate.RawValue(previousTimeFrameDate))!) }
+        .onChange(of: timeFrame) { _, timeFrame in
+            previousTimeFramePeriod = timeFrame.period
+            previousTimeFrameDate = Int(timeFrame.start.rawValue)
+        }
         .onReceive(subscriptionManager.subscriptionLevelPublisher) { subscriptionLevel = $0 }
         .onChange(of: scenePhase) { old, new in onChangeOf(scenePhase: new) }
     }
