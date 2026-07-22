@@ -9,31 +9,30 @@ import SwiftUI
 import SwinjectAutoregistration
 
 struct EditTransactionView: View {
-    
+
     private struct OptionalTransaction: Equatable {
         let transaction: Transaction?
         static let none: OptionalTransaction = .init(transaction: nil)
     }
-    
+
+    private static let maxDigits = 12 // caps entry at $9,999,999,999.99
+
     @Environment(\.dismiss) private var dismiss
-    
-    @EnvironmentObject private var adProviderFactory: AdProviderFactory
-    @State private var adProvider: AdProvider?
-    @State private var ad: Ad?
-    
+
     @StateObject var budget: Budget
-    
+
     private var transactionToEdit: OptionalTransaction = .none
     private var onTransactionEditComplete: ((Transaction) -> Void)?
-    
+
     @State private var screenTitle: String = String(localized: "Add Transaction")
     @State private var kind: Transaction.Kind = .expense
     @State private var categoryId: Transaction.Category.Id? = nil
     @State private var accountId: Account.Id? = nil
     @State private var fromAccountId: Account.Id? = nil
     @State private var toAccountId: Account.Id? = nil
-    @State private var amount: Money = .zero
-    @State private var showAmountEntryView: Bool = false
+    /// Raw digits entered so far, read right-to-left as cents (e.g. "1234" == $12.34).
+    @State private var digits: String = ""
+    @State private var shakeAmount: Bool = false
     @State private var transactionDate: Date = .now
     @State private var titleString: String = ""
     @State private var showTitleEntryView: Bool = false
@@ -41,26 +40,26 @@ struct EditTransactionView: View {
     @State private var showLocationEntryView: Bool = false
     @State private var tags: Set<Transaction.Tag> = []
     @State private var showTagsEditorView: Bool = false
-    
+    @State private var showDetails: Bool = false
+    @State private var showTransactionDatePicker: Bool = false
+
     @State private var suggestions: TransactionPropertySuggestions = .empty
 
     @State private var hasPopulatedFields: Bool = false
-    @State private var subscriptionLevel: SubscriptionLevel? = nil
     @State private var showDiscardDialog: Bool = false
-    @State private var showTransactionDatePicker: Bool = false
-    
+
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
-    
+
     private let subscriptionManager: SubscriptionLevelProvider
-    
+
     init(budget: Budget) {
         self.init(
             budget: budget,
             subscriptionManager: iocContainer~>SubscriptionLevelProvider.self
         )
     }
-    
+
     init(
         budget: Budget,
         subscriptionManager: SubscriptionLevelProvider
@@ -68,19 +67,56 @@ struct EditTransactionView: View {
         self._budget = .init(wrappedValue: budget)
         self.subscriptionManager = subscriptionManager
     }
-    
+
     public func editing(_ transaction: Transaction) -> EditTransactionView {
         var view = self
         view.transactionToEdit = .init(transaction: transaction)
         return view
     }
-    
+
     public func onTransactionSaved(perform action: @escaping (Transaction) -> Void) -> EditTransactionView {
         var view = self
         view.onTransactionEditComplete = action
         return view
     }
-    
+
+    // MARK: - Amount / keypad
+
+    private var amount: Money {
+        Money((Double(digits) ?? 0) / 100) ?? .zero
+    }
+
+    private func appendDigit(_ digit: String) {
+        let candidate = String((digits + digit).drop { $0 == "0" })
+        let normalized = candidate.isEmpty ? "0" : candidate
+        guard normalized.count <= Self.maxDigits else {
+            UINotificationFeedbackGenerator().notificationOccurred(.warning)
+            shakeAmount = true
+            return
+        }
+        digits = normalized
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+    }
+
+    private func deleteLastDigit() {
+        guard !digits.isEmpty else { return }
+        digits = String(digits.dropLast())
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+    }
+
+    private func clearAllDigits() {
+        guard !digits.isEmpty else { return }
+        digits = ""
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+    }
+
+    private func setAmount(_ money: Money) {
+        let cents = Int((money.amount * 100).rounded())
+        digits = cents == 0 ? "" : String(cents)
+    }
+
+    // MARK: - Model
+
     private var partialTransaction: PartialTransaction {
         PartialTransaction(
             title: Transaction.Title(titleString),
@@ -90,9 +126,10 @@ struct EditTransactionView: View {
             tags: tags
         )
     }
-    
+
     private var transaction: Transaction? {
         guard let date = SimpleDate(date: transactionDate) else { return nil }
+        guard amount != .zero else { return nil }
 
         var title: Transaction.Title? = nil
         if !titleString.isEmpty {
@@ -109,7 +146,6 @@ struct EditTransactionView: View {
         let id = transactionToEdit.transaction?.id ?? Transaction.Id()
 
         if kind == .transfer {
-            guard amount != .zero else { return nil }
             guard let fromAccountId, let toAccountId, fromAccountId != toAccountId else { return nil }
             return .init(
                 id: id,
@@ -138,11 +174,11 @@ struct EditTransactionView: View {
             accountId: accountId
         )
     }
-    
+
     private var isEditing: Bool { transactionToEdit.transaction != nil }
-    
+
     private var isFormComplete: Bool { transaction != nil }
-    
+
     private var hasFormChanged: Bool {
         categoryId != nil ||
         amount != .zero ||
@@ -151,41 +187,54 @@ struct EditTransactionView: View {
         fromAccountId != nil ||
         toAccountId != nil
     }
-    
+
+    private var hasDetails: Bool {
+        !titleString.isEmpty || !locationString.isEmpty || !tags.isEmpty
+    }
+
+    private var addButtonTitle: String {
+        if isEditing { return String(localized: "Save") }
+        switch kind {
+        case .expense: return String(localized: "Add Expense")
+        case .income: return String(localized: "Add Income")
+        case .transfer: return String(localized: "Add Transfer")
+        }
+    }
+
     private var transactionTitleInstructions: String {
         if titleString.isEmpty { return "" }
         if let _ = Transaction.Title(titleString) { return "" }
         return "Invalid Title"
     }
-    
+
     private var transactionLocationInstructions: String {
         if locationString.isEmpty { return "" }
         if let _ = Transaction.Location(locationString) { return "" }
         return "Invalid Location"
     }
-    
+
     private func remove(tag: Transaction.Tag) {
         tags.remove(tag)
     }
-    
+
     private func saveTransaction() {
         guard let transaction = transaction else { return }
         budget.save(transaction: transaction)
         onTransactionEditComplete?(transaction)
         dismiss()
     }
-    
+
     private func populateFields(_ transaction: OptionalTransaction) {
         guard !hasPopulatedFields else { return }
         guard let transaction = transaction.transaction else { return }
-        
+
         screenTitle = String(localized: "Edit Transaction")
         kind = transaction.kind
         categoryId = transaction.isTransfer ? nil : transaction.categoryId
         accountId = transaction.accountId
         fromAccountId = transaction.fromAccountId
         toAccountId = transaction.toAccountId
-        amount = transaction.amount
+        setAmount(transaction.amount)
         transactionDate = transaction.date.toDate() ?? .now
         titleString = transaction.title?.value ?? ""
         locationString = transaction.location?.value ?? ""
@@ -193,82 +242,63 @@ struct EditTransactionView: View {
 
         hasPopulatedFields = true
     }
-    
+
     private func getSuggestions(for partialTransaction: PartialTransaction) {
         Task {
             let suggestions = TransactionPropertySuggestions.from(
                 partialTransaction: partialTransaction,
                 historicalTransactions: budget.transactions.map(\.value)
             )
-            print("suggestions.categoryIds.count: \(suggestions.categoryIds.count)")
-            
+
             await MainActor.run {
                 self.suggestions = suggestions
             }
         }
     }
-    
-    private func show(alert: String) {
-        showAlert = true
-        alertMessage = alert
+
+    private func tint(for kind: Transaction.Kind) -> Color {
+        switch kind {
+        case .income: .positive
+        case .expense: .text
+        case .transfer: .accent
+        }
     }
 
+    // MARK: - Body
+
     var body: some View {
-        Form {
-            AdSection()
-            Section {
-                KindField()
-                if kind == .transfer {
-                    AccountField(title: "From", selection: $fromAccountId, exclude: toAccountId)
-                    AccountField(title: "To", selection: $toAccountId, exclude: fromAccountId)
-                } else {
-                    CategoryField()
-                    AccountField(title: "Account", selection: $accountId, exclude: nil)
-                }
-                AmountField()
-                TransactionDateField()
-                TransactionDatePicker()
-            } header: {
-                Text("Required")
-                    .foregroundStyle(Color.text)
-            }
-            Section {
-                TitleField()
-                LocationField()
-                TagsField()
-            } header: {
-                Text("Optional")
-                    .foregroundStyle(Color.text)
-            }
+        VStack(spacing: .padding) {
+            KindSegmented()
+            Spacer(minLength: 0)
+            AmountDisplay()
+            ChipsRow()
+            SuggestionsArea()
+            Spacer(minLength: 0)
+            KeypadGrid(onDigit: appendDigit, onDelete: deleteLastDigit, onClear: clearAllDigits)
+            AddButton()
+            DetailsButton()
         }
-        .animation(.snappy, value: suggestions)
-        .animation(.snappy, value: partialTransaction)
-        .animation(.snappy, value: kind)
-        .scrollDismissesKeyboard(.immediately)
-        .formStyle(.grouped)
-        .scrollContentBackground(.hidden)
+        .padding()
         .toolbar { Toolbar() }
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle(screenTitle)
         .navigationBarBackButtonHidden()
         .foregroundStyle(Color.text)
         .background(Color.background.ignoresSafeArea())
-        .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
+        .sheet(isPresented: $showDetails) { DetailsSheet() }
         .onChange(of: transactionToEdit, initial: true) { _, new in populateFields(new) }
-        .onChange(of: partialTransaction, initial: true) { old, new in getSuggestions(for: new) }
+        .onChange(of: partialTransaction, initial: true) { _, new in getSuggestions(for: new) }
         .alert(alertMessage, isPresented: $showAlert) {}
-        .onReceive(subscriptionManager.subscriptionLevelPublisher) { subscriptionLevel = $0 }
+        .animation(.snappy, value: kind)
+        .animation(.snappy, value: suggestions)
     }
-    
+
     @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
         ToolbarItemGroup(placement: .topBarLeading) {
             CloseButton()
         }
-        ToolbarItemGroup(placement: .topBarTrailing) {
-            SaveButton()
-        }
     }
-    
+
     @ViewBuilder func CloseButton() -> some View {
         Button {
             if hasFormChanged {
@@ -281,64 +311,49 @@ struct EditTransactionView: View {
         }
         .accessibilityIdentifier("EditTransactionView.Toolbar.DismissButton")
         .confirmationDialog(isEditing ? "Discard changes to this transaction?" : "Discard this transaction?", isPresented: $showDiscardDialog, titleVisibility: .visible) {
-            DiscardButton()
-            CancelDiscardButton()
-        }
-    }
-    
-    @ViewBuilder func DiscardButton() -> some View {
-        Button(role: .destructive) {
-            dismiss()
-        } label: {
-            Text("Discard")
-        }
-    }
-    
-    @ViewBuilder func CancelDiscardButton() -> some View {
-        Button(role: .cancel) {
-        } label: {
-            Text("Cancel")
-        }
-    }
-    
-    @ViewBuilder func SaveButton() -> some View {
-        Button {
-            saveTransaction()
-        } label: {
-            Image(systemName: "checkmark")
-        }
-        .opacity(isFormComplete ? 1 : .opacityButtonBackground)
-        .disabled(!isFormComplete)
-        .accessibilityIdentifier("EditTransactionView.Toolbar.SaveButton")
-    }
-    
-    @ViewBuilder func AdSection() -> some View {
-        if subscriptionLevel == SubscriptionLevel.none {
-            Section {
-                NativeAdListRow(ad: $ad, size: .small)
-                    .listRow()
-            }
-        }
-    }
-    
-    private func tint(for kind: Transaction.Kind) -> Color {
-        switch kind {
-        case .income: .positive
-        case .expense: .text
-        case .transfer: .accent
+            Button("Discard", role: .destructive) { dismiss() }
+            Button("Cancel", role: .cancel) { }
         }
     }
 
-    @ViewBuilder func KindField() -> some View {
+    @ViewBuilder private func KindSegmented() -> some View {
         PillSegmentedControl(
             selection: $kind,
             options: Transaction.Kind.allCases,
             title: { $0.name },
             tint: { tint(for: $0) }
         )
-        .listRowBackground(Color.background)
-        .listRowSeparator(.hidden)
         .accessibilityIdentifier("EditTransactionView.KindField")
+    }
+
+    @ViewBuilder private func AmountDisplay() -> some View {
+        Text(amount.formatted())
+            .font(.system(size: 52, weight: .heavy))
+            .foregroundStyle(kind == .expense ? Color.text : tint(for: kind))
+            .contentTransition(.numericText())
+            .animation(.snappy, value: digits)
+            .lineLimit(1)
+            .minimumScaleFactor(0.4)
+            .frame(maxWidth: .infinity)
+            .shake($shakeAmount)
+            .accessibilityIdentifier("EditTransactionView.AmountDisplay")
+    }
+
+    // MARK: - Chips
+
+    @ViewBuilder private func ChipsRow() -> some View {
+        HStack(spacing: .paddingSmall) {
+            if kind == .transfer {
+                AccountChip(title: "From", selection: $fromAccountId, exclude: toAccountId)
+                Image(systemName: "arrow.right")
+                    .font(.caption)
+                    .foregroundStyle(Color.text.opacity(.opacityMutedText))
+                AccountChip(title: "To", selection: $toAccountId, exclude: fromAccountId)
+            } else {
+                AccountChip(title: "Account", selection: $accountId, exclude: nil)
+                CategoryChip()
+            }
+        }
     }
 
     private func sortedAccounts(in accountClass: Account.Class, excluding excluded: Account.Id?) -> [Account] {
@@ -347,60 +362,51 @@ struct EditTransactionView: View {
             .sorted { $0.name.value < $1.name.value }
     }
 
-    @ViewBuilder func AccountField(title: LocalizedStringKey, selection: Binding<Account.Id?>, exclude: Account.Id?) -> some View {
-        HStack {
-            Text(title)
-                .foregroundStyle(Color.text)
-            Spacer(minLength: 0)
-            Menu {
-                Button {
-                    selection.wrappedValue = nil
-                } label: {
-                    HStack {
-                        Text("None")
-                        if selection.wrappedValue == nil { Image(systemName: "checkmark") }
-                    }
+    @ViewBuilder private func AccountChip(title: LocalizedStringKey, selection: Binding<Account.Id?>, exclude: Account.Id?) -> some View {
+        Menu {
+            Button {
+                selection.wrappedValue = nil
+            } label: {
+                HStack {
+                    Text("None")
+                    if selection.wrappedValue == nil { Image(systemName: "checkmark") }
                 }
-                ForEach(Account.Class.allCases, id: \.self) { accountClass in
-                    let accounts = sortedAccounts(in: accountClass, excluding: exclude)
-                    if !accounts.isEmpty {
-                        Section(accountClass.pluralName) {
-                            ForEach(accounts) { account in
-                                Button {
-                                    selection.wrappedValue = account.id
-                                } label: {
-                                    HStack {
-                                        Image(systemName: account.kind.sfSymbol)
-                                        Text(account.name.value)
-                                        if selection.wrappedValue == account.id { Image(systemName: "checkmark") }
-                                    }
+            }
+            ForEach(Account.Class.allCases, id: \.self) { accountClass in
+                let accounts = sortedAccounts(in: accountClass, excluding: exclude)
+                if !accounts.isEmpty {
+                    Section(accountClass.pluralName) {
+                        ForEach(accounts) { account in
+                            Button {
+                                selection.wrappedValue = account.id
+                            } label: {
+                                HStack {
+                                    Image(systemName: account.kind.sfSymbol)
+                                    Text(account.name.value)
+                                    if selection.wrappedValue == account.id { Image(systemName: "checkmark") }
                                 }
                             }
                         }
                     }
                 }
-            } label: {
-                AccountFieldLabel(selection.wrappedValue)
             }
+        } label: {
+            ChipCard(title: title, systemName: selectedAccountSymbol(selection.wrappedValue), text: selectedAccountText(selection.wrappedValue))
         }
-        .listRow()
-        .accessibilityIdentifier("EditTransactionView.AccountField")
+        .accessibilityIdentifier("EditTransactionView.AccountChip")
     }
 
-    @ViewBuilder private func AccountFieldLabel(_ id: Account.Id?) -> some View {
-        if let id, let account = budget.accounts[id] {
-            HStack {
-                Image(systemName: account.kind.sfSymbol)
-                Text(account.name.value)
-            }
-            .buttonLabelSmall()
-        } else {
-            Text(kind == .transfer ? "Select" : "None")
-                .buttonLabelSmall()
-        }
+    private func selectedAccountSymbol(_ id: Account.Id?) -> String {
+        guard let id, let account = budget.accounts[id] else { return "building.columns" }
+        return account.kind.sfSymbol
     }
 
-    @ViewBuilder func CategoryField() -> some View {
+    private func selectedAccountText(_ id: Account.Id?) -> String {
+        if let id, let account = budget.accounts[id] { return account.name.value }
+        return String(localized: "None")
+    }
+
+    @ViewBuilder private func CategoryChip() -> some View {
         NavigationLink {
             TransactionCategoryPickerView(
                 budget: budget,
@@ -408,126 +414,154 @@ struct EditTransactionView: View {
             )
             .pickerMode(.pickerAndEditor)
         } label: {
-            HStack {
-                Text("Category")
-                    .foregroundStyle(Color.text)
-                Spacer(minLength: 0)
-                CategoryButtonLabel(categoryId)
-            }
+            let category = categoryId.map { budget.getCategoryBy(id: $0) }
+            ChipCard(
+                title: "Category",
+                systemName: category?.sfSymbol.value ?? "square.grid.2x2",
+                text: category?.name.value ?? String(localized: "Choose")
+            )
         }
-        .listRow()
-        .listRowSeparator(categoryId == nil ? .hidden : .visible)
-        .accessibilityIdentifier("EditTransactionView.CategoryField.SelectCategoryButton")
-        if categoryId == nil && !suggestions.categoryIds.isEmpty {
+        .accessibilityIdentifier("EditTransactionView.CategoryChip")
+    }
+
+    @ViewBuilder private func ChipCard(title: LocalizedStringKey, systemName: String, text: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+                .font(.system(size: 9, weight: .semibold))
+                .textCase(.uppercase)
+                .kerning(0.5)
+                .foregroundStyle(Color.text.opacity(0.5))
+            HStack(spacing: 5) {
+                Image(systemName: systemName)
+                    .font(.caption)
+                Text(text)
+                    .font(.subheadline.weight(.semibold))
+                    .lineLimit(1)
+            }
+            .foregroundStyle(Color.text)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .card(.paddingSmall, cornerRadius: .cornerRadiusSmall)
+    }
+
+    // MARK: - Suggestions
+
+    @ViewBuilder private func SuggestionsArea() -> some View {
+        if amount == .zero, !suggestions.amounts.isEmpty {
+            SuggestionScroller(items: suggestions.amounts) { money in
+                Button { setAmount(money) } label: {
+                    Text(money.formatted()).buttonLabelSmall()
+                }
+            }
+        } else if kind != .transfer, categoryId == nil, !suggestions.categoryIds.isEmpty {
             let categories = suggestions.categoryIds.map { budget.getCategoryBy(id: $0) }
-            HorizontalScrollingSuggestions(items: categories) { category in
-                Button {
-                    self.categoryId = category.id
-                } label: {
-                    CategoryButtonLabel(category.id)
+            SuggestionScroller(items: categories) { category in
+                Button { categoryId = category.id } label: {
+                    HStack {
+                        Image(systemName: category.sfSymbol.value)
+                        Text(category.name.value)
+                    }
+                    .buttonLabelSmall()
                 }
             }
         }
     }
-    
-    @ViewBuilder private func CategoryButtonLabel(_ categoryId: Transaction.Category.Id?) -> some View {
-        if let categoryId = categoryId {
-            let category = budget.getCategoryBy(id: categoryId)
-            HStack {
-                Image(systemName: category.sfSymbol.value)
-                Text(category.name.value)
-            }
-            .buttonLabelSmall()
-        } else {
-            Text("N/A")
-                .buttonLabelSmall()
-        }
-    }
-    
-    @ViewBuilder private func HorizontalScrollingSuggestions<Item: Identifiable, Content: View>(
+
+    @ViewBuilder private func SuggestionScroller<Item: Identifiable, Content: View>(
         items: [Item],
         @ViewBuilder content: @escaping (Item) -> Content
     ) -> some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack {
+            HStack(spacing: .paddingSmall) {
                 ForEach(items) { item in
                     content(item)
-                        .overlay(alignment: .topLeading) {
-                            Image(systemName: "lightbulb.fill")
-                                .foregroundStyle(Color.text)
-                                .font(.footnote)
-                                .offset(x: -.paddingVerticalButtonXSmall/2, y: -.paddingVerticalButtonXSmall)
-                                .rotationEffect(.degrees(-25))
-                        }
                 }
             }
-            .padding(.horizontal, .paddingHorizontalButtonMedium)
-            .padding(.vertical, .paddingVerticalButtonXSmall)
+            .padding(.horizontal, 2)
         }
-        .listRowBackground(Color.text.opacity(.opacityButtonBackground))
-        .listRowSeparatorTint(Color.text.opacity(.opacityButtonBackground))
-        .listRowInsets(.init(top: .paddingVerticalButtonXSmall,
-                             leading: 0,
-                             bottom: .paddingVerticalButtonXSmall,
-                             trailing: 0))
+        .frame(height: 40)
     }
-    
-    @ViewBuilder func AmountField() -> some View {
+
+    // MARK: - Actions
+
+    @ViewBuilder private func AddButton() -> some View {
+        Button {
+            saveTransaction()
+        } label: {
+            PrimaryButtonLabel(title: addButtonTitle, enabled: isFormComplete)
+        }
+        .disabled(!isFormComplete)
+        .accessibilityIdentifier("EditTransactionView.Toolbar.SaveButton")
+    }
+
+    @ViewBuilder private func DetailsButton() -> some View {
+        Button {
+            showDetails = true
+        } label: {
+            HStack(spacing: 5) {
+                Image(systemName: "slider.horizontal.3")
+                Text("Details")
+                if hasDetails {
+                    Circle().frame(width: 5, height: 5)
+                }
+            }
+            .font(.subheadline.weight(.medium))
+            .foregroundStyle(Color.text.opacity(.opacityMutedText))
+        }
+        .accessibilityIdentifier("EditTransactionView.DetailsButton")
+    }
+
+    // MARK: - Details sheet
+
+    @ViewBuilder private func DetailsSheet() -> some View {
+        NavigationStack {
+            Form {
+                Section {
+                    TitleField()
+                    LocationField()
+                    TagsField()
+                } header: {
+                    Text("Details")
+                        .foregroundStyle(Color.text)
+                }
+                Section {
+                    TransactionDateField()
+                    TransactionDatePicker()
+                }
+            }
+            .scrollDismissesKeyboard(.immediately)
+            .formStyle(.grouped)
+            .scrollContentBackground(.hidden)
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationTitle("Details")
+            .foregroundStyle(Color.text)
+            .background(Color.background.ignoresSafeArea())
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") { showDetails = false }
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
+        .presentationBackground(Color.background)
+    }
+
+    @ViewBuilder private func TransactionDateField() -> some View {
         HStack {
-            Text("Amount")
+            Text("Date")
                 .foregroundStyle(Color.text)
             Spacer(minLength: 0)
             Button {
-                showAmountEntryView = true
+                withAnimation(.snappy) { showTransactionDatePicker.toggle() }
             } label: {
-                HStack {
-                    Spacer(minLength: 0)
-                    Text(amount.formatted())
-                        .multilineTextAlignment(.trailing)
-                }
-            }
-            .frame(width: 128)
-            .textFieldSmall()
-            .accessibilityIdentifier("EditTransactionView.AmountField.TextField")
-        }
-        .listRow()
-        .listRowSeparator(amount.amount == .zero ? .hidden : .visible)
-        .fullScreenCover(isPresented: $showAmountEntryView) {
-            TransactionAmountEntryView(
-                amount: $amount,
-                budget: budget
-            )
-        }
-        if amount.amount == .zero && !suggestions.amounts.isEmpty {
-            HorizontalScrollingSuggestions(items: suggestions.amounts) { amount in
-                Button {
-                    self.amount = amount
-                } label: {
-                    Text(amount.formatted())
-                        .buttonLabelSmall()
-                }
-            }
-        }
-    }
-    
-    @ViewBuilder func TransactionDateField() -> some View {
-        VStack {
-            HStack {
-                Text("Date")
-                    .foregroundStyle(Color.text)
-                Spacer(minLength: 0)
-                Button {
-                    withAnimation(.snappy) { showTransactionDatePicker.toggle() }
-                } label: {
-                    Text(transactionDate.toBasicUiString())
-                        .buttonLabelSmall()
-                }
+                Text(transactionDate.toBasicUiString())
+                    .buttonLabelSmall()
             }
         }
         .listRow()
     }
-    
-    @ViewBuilder func TransactionDatePicker() -> some View {
+
+    @ViewBuilder private func TransactionDatePicker() -> some View {
         if showTransactionDatePicker {
             DatePicker(
                 "Date",
@@ -540,8 +574,8 @@ struct EditTransactionView: View {
             .listRow()
         }
     }
-    
-    @ViewBuilder func TitleField() -> some View {
+
+    @ViewBuilder private func TitleField() -> some View {
         VStack {
             HStack {
                 Text("Title")
@@ -566,26 +600,15 @@ struct EditTransactionView: View {
             .accessibilityIdentifier("EditTransactionView.TitleField.TextField")
         }
         .listRow()
-        .listRowSeparator(titleString.isEmpty ? .hidden : .visible)
         .fullScreenCover(isPresented: $showTitleEntryView) {
             TransactionTitleEntryView(
                 titleString: $titleString,
                 budget: budget
             )
         }
-        if titleString.isEmpty && !suggestions.titles.isEmpty {
-            HorizontalScrollingSuggestions(items: suggestions.titles) { title in
-                Button {
-                    self.titleString = title.value
-                } label: {
-                    Text(title.value)
-                        .buttonLabelSmall()
-                }
-            }
-        }
     }
-    
-    @ViewBuilder func LocationField() -> some View {
+
+    @ViewBuilder private func LocationField() -> some View {
         VStack {
             HStack {
                 Text("Location")
@@ -610,27 +633,15 @@ struct EditTransactionView: View {
             .accessibilityIdentifier("EditTransactionView.LocationField.TextField")
         }
         .listRow()
-        .listRowSeparator(locationString.isEmpty ? .hidden : .visible)
         .fullScreenCover(isPresented: $showLocationEntryView) {
             TransactionLocationEntryView(
                 locationString: $locationString,
                 budget: budget
             )
         }
-        if locationString.isEmpty && !suggestions.locations.isEmpty {
-            HorizontalScrollingSuggestions(items: suggestions.locations) { location in
-                Button {
-                    self.locationString = location.value
-                } label: {
-                    Text(location.value)
-                        .buttonLabelSmall()
-                }
-            }
-        }
     }
-    
-    @ViewBuilder func TagsField() -> some View {
-        let suggestedTags = suggestions.tags.filter { !tags.contains($0) }
+
+    @ViewBuilder private func TagsField() -> some View {
         VStack {
             HStack {
                 Text("Tags")
@@ -640,52 +651,35 @@ struct EditTransactionView: View {
             }
         }
         .listRow()
-        .listRowSeparator(!suggestedTags.isEmpty ? .hidden : .visible)
-        if !suggestedTags.isEmpty {
-            HorizontalScrollingSuggestions(items: suggestedTags) { tag in
-                Button {
-                    tags.insert(tag)
-                } label: {
-                    TransactionTagView(tag)
-                }
-            }
-        }
         ForEach(tags.sorted { $0.value < $1.value }) { tag in
             TagRow(tag)
         }
     }
-    
-    @ViewBuilder func AddTagsButton() -> some View {
+
+    @ViewBuilder private func AddTagsButton() -> some View {
         Button {
             showTagsEditorView = true
         } label: {
-            AddTagButtonLabel()
+            HStack {
+                Image(systemName: "tag")
+                    .overlay(alignment: .bottomTrailing) {
+                        Image(systemName: "plus")
+                            .font(.system(size: 8))
+                            .bold()
+                            .foregroundStyle(Color.background)
+                            .padding(.borderWidthThin)
+                            .background { Circle().foregroundStyle(Color.text) }
+                    }
+            }
+            .buttonLabelSmall()
         }
         .accessibilityIdentifier("EditTransactionView.TagsField.AddTagsButton")
         .fullScreenCover(isPresented: $showTagsEditorView) {
             TagsEditorView(tags: $tags, budget: budget)
         }
     }
-    
-    @ViewBuilder private func AddTagButtonLabel() -> some View {
-        HStack {
-            Image(systemName: "tag")
-                .overlay(alignment: .bottomTrailing) {
-                    Image(systemName: "plus")
-                        .font(.system(size: 8))
-                        .bold()
-                        .foregroundStyle(Color.background)
-                        .padding(.borderWidthThin)
-                        .background {
-                            Circle()
-                                .foregroundStyle(Color.text)
-                        }
-                }
-        }
-        .buttonLabelSmall()
-    }
-    
-    @ViewBuilder func TagRow(_ tag: Transaction.Tag) -> some View {
+
+    @ViewBuilder private func TagRow(_ tag: Transaction.Tag) -> some View {
         HStack {
             Image(systemName: "xmark")
                 .buttonSymbolCircleSmall()
@@ -700,6 +694,6 @@ struct EditTransactionView: View {
 
 #Preview {
     NavigationStack {
-        EditTransactionView(budget: Budget(info: .sample))
+        EditTransactionView(budget: .previewSample(accounts: Account.samples))
     }
 }
