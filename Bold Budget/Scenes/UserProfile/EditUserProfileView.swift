@@ -40,8 +40,7 @@ struct EditUserProfileView: View {
 
     @State private var showTermsOfService: Bool = false
     @State private var showPrivacyPolicy: Bool = false
-    @State private var showBlockingSpinner: Bool = false
-    
+
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
     
@@ -140,82 +139,102 @@ struct EditUserProfileView: View {
                 }
             }
             .alert(alertMessage, isPresented: $showAlert) {}
-            .onChange(of: initializationState, initial: true) { _, newState in
-                withAnimation(.snappy) { showBlockingSpinner = newState == .notInitialized }
-            }
             .onAppear { fetchExistingUserData() }
-            .toolbar { Toolbar() }
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationTitle(navTitle)
+            .toolbar(.hidden, for: .navigationBar)
             .navigationBarBackButtonHidden()
-            .foregroundStyle(Color.text)
-            .background(Color.background.ignoresSafeArea())
+            .foregroundStyle(Color.appText)
+            .background(Color.appBackground.ignoresSafeArea())
     }
-    
+
     @ViewBuilder func InitializedView() -> some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                ProfileFormPictureField(
-                    profileImage: $profileImage,
-                    profileImageUrl: profileImageUrl
-                )
-                .padding(.bottom, 16)
-                ProfileFormUsernameField(
-                    username: $username,
-                    userId: userId
-                )
-                if mode == .createProfile {
-                    VStack(spacing: 0) {
-                        TermsOfServiceField()
-                        PrivacyPolicyField()
+        VStack(spacing: 0) {
+            Header()
+            ScrollView {
+                VStack(spacing: .padding) {
+                    ProfileFormPictureField(
+                        profileImage: $profileImage,
+                        profileImageUrl: profileImageUrl,
+                        profileImageSize: 140
+                    )
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, .paddingSmall)
+                    ProfileFormUsernameField(
+                        username: $username,
+                        userId: userId
+                    )
+                    if mode == .createProfile {
+                        AgreementsCard()
                     }
-                    .padding(.horizontal, .padding)
+                    SaveButton()
+                        .padding(.top, .paddingSmall)
                 }
-                Spacer()
-                SaveButton()
-                    .padding(.top, 16)
+                .padding()
             }
-            .padding(.horizontal, .padding)
-            .padding(.vertical)
-        }
-        .background(Color.background.ignoresSafeArea())
-    }
-    
-    @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
-        if mode == .editProfile {
-            ToolbarItemGroup(placement: .topBarLeading) {
-                Button {
-                    dismiss()
-                } label: {
-                    Image(systemName: "chevron.backward")
-                }
-                .accessibilityIdentifier("EditUserProfileView.Toolbar.DismissButton")
-            }
+            .scrollDismissesKeyboard(.immediately)
+            .scrollIndicators(.hidden)
         }
     }
-    
+
+    // MARK: - Header
+
+    @ViewBuilder private func Header() -> some View {
+        ZStack {
+            Text(navTitle)
+                .font(.headline)
+                .foregroundStyle(Color.appText)
+            if mode == .editProfile {
+                HStack {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.body.weight(.semibold))
+                            .foregroundStyle(Color.appMutedText)
+                    }
+                    .accessibilityIdentifier("EditUserProfileView.Toolbar.DismissButton")
+                    Spacer(minLength: 0)
+                }
+            }
+        }
+        .frame(height: .barHeight)
+        .padding(.horizontal)
+    }
+
+    // MARK: - Agreements
+
+    @ViewBuilder private func AgreementsCard() -> some View {
+        VStack(spacing: 0) {
+            TermsOfServiceField()
+            RowDivider()
+            PrivacyPolicyField()
+        }
+        .card(0)
+    }
+
+    @ViewBuilder private func RowDivider(opacity: Double = 0.15) -> some View {
+        Rectangle()
+            .fill(Color.appMutedText.opacity(opacity))
+            .frame(height: 1)
+            .padding(.leading, .padding)
+    }
+
     @ViewBuilder func TermsOfServiceField() -> some View {
         let message: AttributedString = {
-            var text = AttributedString("I agree to the Terms of Service.")
-            text.foregroundColor = Color.text
+            var text = AttributedString(String(localized: "I agree to the Terms of Service."))
+            text.foregroundColor = Color.appText
             guard let range = text.range(of: "Terms of Service") else { return text }
-            text[range].foregroundColor = Color.accent
+            text[range].foregroundColor = Color.brandTeal
 
             return text
         }()
-        
-        HStack {
+
+        HStack(spacing: .padding) {
             Button {
-                if termsOfServiceAcceptance == nil {
-                    termsOfServiceAcceptance = .now
-                } else {
-                    termsOfServiceAcceptance = nil
-                }
+                termsOfServiceAcceptance = termsOfServiceAcceptance == nil ? .now : nil
             } label: {
                 let isAccepted = termsOfServiceAcceptance != nil
                 Image(systemName: isAccepted ? "checkmark.square.fill" : "square")
-                    .foregroundStyle(isAccepted ? Color.accent : Color.text)
-                    .padding(.vertical)
+                    .foregroundStyle(isAccepted ? Color.brandTeal : Color.appMutedText)
             }
             Button {
                 showTermsOfService = true
@@ -225,32 +244,28 @@ struct EditUserProfileView: View {
             .sheet(isPresented: $showTermsOfService) {
                 TextWall(TermsOfService.markdownContent)
             }
-            Spacer()
+            Spacer(minLength: 0)
         }
+        .padding(.padding)
     }
-    
+
     @ViewBuilder func PrivacyPolicyField() -> some View {
         let message: AttributedString = {
-            var text = AttributedString("I accept the Privacy Policy.")
-            text.foregroundColor = Color.text
+            var text = AttributedString(String(localized: "I accept the Privacy Policy."))
+            text.foregroundColor = Color.appText
             guard let range = text.range(of: "Privacy Policy") else { return text }
-            text[range].foregroundColor = Color.accent
+            text[range].foregroundColor = Color.brandTeal
 
             return text
         }()
-        
-        HStack {
+
+        HStack(spacing: .padding) {
             Button {
-                if privacyPolicyAcceptance == nil {
-                    privacyPolicyAcceptance = .now
-                } else {
-                    privacyPolicyAcceptance = nil
-                }
+                privacyPolicyAcceptance = privacyPolicyAcceptance == nil ? .now : nil
             } label: {
                 let isAccepted = privacyPolicyAcceptance != nil
                 Image(systemName: isAccepted ? "checkmark.square.fill" : "square")
-                    .foregroundStyle(isAccepted ? Color.accent : Color.text)
-                    .padding(.vertical)
+                    .foregroundStyle(isAccepted ? Color.brandTeal : Color.appMutedText)
             }
             Button {
                 showPrivacyPolicy = true
@@ -260,29 +275,36 @@ struct EditUserProfileView: View {
             .sheet(isPresented: $showPrivacyPolicy) {
                 TextWall(PrivacyPolicy.markdownContent)
             }
-            Spacer()
+            Spacer(minLength: 0)
         }
+        .padding(.padding)
     }
-    
+
     @ViewBuilder func TextWall(_ markdownContent: String) -> some View {
         ScrollView {
             Markdown(markdownContent)
-                .markdownTextStyle { ForegroundColor(Color.text) }
+                .markdownTextStyle { ForegroundColor(Color.appText) }
                 .frame(maxWidth: .infinity)
                 .padding()
         }
-        .background(Color.background.ignoresSafeArea())
+        .background(Color.appBackground.ignoresSafeArea())
         .presentationDragIndicator(.visible)
     }
-    
+
+    // MARK: - Save
+
     @ViewBuilder func SaveButton() -> some View {
-        TaskAwareButton {
+        TaskAwareButton(
+            buttonColor: .brandTeal,
+            contentColor: .appBackground
+        ) {
             await saveProfileData()
         } label: {
             Text("Save")
-                .foregroundStyle(Color.background)
+                .font(.headline)
                 .frame(maxWidth: .infinity)
         }
+        .accessibilityIdentifier("EditUserProfileView.SaveButton")
     }
 }
 

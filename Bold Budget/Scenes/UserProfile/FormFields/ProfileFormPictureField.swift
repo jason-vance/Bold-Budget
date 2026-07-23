@@ -38,7 +38,7 @@ struct ProfileFormPictureField: View {
                 .frame(width: noUrlImageSize, height: noUrlImageSize)
                 .clipShape(Circle())
                 .padding(padding)
-                .background(Circle().fill(Color.text))
+                .background(Circle().fill(Color.appText))
         } else if profileImageUrl != nil {
             ProfileImageView(
                 profileImageUrl,
@@ -47,23 +47,23 @@ struct ProfileFormPictureField: View {
         } else {
             Image(systemName: "person.crop.circle.fill")
                 .resizable()
-                .foregroundStyle(Color.background)
+                .foregroundStyle(Color.appBackground)
                 .frame(width: noUrlImageSize, height: noUrlImageSize)
                 .clipShape(Circle())
                 .padding(padding)
-                .background(Circle().fill(Color.text))
+                .background(Circle().fill(Color.appText))
         }
     }
-    
+
     @ViewBuilder func ProfileImageIconOverlay() -> some View {
         Image(systemName: "camera.circle.fill")
             .resizable()
-            .foregroundStyle(Color.background)
-            .frame(width: 48, height: 48)
+            .foregroundStyle(Color.appBackground)
+            .frame(width: 44, height: 44)
             .padding(4)
             .background {
                 Circle()
-                    .foregroundStyle(Color.text)
+                    .foregroundStyle(Color.brandTeal)
             }
     }
     
@@ -74,7 +74,7 @@ struct ProfileFormPictureField: View {
         } didCancel: {
             showImagePicker = false
         }
-        .background(Color.background)
+        .background(Color.appBackground)
     }
 }
 
@@ -85,7 +85,7 @@ struct ProfileFormPictureField: View {
             profileImageUrl: UserData.sample.profileImageUrl
         )
     }
-    .background(Color.background)
+    .background(Color.appBackground)
 }
 
 #Preview("Without Image Url") {
@@ -94,5 +94,5 @@ struct ProfileFormPictureField: View {
             profileImage: image
         )
     }
-    .background(Color.background)
+    .background(Color.appBackground)
 }

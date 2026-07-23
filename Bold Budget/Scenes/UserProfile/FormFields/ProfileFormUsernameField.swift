@@ -62,61 +62,68 @@ struct ProfileFormUsernameField: View {
     }
     
     var body: some View {
-        FormTextField(
-            text: $usernameStr,
-            prompt: String(localized: "Username"),
-            autoCapitalization: .never,
-            errorView: {
-                UsernameErrorView()
-            }
-        )
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Username")
+                .font(.caption2.weight(.semibold))
+                .textCase(.uppercase)
+                .kerning(0.5)
+                .foregroundStyle(Color.appMutedText)
+            TextField(
+                "Username",
+                text: $usernameStr,
+                prompt: Text("Username").foregroundStyle(Color.appMutedText)
+            )
+            .font(.title3)
+            .foregroundStyle(Color.appText)
+            .tint(Color.brandTeal)
+            .textInputAutocapitalization(.never)
+            .autocorrectionDisabled()
+            .submitLabel(.done)
+            .accessibilityIdentifier("ProfileFormUsernameField.TextField")
+            UsernameErrorView()
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .card()
         .onChange(of: usernameStr) { _, newValue in
             guard username?.value != newValue else { return }
             username = Username(newValue)
-            
+
             checkAvailability()
         }
         .onChange(of: username, initial: true) { _, newValue in
             guard let value = newValue else { return }
             guard usernameStr != value.value else { return }
             usernameStr = value.value
-            
+
             checkAvailability()
         }
     }
-    
+
     @ViewBuilder func UsernameErrorView() -> some View {
+        let icon: String
+        let text: String
+        let color: Color
         if isUsernameValidAndAvailable {
-            ValidAvailableUsernameIndicator()
+            icon = "checkmark.circle.fill"
+            text = String(localized: "Username is valid and available")
+            color = .brandTeal
         } else if isCheckingAvailability {
-            CheckingAvailabiltyIndicator()
+            icon = "questionmark.circle.fill"
+            text = String(localized: "Checking...")
+            color = .appMutedText
         } else {
-            InvalidUsernameIndicator()
+            icon = "exclamationmark.octagon.fill"
+            text = String(localized: "3-32 characters. No spaces. At least 1 letter.")
+            color = .appMutedText
         }
-    }
-    
-    @ViewBuilder func ValidAvailableUsernameIndicator() -> some View {
-        FormFieldErrorView(
-            icon: "checkmark.circle.fill",
-            text: String(localized: "Username is valid and available"),
-            color: .text
-        )
-    }
-    
-    @ViewBuilder func CheckingAvailabiltyIndicator() -> some View {
-        FormFieldErrorView(
-            icon: "questionmark.circle.fill",
-            text: String(localized: "Checking..."),
-            color: .text.opacity(0.8)
-        )
-    }
-    
-    @ViewBuilder func InvalidUsernameIndicator() -> some View {
-        FormFieldErrorView(
-            icon: "exclamationmark.octagon.fill",
-            text: String(localized: "3-32 characters. No spaces. At least 1 letter."),
-            color: .text
-        )
+
+        return HStack(spacing: .paddingSmall) {
+            Image(systemName: icon)
+            Text(text)
+            Spacer(minLength: 0)
+        }
+        .font(.caption)
+        .foregroundStyle(color)
     }
 }
 
