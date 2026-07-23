@@ -268,7 +268,17 @@ struct BudgetSettingsView: View {
                 VStack(spacing: 0) {
                     ForEach(Array(users.enumerated()), id: \.element.id) { index, user in
                         if index > 0 { RowDivider() }
-                        UserRow(user: user)
+                        if user.id == currentUserIdProvider.currentUserId {
+                            NavigationLink {
+                                UserProfileView(userId: user.id)
+                            } label: {
+                                UserRow(user: user, showsChevron: true)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityIdentifier("BudgetSettingsView.CurrentUserRow")
+                        } else {
+                            UserRow(user: user)
+                        }
                     }
                 }
                 .card(0)
@@ -276,7 +286,7 @@ struct BudgetSettingsView: View {
         }
     }
 
-    @ViewBuilder private func UserRow(user: UserData) -> some View {
+    @ViewBuilder private func UserRow(user: UserData, showsChevron: Bool = false) -> some View {
         HStack(spacing: .padding) {
             ProfileImageView(
                 user.profileImageUrl,
@@ -294,8 +304,14 @@ struct BudgetSettingsView: View {
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(Color.appMutedText)
             }
+            if showsChevron {
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Color.appMutedText)
+            }
         }
         .padding(.padding)
+        .contentShape(Rectangle())
     }
 
     @ViewBuilder private func RowDivider(opacity: Double = 0.15) -> some View {
