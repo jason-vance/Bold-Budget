@@ -8,12 +8,18 @@
 import SwiftUI
 import SwinjectAutoregistration
 
+/// The budget's settings, redesign palette: a title header with a back button, a budget profile
+/// badge, an optional ad card, navigation rows (rename, categories), and a users card. Self-contained
+/// (own header + scroll) so it carries the redesign look without the shared List chrome, mirroring
+/// `RecurringExpensesView`.
 struct BudgetSettingsView: View {
-    
+
+    @Environment(\.dismiss) private var dismiss: DismissAction
+
     @EnvironmentObject private var adProviderFactory: AdProviderFactory
     @State private var adProvider: AdProvider?
     @State private var ad: Ad?
-    
+
     @StateObject var budget: Budget
 
     @State private var users: [UserData] = []
@@ -82,17 +88,23 @@ struct BudgetSettingsView: View {
     }
     
     var body: some View {
-        List {
-            AdSection()
-            RenameBudgetSection()
-            CategoriesSection()
-            UsersSection()
+        VStack(spacing: 0) {
+            Header()
+            ScrollView {
+                VStack(spacing: .padding) {
+                    Profile()
+                    AdCard()
+                    ActionsCard()
+                    UsersCard()
+                }
+                .padding()
+            }
+            .scrollIndicators(.hidden)
         }
-        .listStyle(.insetGrouped)
-        .scrollContentBackground(.hidden)
-        .navigationTitle(budget.info.name.value)
-        .foregroundStyle(Color.text)
-        .background(Color.background)
+        .foregroundStyle(Color.appText)
+        .background(Color.appBackground.ignoresSafeArea())
+        .toolbar(.hidden, for: .navigationBar)
+        .navigationBarBackButtonHidden()
         .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
         .onAppear { fetchUsers() }
         .onAppear { fetchUserRoles() }
@@ -100,30 +112,66 @@ struct BudgetSettingsView: View {
         .animation(.snappy, value: budgetUsers)
         .onReceive(subscriptionLevelProvider.subscriptionLevelPublisher) { subscriptionLevel = $0 }
     }
-    
-    @ViewBuilder func AdSection() -> some View {
-        if subscriptionLevel == SubscriptionLevel.none {
-            Section {
-                NativeAdListRow(ad: $ad, size: .small)
-                    .listRow()
+
+    // MARK: - Header
+
+    @ViewBuilder private func Header() -> some View {
+        ZStack {
+            Text(budget.info.name.value)
+                .font(.headline)
+                .foregroundStyle(Color.appText)
+                .lineLimit(1)
+                .padding(.horizontal, .barHeight)
+            HStack {
+                Button { dismiss() } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(Color.appMutedText)
+                }
+                .accessibilityIdentifier("BudgetSettingsView.BackButton")
+                Spacer(minLength: 0)
             }
         }
+        .frame(height: .barHeight)
+        .padding(.horizontal)
     }
-    
-    @ViewBuilder private func RenameBudgetSection() -> some View {
-        Section {
+
+    // MARK: - Profile
+
+    @ViewBuilder private func Profile() -> some View {
+        VStack(spacing: .paddingSmall) {
+            IconCircle(systemName: "chart.pie.fill", size: 64, tint: .brandTeal)
+            Text(budget.info.name.value)
+                .font(.title3.weight(.bold))
+                .foregroundStyle(Color.appText)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, .paddingSmall)
+    }
+
+    // MARK: - Ad
+
+    @ViewBuilder private func AdCard() -> some View {
+        if subscriptionLevel == SubscriptionLevel.none {
+            NativeAdListRow(ad: $ad, size: .small)
+                .frame(maxWidth: .infinity)
+                .card()
+        }
+    }
+
+    // MARK: - Actions
+
+    @ViewBuilder private func ActionsCard() -> some View {
+        VStack(spacing: 0) {
             NavigationLink {
                 EditBudgetView()
                     .editing(budget)
             } label: {
-                Text("Rename Budget")
+                NavRow(systemName: "pencil", title: "Rename Budget")
             }
-            .listRow()
-        }
-    }
-    
-    @ViewBuilder private func CategoriesSection() -> some View {
-        Section {
+            .buttonStyle(.plain)
+            RowDivider()
             NavigationLink {
                 TransactionCategoryPickerView(
                     budget: budget,
@@ -131,40 +179,77 @@ struct BudgetSettingsView: View {
                 )
                 .pickerMode(.editor)
             } label: {
-                Text("Transaction Categories")
+                NavRow(systemName: "tag.fill", title: "Transaction Categories")
             }
-            .listRow()
+            .buttonStyle(.plain)
         }
+        .card(0)
     }
-    
-    @ViewBuilder private func UsersSection() -> some View {
+
+    @ViewBuilder private func NavRow(systemName: String, title: LocalizedStringKey) -> some View {
+        HStack(spacing: .padding) {
+            IconCircle(systemName: systemName, size: 40, tint: .brandTeal)
+            Text(title)
+                .fontWeight(.semibold)
+                .foregroundStyle(Color.appText)
+            Spacer(minLength: 0)
+            Image(systemName: "chevron.right")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Color.appMutedText)
+        }
+        .padding(.padding)
+        .contentShape(Rectangle())
+    }
+
+    // MARK: - Users
+
+    @ViewBuilder private func UsersCard() -> some View {
         if !users.isEmpty {
-            Section {
-                ForEach(users) { user in
-                    UserRow(user: user)
-                }
-            } header: {
+            VStack(alignment: .leading, spacing: .paddingSmall) {
                 Text("Users")
+                    .font(.caption2.weight(.semibold))
+                    .textCase(.uppercase)
+                    .kerning(0.5)
+                    .foregroundStyle(Color.appMutedText)
+                    .padding(.horizontal, .paddingSmall)
+                VStack(spacing: 0) {
+                    ForEach(Array(users.enumerated()), id: \.element.id) { index, user in
+                        if index > 0 { RowDivider() }
+                        UserRow(user: user)
+                    }
+                }
+                .card(0)
             }
         }
     }
-    
+
     @ViewBuilder private func UserRow(user: UserData) -> some View {
-        HStack {
+        HStack(spacing: .padding) {
             ProfileImageView(
                 user.profileImageUrl,
-                size: 32,
+                size: 40,
                 padding: .borderWidthThin
             )
             if let username = user.username {
                 Text(username.value)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(Color.appText)
             }
             Spacer(minLength: 0)
             if let role = budgetUsers[user.id]?.role {
-                Text("(\(String(describing: role)))")
+                Text(String(describing: role).capitalized)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Color.appMutedText)
             }
         }
-        .listRow()
+        .padding(.padding)
+    }
+
+    @ViewBuilder private func RowDivider(opacity: Double = 0.15) -> some View {
+        Rectangle()
+            .fill(Color.appMutedText.opacity(opacity))
+            .frame(height: 1)
+            .padding(.leading, .padding)
     }
 }
 
@@ -177,4 +262,5 @@ struct BudgetSettingsView: View {
             subscriptionLevelProvider: MockSubscriptionLevelProvider(level: .boldBudgetPlus)
         )
     }
+    .environmentObject(AdProviderFactory.forScreenshots)
 }
