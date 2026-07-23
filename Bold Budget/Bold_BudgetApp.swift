@@ -86,7 +86,7 @@ struct Bold_BudgetApp: App {
     var body: some Scene {
         WindowGroup {
             ZStack {
-                Color.background.ignoresSafeArea()
+                Color.appBackground.ignoresSafeArea()
                 ContentView()
                     .accentColor(Color.accent)
                     .onAppear { trackAppLaunch() }

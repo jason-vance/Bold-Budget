@@ -35,7 +35,7 @@ struct ProfileImageView: View {
         .frame(width: imageSize, height: imageSize)
         .clipShape(Circle())
         .padding(padding)
-        .background(Circle().fill(Color.text))
+        .background(Circle().fill(Color.brandTeal))
     }
 
     @ViewBuilder func PlaceholderView() -> some View {

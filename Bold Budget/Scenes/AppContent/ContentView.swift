@@ -78,7 +78,7 @@ struct ContentView: View {
         NavigationStack(path: $budgetNavigator.path) {
             BudgetsListView()
         }
-        .background(Color.background)
+        .background(Color.appBackground)
         .environmentObject(budgetNavigator)
     }
 
@@ -86,7 +86,7 @@ struct ContentView: View {
         NavigationStack {
             EditUserProfileView(mode: .createProfile)
         }
-        .background(Color.background)
+        .background(Color.appBackground)
     }
 }
 
