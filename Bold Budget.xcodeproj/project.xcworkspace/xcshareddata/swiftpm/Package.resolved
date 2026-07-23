@@ -1,5 +1,5 @@
 {
-  "originHash" : "6220c4bea9d36ffdf06e523df618c5eca2bd1c5f9eaa69f4918271befd1c16a5",
+  "originHash" : "97f6c31b478953977553d0b0d769ce609bc6b7520c65e6b81daa836449789a28",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -137,24 +137,6 @@
       }
     },
     {
-      "identity" : "prynttrimmerview",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/HHK1/PryntTrimmerView",
-      "state" : {
-        "revision" : "ac1b60a22c7e6a6514de7a66d2f3d5b537c956d5",
-        "version" : "4.0.2"
-      }
-    },
-    {
-      "identity" : "stevia",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/freshOS/Stevia",
-      "state" : {
-        "revision" : "6192b6216f821b7132e9b772108f25af8cf8ebc5",
-        "version" : "6.2.2"
-      }
-    },
-    {
       "identity" : "swift-cmark",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swiftlang/swift-cmark",
@@ -224,15 +206,6 @@
       "state" : {
         "revision" : "fd9ffae5f666d37b4b3c210af2e16a10598342e4",
         "version" : "2.9.1"
-      }
-    },
-    {
-      "identity" : "ypimagepicker",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/Yummypets/YPImagePicker.git",
-      "state" : {
-        "revision" : "a1dbf277792dbfa6e15719e57bb552c9f471b94a",
-        "version" : "5.3.2"
       }
     }
   ],

@@ -15,7 +15,6 @@
 		569203752F1048010008B2E6 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 569203742F1048010008B2E6 /* FirebaseAuth */; };
 		569203772F1048010008B2E6 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 569203762F1048010008B2E6 /* FirebaseFirestore */; };
 		569203792F1048010008B2E6 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 569203782F1048010008B2E6 /* FirebaseStorage */; };
-		5692075D2F1049840008B2E6 /* YPImagePicker in Frameworks */ = {isa = PBXBuildFile; productRef = 5692075C2F1049840008B2E6 /* YPImagePicker */; };
 		569207602F104A280008B2E6 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 5692075F2F104A280008B2E6 /* MarkdownUI */; };
 		569207632F104A510008B2E6 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 569207622F104A510008B2E6 /* GoogleMobileAds */; };
 		569207742F10507A0008B2E6 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 569207732F10507A0008B2E6 /* Kingfisher */; };
@@ -215,7 +214,6 @@
 				569207742F10507A0008B2E6 /* Kingfisher in Frameworks */,
 				569207602F104A280008B2E6 /* MarkdownUI in Frameworks */,
 				569203792F1048010008B2E6 /* FirebaseStorage in Frameworks */,
-				5692075D2F1049840008B2E6 /* YPImagePicker in Frameworks */,
 				569203702F1047BA0008B2E6 /* SwinjectAutoregistration in Frameworks */,
 				569203772F1048010008B2E6 /* FirebaseFirestore in Frameworks */,
 			);
@@ -294,7 +292,6 @@
 				569203742F1048010008B2E6 /* FirebaseAuth */,
 				569203762F1048010008B2E6 /* FirebaseFirestore */,
 				569203782F1048010008B2E6 /* FirebaseStorage */,
-				5692075C2F1049840008B2E6 /* YPImagePicker */,
 				5692075F2F104A280008B2E6 /* MarkdownUI */,
 				569207622F104A510008B2E6 /* GoogleMobileAds */,
 				569207732F10507A0008B2E6 /* Kingfisher */,
@@ -385,7 +382,6 @@
 				5692036B2F1047A70008B2E6 /* XCRemoteSwiftPackageReference "swiftui-flow-layout" */,
 				5692036E2F1047BA0008B2E6 /* XCRemoteSwiftPackageReference "SwinjectAutoregistration" */,
 				569203712F1048010008B2E6 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
-				5692075B2F1049840008B2E6 /* XCRemoteSwiftPackageReference "YPImagePicker" */,
 				5692075E2F104A280008B2E6 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
 				569207612F104A510008B2E6 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
 				569207722F10507A0008B2E6 /* XCRemoteSwiftPackageReference "Kingfisher" */,
@@ -823,14 +819,6 @@
 				minimumVersion = 12.7.0;
 			};
 		};
-		5692075B2F1049840008B2E6 /* XCRemoteSwiftPackageReference "YPImagePicker" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/Yummypets/YPImagePicker.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 5.3.2;
-			};
-		};
 		5692075E2F104A280008B2E6 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/gonzalezreal/swift-markdown-ui";
@@ -887,11 +875,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 569203712F1048010008B2E6 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseStorage;
-		};
-		5692075C2F1049840008B2E6 /* YPImagePicker */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 5692075B2F1049840008B2E6 /* XCRemoteSwiftPackageReference "YPImagePicker" */;
-			productName = YPImagePicker;
 		};
 		5692075F2F104A280008B2E6 /* MarkdownUI */ = {
 			isa = XCSwiftPackageProductDependency;
