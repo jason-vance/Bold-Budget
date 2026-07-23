@@ -29,6 +29,7 @@ struct EditRecurringExpenseView: View {
 
     @State private var showPriceEntryView: Bool = false
     @State private var showBalanceEntryView: Bool = false
+    @State private var showAddCategory: Bool = false
 
     @State private var showDeleteConfirmation: Bool = false
     @State private var showConvertConfirmation: Bool = false
@@ -156,6 +157,15 @@ struct EditRecurringExpenseView: View {
         return budget.getCategoryBy(id: categoryId).name.value
     }
 
+    private var selectedCategorySymbol: String {
+        guard let categoryId else { return "square.grid.2x2" }
+        return budget.getCategoryBy(id: categoryId).sfSymbol.value
+    }
+
+    private var sortedCategories: [Transaction.Category] {
+        budget.transactionCategories.values.sorted { $0.name.value < $1.name.value }
+    }
+
     // MARK: - Body
 
     var body: some View {
@@ -200,6 +210,9 @@ struct EditRecurringExpenseView: View {
                 title: "Still Owed",
                 money: $remainingBalance
             )
+        }
+        .fullScreenCover(isPresented: $showAddCategory) {
+            NavigationStack { EditTransactionCategoryView(budget: budget) }
         }
         .confirmationDialog(
             "Delete '\(expenseToEdit.expense?.name.value ?? "")'?",
@@ -355,30 +368,36 @@ struct EditRecurringExpenseView: View {
 
     @ViewBuilder private func CategoryField() -> some View {
         FieldCard("Linked Category (Optional)") {
-            NavigationLink {
-                TransactionCategoryPickerView(
-                    budget: budget,
-                    selectedCategoryId: $categoryId
-                )
-                .pickerMode(.picker)
-            } label: {
-                ValueLabel(text: selectedCategoryName)
-            }
-            .accessibilityIdentifier("EditRecurringExpenseView.CategoryField.SelectCategoryButton")
-            if categoryId != nil {
+            Menu {
                 Button {
                     categoryId = nil
                 } label: {
-                    HStack(spacing: .paddingSmall) {
-                        Image(systemName: "xmark.circle")
-                        Text("Unlink Category")
-                        Spacer(minLength: 0)
+                    HStack {
+                        Text("None")
+                        if categoryId == nil { Image(systemName: "checkmark") }
                     }
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Color.appMutedText)
                 }
-                .padding(.top, 6)
+                ForEach(sortedCategories) { category in
+                    Button {
+                        categoryId = category.id
+                    } label: {
+                        HStack {
+                            Image(systemName: category.sfSymbol.value)
+                            Text(category.name.value)
+                            if categoryId == category.id { Image(systemName: "checkmark") }
+                        }
+                    }
+                }
+                Divider()
+                Button {
+                    showAddCategory = true
+                } label: {
+                    Label("Add Category", systemImage: "plus")
+                }
+            } label: {
+                MenuLabel(systemName: selectedCategorySymbol, text: selectedCategoryName)
             }
+            .accessibilityIdentifier("EditRecurringExpenseView.CategoryField.Menu")
         }
     }
 
