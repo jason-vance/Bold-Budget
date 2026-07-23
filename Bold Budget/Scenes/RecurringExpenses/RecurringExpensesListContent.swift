@@ -65,6 +65,7 @@ struct RecurringExpensesView: View {
                     } else {
                         Totals()
                             .padding(.vertical, .padding)
+                        RowDivider(opacity: 0.2)
                         ForEach(RecurringExpense.Kind.allCases, id: \.self) { kind in
                             KindSection(kind)
                         }
@@ -139,13 +140,12 @@ struct RecurringExpensesView: View {
         if !expenses.isEmpty || !accounts.isEmpty {
             let monthly = expenses.totalMonthlyCost + accounts.totalMonthlyPayments
             VStack(spacing: 0) {
-                RowDivider(opacity: 0.2)
                 SectionHeader(title: kind.pluralName, monthly: monthly)
-                ForEach(Array(expenses.enumerated()), id: \.element.id) { index, expense in
-                    ExpenseRow(expense, showTopDivider: index > 0)
+                ForEach(expenses) { expense in
+                    ExpenseRow(expense)
                 }
-                ForEach(Array(accounts.enumerated()), id: \.element.id) { index, account in
-                    AccountRow(account, showTopDivider: !expenses.isEmpty || index > 0)
+                ForEach(accounts) { account in
+                    AccountRow(account)
                 }
             }
         }
@@ -168,39 +168,33 @@ struct RecurringExpensesView: View {
 
     // MARK: - Rows
 
-    @ViewBuilder private func AccountRow(_ account: Account, showTopDivider: Bool) -> some View {
-        VStack(spacing: 0) {
-            if showTopDivider { RowDivider() }
-            NavigationLink {
-                AccountDetailView(budget: budget, accountId: account.id)
-            } label: {
-                Row(
-                    systemName: account.kind.sfSymbol,
-                    title: account.name.value,
-                    subtitle: String(localized: "\(account.balance.formatted()) still owed"),
-                    trailing: "\((account.monthlyPayment ?? .zero).formatted())/mo"
-                )
-            }
-            .buttonStyle(.plain)
+    @ViewBuilder private func AccountRow(_ account: Account) -> some View {
+        NavigationLink {
+            AccountDetailView(budget: budget, accountId: account.id)
+        } label: {
+            Row(
+                systemName: account.kind.sfSymbol,
+                title: account.name.value,
+                subtitle: String(localized: "\(account.balance.formatted()) still owed"),
+                trailing: "\((account.monthlyPayment ?? .zero).formatted())/mo"
+            )
         }
+        .buttonStyle(.plain)
     }
 
-    @ViewBuilder private func ExpenseRow(_ expense: RecurringExpense, showTopDivider: Bool) -> some View {
-        VStack(spacing: 0) {
-            if showTopDivider { RowDivider() }
-            NavigationLink {
-                EditRecurringExpenseView(budget: budget)
-                    .editing(expense)
-            } label: {
-                Row(
-                    systemName: symbol(for: expense.kind),
-                    title: expense.name.value,
-                    subtitle: rowSubtitle(for: expense),
-                    trailing: "\(expense.monthlyCost.formatted())/mo"
-                )
-            }
-            .buttonStyle(.plain)
+    @ViewBuilder private func ExpenseRow(_ expense: RecurringExpense) -> some View {
+        NavigationLink {
+            EditRecurringExpenseView(budget: budget)
+                .editing(expense)
+        } label: {
+            Row(
+                systemName: symbol(for: expense.kind),
+                title: expense.name.value,
+                subtitle: rowSubtitle(for: expense),
+                trailing: "\(expense.monthlyCost.formatted())/mo"
+            )
         }
+        .buttonStyle(.plain)
     }
 
     @ViewBuilder private func Row(systemName: String, title: String, subtitle: String?, trailing: String) -> some View {
