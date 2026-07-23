@@ -11,7 +11,9 @@ import _AuthenticationServices_SwiftUI
 import SwinjectAutoregistration
 
 struct AuthenticationView: View {
-    
+
+    @Environment(\.colorScheme) private var colorScheme: ColorScheme
+
     @State var userAuthState: UserAuthState = .working
     @State var showError: Bool = false
     @State var errorMessage: String = ""
@@ -52,12 +54,16 @@ struct AuthenticationView: View {
     }
     
     var body: some View {
-        ZStack {
+        VStack(spacing: 0) {
+            Spacer()
             AppTitle()
+            Spacer()
             SignInControls()
+                .padding(.horizontal)
+                .padding(.bottom, .padding)
         }
         .containerRelativeFrame(.horizontal)
-        .background(Color.background)
+        .background(Color.appBackground.ignoresSafeArea())
         .alert(errorMessage, isPresented: $showError) {}
         .onReceive(userAuthStatePublisher) { newAuthState in
             withAnimation(.snappy) {
@@ -65,50 +71,50 @@ struct AuthenticationView: View {
             }
         }
     }
-    
+
     @ViewBuilder func SignInControls() -> some View {
-        VStack{
-            Spacer()
-            if userAuthState == .loggedOut {
-                SignInButton()
-            } else {
-                ProgressSpinner()
-            }
+        if userAuthState == .loggedOut {
+            SignInButton()
+        } else {
+            ProgressSpinner()
         }
-        .containerRelativeFrame(.horizontal)
     }
-    
+
     @ViewBuilder func AppTitle() -> some View {
-        VStack {
+        VStack(spacing: .padding) {
             Image("AuthBg")
                 .resizable()
                 .scaledToFit()
                 .clipShape(RoundedRectangle(cornerRadius: 48, style: .continuous))
                 .frame(width: 256, height: 256)
-                .shadow(radius: .cornerRadiusMedium)
-            Text("Bold Budget")
-                .font(.largeTitle.bold())
-                .foregroundStyle(Color.text)
+                .shadow(color: .black.opacity(0.15), radius: .cornerRadiusMedium, y: 6)
+            VStack(spacing: .paddingSmall) {
+                Text("Bold Budget")
+                    .font(.largeTitle.bold())
+                    .foregroundStyle(Color.appText)
+                Text("Take bold control of your money.")
+                    .font(.subheadline)
+                    .foregroundStyle(Color.appMutedText)
+            }
         }
     }
-    
+
     @ViewBuilder func SignInButton() -> some View {
         SignInWithAppleButton(.continue) { request in
             request.requestedScopes = [.fullName, .email]
         } onCompletion: { result in
             signIn(withResult: result)
         }
-        .signInWithAppleButtonStyle(.white)
-        .frame(height: 48)
-        .padding()
+        .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
+        .frame(height: 50)
+        .clipShape(RoundedRectangle(cornerRadius: .cornerRadiusMedium, style: .continuous))
     }
-    
+
     @ViewBuilder func ProgressSpinner() -> some View {
         ProgressView()
             .progressViewStyle(.circular)
-            .tint(Color.text)
-            .frame(height: 48)
-            .padding()
+            .tint(Color.brandTeal)
+            .frame(height: 50)
     }
 }
 
