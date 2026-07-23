@@ -110,7 +110,7 @@ struct TransactionCategoryPickerView: View {
                     } else if filteredCategories.isEmpty {
                         NoResults()
                     } else {
-                        CategoriesCard()
+                        CategoriesList()
                     }
                 }
                 .padding()
@@ -214,14 +214,12 @@ struct TransactionCategoryPickerView: View {
 
     // MARK: - Categories
 
-    @ViewBuilder private func CategoriesCard() -> some View {
+    @ViewBuilder private func CategoriesList() -> some View {
         VStack(spacing: 0) {
-            ForEach(Array(filteredCategories.enumerated()), id: \.element.id) { index, category in
-                if index > 0 { RowDivider() }
+            ForEach(filteredCategories) { category in
                 CategoryButton(category)
             }
         }
-        .card(0)
     }
 
     @ViewBuilder private func CategoryButton(_ category: Transaction.Category) -> some View {
@@ -246,14 +244,27 @@ struct TransactionCategoryPickerView: View {
     @ViewBuilder private func CategoryRow(_ category: Transaction.Category) -> some View {
         HStack(spacing: .padding) {
             IconCircle(systemName: category.sfSymbol.value, size: 40, tint: .brandTeal)
-            Text(category.name.value)
-                .fontWeight(.semibold)
-                .foregroundStyle(Color.appText)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(category.name.value)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(Color.appText)
+                if let goal = category.goal {
+                    Text(goalSubtitle(goal))
+                        .font(.caption)
+                        .foregroundStyle(Color.appMutedText)
+                        .lineLimit(1)
+                }
+            }
             Spacer(minLength: 0)
             TrailingIndicator(category)
         }
         .padding(.padding)
         .contentShape(Rectangle())
+    }
+
+    private func goalSubtitle(_ goal: Transaction.Category.Goal) -> String {
+        let symbol = goal.comparison == .lessThan ? "<" : "≥"
+        return "Goal: \(symbol) \(goal.amount.formattedRounded())/\(goal.period.toUiString())"
     }
 
     @ViewBuilder private func TrailingIndicator(_ category: Transaction.Category) -> some View {
@@ -270,13 +281,6 @@ struct TransactionCategoryPickerView: View {
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(Color.appMutedText)
         }
-    }
-
-    @ViewBuilder private func RowDivider(opacity: Double = 0.15) -> some View {
-        Rectangle()
-            .fill(Color.appMutedText.opacity(opacity))
-            .frame(height: 1)
-            .padding(.leading, .padding)
     }
 
     // MARK: - Empty states
