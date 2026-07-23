@@ -9,26 +9,29 @@ import Combine
 import SwiftUI
 import SwinjectAutoregistration
 
+/// Picks (or edits) a budget's transaction categories, redesign palette: a title header with a
+/// close button and an edit toggle, a rounded search field, and a card of category rows. Self-
+/// contained (own header + scroll) so it carries the redesign look without the shared List chrome,
+/// mirroring `RecurringExpensesView`.
 struct TransactionCategoryPickerView: View {
-    
+
     enum Mode {
         case picker
         case pickerAndEditor
         case editor
     }
-    
+
     @Environment(\.dismiss) private var dismiss
-    
+
     @EnvironmentObject private var adProviderFactory: AdProviderFactory
     @State private var adProvider: AdProvider?
     @State private var ad: Ad?
-    
+
     @StateObject public var budget: Budget
     @Binding public var selectedCategoryId: Transaction.Category.Id?
-    
+
     @State private var mode: Mode? = nil
     @State private var searchText: String = ""
-    @State private var searchPresented: Bool = false
     @State private var isEditing: Bool = false
     
     @State private var showAlert: Bool = false
@@ -97,162 +100,233 @@ struct TransactionCategoryPickerView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            SearchArea()
-            BarDivider()
-            List {
-                AdSection()
-                if budget.transactionCategories.isEmpty {
-                    NoCategoriesView()
-                } else {
-                    ForEach(filteredCategories) { category in
-                        CategoryButton(category)
-                            .listRowNoChrome()
-                            .listRowInsets(.init(top: 0,
-                                                 leading: 0,
-                                                 bottom: 0,
-                                                 trailing: 0))
+            Header()
+            SearchField()
+            ScrollView {
+                VStack(spacing: .padding) {
+                    AdCard()
+                    if budget.transactionCategories.isEmpty {
+                        EmptyState()
+                    } else if filteredCategories.isEmpty {
+                        NoResults()
+                    } else {
+                        CategoriesCard()
                     }
                 }
+                .padding()
             }
-            .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
-            .overlay(alignment: .bottomTrailing) { AddCategoryButton() }
+            .scrollDismissesKeyboard(.immediately)
+            .scrollIndicators(.hidden)
         }
-        .toolbar { Toolbar() }
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationTitle(isEditing ? "Edit a Category" : "Pick a Category")
+        .foregroundStyle(Color.appText)
+        .background(Color.appBackground.ignoresSafeArea())
+        .overlay(alignment: .bottomTrailing) { AddCategoryButton() }
+        .toolbar(.hidden, for: .navigationBar)
         .navigationBarBackButtonHidden()
-        .foregroundStyle(Color.text)
-        .background(Color.background.ignoresSafeArea())
         .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
         .onChange(of: __mode, initial: true) { _, mode in set(mode: mode) }
         .onReceive(subscriptionLevelProvider.subscriptionLevelPublisher) { subscriptionLevel = $0 }
         .alert(alertMessage, isPresented: $showAlert) {}
+        .animation(.snappy, value: isEditing)
     }
-    
-    @ViewBuilder func AdSection() -> some View {
-        if subscriptionLevel == SubscriptionLevel.none {
-            Section {
-                NativeAdListRow(ad: $ad, size: .small)
-                    .listRow()
-            }
-        }
-    }
-    
-    @ViewBuilder func NoCategoriesView() -> some View {
-        ContentUnavailableView(
-            "No Categories",
-            systemImage: "list.bullet",
-            description: Text("Any categories you add will show up here")
-        )
-        .listRowNoChrome()
-    }
-    
-    @ViewBuilder private func LoadingSpinner() -> some View {
-        HStack {
-            Spacer()
-            ProgressView()
-                .progressViewStyle(.circular)
-                .tint(Color.text)
-            Spacer()
-        }
-        .padding(.top, 100)
-        .listRowNoChrome()
-    }
-    
-    @ViewBuilder func CategoryButton(_ category: Transaction.Category) -> some View {
-        if isEditing {
-            NavigationLink {
-                EditTransactionCategoryView(budget: budget)
-                    .editing(category)
-            } label: {
-                CategoryButtonLabel(category)
-            }
-        } else {
-            Button {
-                select(category: category)
-            } label: {
-                CategoryButtonLabel(category)
-            }
-        }
-    }
-    
-    @ViewBuilder private func CategoryButtonLabel(_ category: Transaction.Category) -> some View {
-        HStack {
+
+    // MARK: - Header
+
+    @ViewBuilder private func Header() -> some View {
+        ZStack {
+            Text(isEditing ? "Edit a Category" : "Pick a Category")
+                .font(.headline)
+                .foregroundStyle(Color.appText)
+                .padding(.horizontal, .barHeight)
             HStack {
-                Image(systemName: category.sfSymbol.value)
-                Text(category.name.value)
-            }
-            .buttonLabelSmall()
-            Spacer(minLength: 0)
-            CategoryButtonIsEditingIndicator()
-        }
-    }
-    
-    @ViewBuilder func CategoryButtonIsEditingIndicator() -> some View {
-        if isEditing {
-            Image(systemName: "pencil")
-                .bold()
-                .frame(width: 22, height: 22)
-        }
-    }
-    
-    @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
-        ToolbarItemGroup(placement: .topBarLeading) {
-            CloseButton()
-        }
-        ToolbarItemGroup(placement: .topBarTrailing) {
-            if mode != .editor {
-                EditButton()
+                Button { dismiss() } label: {
+                    Image(systemName: "xmark")
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(Color.appMutedText)
+                }
+                .accessibilityIdentifier("TransactionCategoryPickerView.CloseButton")
+                Spacer(minLength: 0)
+                if mode != .editor {
+                    EditButton()
+                }
             }
         }
+        .frame(height: .barHeight)
+        .padding(.horizontal)
     }
-    
-    @ViewBuilder func CloseButton() -> some View {
-        Button {
-            dismiss()
-        } label: {
-            Image(systemName: "xmark")
-        }
-    }
-    
+
     @ViewBuilder private func EditButton() -> some View {
         Button {
             withAnimation(.snappy) { isEditing.toggle() }
         } label: {
             Image(systemName: isEditing ? "pencil.slash" : "pencil")
+                .font(.body.weight(.semibold))
+                .foregroundStyle(isEditing ? Color.brandTeal : Color.appMutedText)
         }
         .opacity(mode == .pickerAndEditor && budget.transactionCategories.isEmpty ? 0 : 1)
         .accessibilityIdentifier("TransactionCategoryPickerView.Toolbar.EditButton")
     }
-    
-    @ViewBuilder func AddCategoryButton() -> some View {
+
+    // MARK: - Search
+
+    @ViewBuilder private func SearchField() -> some View {
+        HStack(spacing: .paddingSmall) {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(Color.appMutedText)
+            TextField(
+                "Search",
+                text: $searchText,
+                prompt: Text("Search for a category").foregroundStyle(Color.appMutedText)
+            )
+            .textInputAutocapitalization(.never)
+            .autocorrectionDisabled()
+            .submitLabel(.search)
+            .tint(Color.brandTeal)
+            .foregroundStyle(Color.appText)
+            if !searchText.isEmpty {
+                Button {
+                    searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(Color.appMutedText)
+                }
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background {
+            RoundedRectangle(cornerRadius: .cornerRadiusMedium, style: .continuous)
+                .foregroundStyle(Color.appSurface)
+        }
+        .padding(.horizontal)
+        .padding(.bottom, .paddingSmall)
+    }
+
+    // MARK: - Ad
+
+    @ViewBuilder private func AdCard() -> some View {
+        if subscriptionLevel == SubscriptionLevel.none {
+            NativeAdListRow(ad: $ad, size: .small)
+                .frame(maxWidth: .infinity)
+                .card()
+        }
+    }
+
+    // MARK: - Categories
+
+    @ViewBuilder private func CategoriesCard() -> some View {
+        VStack(spacing: 0) {
+            ForEach(Array(filteredCategories.enumerated()), id: \.element.id) { index, category in
+                if index > 0 { RowDivider() }
+                CategoryButton(category)
+            }
+        }
+        .card(0)
+    }
+
+    @ViewBuilder private func CategoryButton(_ category: Transaction.Category) -> some View {
+        if isEditing {
+            NavigationLink {
+                EditTransactionCategoryView(budget: budget)
+                    .editing(category)
+            } label: {
+                CategoryRow(category)
+            }
+            .buttonStyle(.plain)
+        } else {
+            Button {
+                select(category: category)
+            } label: {
+                CategoryRow(category)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    @ViewBuilder private func CategoryRow(_ category: Transaction.Category) -> some View {
+        HStack(spacing: .padding) {
+            IconCircle(systemName: category.sfSymbol.value, size: 40, tint: .brandTeal)
+            Text(category.name.value)
+                .fontWeight(.semibold)
+                .foregroundStyle(Color.appText)
+            Spacer(minLength: 0)
+            TrailingIndicator(category)
+        }
+        .padding(.padding)
+        .contentShape(Rectangle())
+    }
+
+    @ViewBuilder private func TrailingIndicator(_ category: Transaction.Category) -> some View {
+        if isEditing {
+            Image(systemName: "pencil")
+                .font(.body.weight(.semibold))
+                .foregroundStyle(Color.appMutedText)
+        } else if selectedCategoryId == category.id {
+            Image(systemName: "checkmark")
+                .font(.body.weight(.semibold))
+                .foregroundStyle(Color.brandTeal)
+        } else {
+            Image(systemName: "chevron.right")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Color.appMutedText)
+        }
+    }
+
+    @ViewBuilder private func RowDivider(opacity: Double = 0.15) -> some View {
+        Rectangle()
+            .fill(Color.appMutedText.opacity(opacity))
+            .frame(height: 1)
+            .padding(.leading, .padding)
+    }
+
+    // MARK: - Empty states
+
+    @ViewBuilder private func EmptyState() -> some View {
+        VStack(spacing: .paddingSmall) {
+            IconCircle(systemName: "list.bullet", size: 56, tint: .brandTeal)
+            Text("No Categories")
+                .font(.title3.weight(.bold))
+            Text("Any categories you add will show up here.")
+                .font(.subheadline)
+                .foregroundStyle(Color.appMutedText)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, .padding * 2)
+    }
+
+    @ViewBuilder private func NoResults() -> some View {
+        VStack(spacing: .paddingSmall) {
+            IconCircle(systemName: "magnifyingglass", size: 56, tint: .brandTeal)
+            Text("No Matches")
+                .font(.title3.weight(.bold))
+            Text("No categories match \u{201C}\(searchText)\u{201D}.")
+                .font(.subheadline)
+                .foregroundStyle(Color.appMutedText)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, .padding * 2)
+    }
+
+    // MARK: - Add
+
+    @ViewBuilder private func AddCategoryButton() -> some View {
         NavigationLink {
             EditTransactionCategoryView(budget: budget)
         } label: {
             Image(systemName: "plus")
-                .foregroundStyle(Color.background)
-                .font(.title)
+                .font(.title.weight(.semibold))
+                .foregroundStyle(Color.appBackground)
                 .padding()
                 .background {
                     Circle()
-                        .foregroundStyle(Color.text)
-                        .shadow(color: Color.background, radius: .padding)
+                        .foregroundStyle(Color.brandTeal)
+                        .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
                 }
         }
         .padding()
         .accessibilityIdentifier("TransactionCategoryPickerView.AddCategoryButton")
-    }
-    
-    @ViewBuilder func SearchArea() -> some View {
-        SearchBar(
-            prompt: String(localized: "Search for a category"),
-            searchText: $searchText,
-            searchPresented: $searchPresented,
-            action: {}
-        )
-        .padding(.horizontal)
-        .padding(.vertical, .padding)
     }
 }
 
@@ -265,6 +339,7 @@ struct TransactionCategoryPickerView: View {
         )
         .pickerMode(.picker)
     }
+    .environmentObject(AdProviderFactory.forScreenshots)
 }
 
 #Preview("Picker And Editor") {
@@ -276,4 +351,5 @@ struct TransactionCategoryPickerView: View {
         )
         .pickerMode(.pickerAndEditor)
     }
+    .environmentObject(AdProviderFactory.forScreenshots)
 }
