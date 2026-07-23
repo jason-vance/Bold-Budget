@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import SwinjectAutoregistration
 
 struct EditRecurringExpenseView: View {
 
@@ -18,10 +17,6 @@ struct EditRecurringExpenseView: View {
     private static let cycleOptions: [Int] = [1, 3, 6, 12]
 
     @Environment(\.dismiss) private var dismiss
-
-    @EnvironmentObject private var adProviderFactory: AdProviderFactory
-    @State private var adProvider: AdProvider?
-    @State private var ad: Ad?
 
     @State private var screenTitle: String = String(localized: "Add Recurring Expense")
     @State private var kind: RecurringExpense.Kind = .bill
@@ -38,28 +33,12 @@ struct EditRecurringExpenseView: View {
     @State private var showDeleteConfirmation: Bool = false
     @State private var showConvertConfirmation: Bool = false
 
-    @State private var subscriptionLevel: SubscriptionLevel = .none
-    private let subscriptionLevelProvider: SubscriptionLevelProvider
-
     private var expenseToEdit: OptionalExpense = .none
 
     @StateObject var budget: Budget
 
-    init(
-        budget: Budget
-    ) {
-        self.init(
-            budget: budget,
-            subscriptionLevelProvider: iocContainer~>SubscriptionLevelProvider.self
-        )
-    }
-
-    init(
-        budget: Budget,
-        subscriptionLevelProvider: SubscriptionLevelProvider
-    ) {
+    init(budget: Budget) {
         self._budget = .init(wrappedValue: budget)
-        self.subscriptionLevelProvider = subscriptionLevelProvider
     }
 
     public func editing(_ expense: RecurringExpense) -> EditRecurringExpenseView {
@@ -87,6 +66,8 @@ struct EditRecurringExpenseView: View {
             categoryId: categoryId
         )
     }
+
+    private var isEditingExisting: Bool { expenseToEdit.expense != nil }
 
     private var isFormComplete: Bool { expense != nil }
 
@@ -143,8 +124,7 @@ struct EditRecurringExpenseView: View {
 
     private func populateFields(_ expense: OptionalExpense) {
         guard let expense = expense.expense else { return }
-        let isFormEmpty = nameString.isEmpty
-        guard isFormEmpty else { return }
+        guard nameString.isEmpty else { return }
 
         screenTitle = String(localized: "Edit Recurring Expense")
         kind = expense.kind
@@ -163,157 +143,51 @@ struct EditRecurringExpenseView: View {
         }
     }
 
+    private func symbol(for kind: RecurringExpense.Kind) -> String {
+        switch kind {
+        case .debt: "creditcard.fill"
+        case .bill: "doc.text.fill"
+        case .subscription: "arrow.triangle.2.circlepath"
+        }
+    }
+
+    private var selectedCategoryName: String {
+        guard let categoryId else { return String(localized: "None") }
+        return budget.getCategoryBy(id: categoryId).name.value
+    }
+
+    // MARK: - Body
+
     var body: some View {
-        Form {
-            AdSection()
-            Section {
-                NameField()
-                KindField()
-            } header: {
-                Text("")
-                    .foregroundStyle(Color.text)
-            }
-            Section {
-                PriceField()
-                BillingCycleField()
-            } header: {
-                Text("Cost")
-                    .foregroundStyle(Color.text)
-            }
-            BalanceSection()
-            CategorySection()
-            ConvertToAccountSection()
-            DeleteSection()
-        }
-        .scrollDismissesKeyboard(.immediately)
-        .formStyle(.grouped)
-        .scrollContentBackground(.hidden)
-        .toolbar { Toolbar() }
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationTitle(screenTitle)
-        .foregroundStyle(Color.text)
-        .background(Color.background.ignoresSafeArea())
-        .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
-        .confirmationDialog(
-            "Delete '\(expenseToEdit.expense?.name.value ?? "")'?",
-            isPresented: $showDeleteConfirmation,
-            titleVisibility: .visible
-        ) {
-            Button("Delete", role: .destructive) {
-                deleteExpense()
-            }
-            Button("Cancel", role: .cancel) { }
-        }
-        .confirmationDialog(
-            "Convert '\(expenseToEdit.expense?.name.value ?? "")' to a liability account?",
-            isPresented: $showConvertConfirmation,
-            titleVisibility: .visible
-        ) {
-            Button("Convert") {
-                convertDebtToAccount()
-            }
-            Button("Cancel", role: .cancel) { }
-        }
-        .onChange(of: nameString) { _, nameString in setNameInstructions(nameString) }
-        .onChange(of: expenseToEdit, initial: true) { _, expense in populateFields(expense) }
-        .onReceive(subscriptionLevelProvider.subscriptionLevelPublisher) { subscriptionLevel = $0 }
-        .animation(.snappy, value: kind)
-    }
-
-    @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
-        ToolbarItemGroup(placement: .topBarTrailing) {
-            SaveButton()
-        }
-    }
-
-    @ViewBuilder private func SaveButton() -> some View {
-        Button {
-            saveExpense()
-        } label: {
-            Image(systemName: "checkmark")
-        }
-        .opacity(isFormComplete ? 1 : .opacityButtonBackground)
-        .disabled(!isFormComplete)
-        .accessibilityIdentifier("EditRecurringExpenseView.Toolbar.SaveButton")
-    }
-
-    @ViewBuilder private func AdSection() -> some View {
-        if subscriptionLevel == SubscriptionLevel.none {
-            Section {
-                NativeAdListRow(ad: $ad, size: .small)
-                    .listRow()
-            }
-        }
-    }
-
-    @ViewBuilder private func NameField() -> some View {
-        VStack {
-            HStack {
-                Text("Name")
-                    .foregroundStyle(Color.text)
-                Spacer(minLength: 0)
-            }
-            TextField("Name",
-                      text: $nameString,
-                      prompt: Text(RecurringExpense.Name.sample.value).foregroundStyle(Color.text.opacity(.opacityTextFieldPrompt))
-            )
-            .textFieldSmall()
-            .autocapitalization(.words)
-            .accessibilityIdentifier("EditRecurringExpenseView.NameField.TextField")
-            HStack {
-                Spacer(minLength: 0)
-                Text(nameInstructions)
-                    .font(.caption2)
-                    .foregroundStyle(Color.text.opacity(.opacityMutedText))
-                    .padding(.horizontal, .paddingHorizontalButtonXSmall)
-            }
-        }
-        .listRow()
-    }
-
-    @ViewBuilder private func KindField() -> some View {
-        HStack {
-            Text("Type")
-                .foregroundStyle(Color.text)
-            Spacer(minLength: 0)
-            Menu {
-                ForEach(availableKinds, id: \.self) { option in
-                    Button {
-                        kind = option
-                    } label: {
-                        HStack {
-                            Text(option.name)
-                            if kind == option { Image(systemName: "checkmark") }
-                        }
+        VStack(spacing: 0) {
+            Header()
+            ScrollView {
+                VStack(spacing: .padding) {
+                    Profile()
+                    NameField()
+                    KindField()
+                    PriceField()
+                    BillingCycleField()
+                    if kind == .debt {
+                        BalanceField()
+                    }
+                    CategoryField()
+                    if canConvertToAccount {
+                        ConvertToAccountButton()
+                    }
+                    if isEditingExisting {
+                        DeleteButton()
                     }
                 }
-            } label: {
-                Text(kind.name)
-                    .buttonLabelSmall()
+                .padding()
             }
+            .scrollDismissesKeyboard(.immediately)
+            .scrollIndicators(.hidden)
         }
-        .listRow()
-    }
-
-    @ViewBuilder private func PriceField() -> some View {
-        HStack {
-            Text("Price")
-                .foregroundStyle(Color.text)
-            Spacer(minLength: 0)
-            Button {
-                showPriceEntryView = true
-            } label: {
-                HStack {
-                    Spacer(minLength: 0)
-                    Text(price.formatted())
-                        .multilineTextAlignment(.trailing)
-                }
-            }
-            .frame(width: 128)
-            .textFieldSmall()
-            .accessibilityIdentifier("EditRecurringExpenseView.PriceField.TextField")
-        }
-        .listRow()
+        .foregroundStyle(Color.appText)
+        .background(Color.appBackground.ignoresSafeArea())
+        .toolbar(.hidden, for: .navigationBar)
+        .navigationBarBackButtonHidden()
         .fullScreenCover(isPresented: $showPriceEntryView) {
             MoneyFieldEntryView(
                 title: "Price",
@@ -321,13 +195,135 @@ struct EditRecurringExpenseView: View {
                 suggestions: budget.recurringExpenses.values.map(\.price)
             )
         }
+        .fullScreenCover(isPresented: $showBalanceEntryView) {
+            MoneyFieldEntryView(
+                title: "Still Owed",
+                money: $remainingBalance
+            )
+        }
+        .confirmationDialog(
+            "Delete '\(expenseToEdit.expense?.name.value ?? "")'?",
+            isPresented: $showDeleteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) { deleteExpense() }
+            Button("Cancel", role: .cancel) { }
+        }
+        .confirmationDialog(
+            "Convert '\(expenseToEdit.expense?.name.value ?? "")' to a liability account?",
+            isPresented: $showConvertConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Convert") { convertDebtToAccount() }
+            Button("Cancel", role: .cancel) { }
+        }
+        .onChange(of: nameString) { _, nameString in setNameInstructions(nameString) }
+        .onChange(of: expenseToEdit, initial: true) { _, expense in populateFields(expense) }
+        .animation(.snappy, value: kind)
+    }
+
+    @ViewBuilder private func Header() -> some View {
+        ZStack {
+            Text(screenTitle)
+                .font(.headline)
+                .foregroundStyle(Color.appText)
+            HStack {
+                Button("Cancel") { dismiss() }
+                    .foregroundStyle(Color.appMutedText)
+                Spacer(minLength: 0)
+                Button("Save") { saveExpense() }
+                    .fontWeight(.semibold)
+                    .foregroundStyle(Color.brandTeal)
+                    .opacity(isFormComplete ? 1 : .opacityButtonBackground)
+                    .disabled(!isFormComplete)
+                    .accessibilityIdentifier("EditRecurringExpenseView.Toolbar.SaveButton")
+            }
+        }
+        .frame(height: .barHeight)
+        .padding(.horizontal)
+    }
+
+    @ViewBuilder private func Profile() -> some View {
+        IconCircle(systemName: symbol(for: kind), size: 64, tint: .brandTeal)
+            .frame(maxWidth: .infinity)
+            .padding(.top, .paddingSmall)
+    }
+
+    @ViewBuilder private func FieldCard<Content: View>(
+        _ label: LocalizedStringKey,
+        footer: LocalizedStringKey? = nil,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label)
+                .font(.caption2.weight(.semibold))
+                .textCase(.uppercase)
+                .kerning(0.5)
+                .foregroundStyle(Color.appMutedText)
+            content()
+            if let footer {
+                Text(footer)
+                    .font(.caption2)
+                    .foregroundStyle(Color.appMutedText)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background {
+            RoundedRectangle(cornerRadius: .cornerRadiusMedium, style: .continuous)
+                .foregroundStyle(Color.appSurface)
+        }
+    }
+
+    @ViewBuilder private func NameField() -> some View {
+        FieldCard("Name", footer: nameInstructions.isEmpty ? nil : LocalizedStringKey(nameInstructions)) {
+            TextField(
+                "Name",
+                text: $nameString,
+                prompt: Text(RecurringExpense.Name.sample.value).foregroundStyle(Color.appMutedText)
+            )
+            .font(.title3)
+            .foregroundStyle(Color.appText)
+            .tint(Color.brandTeal)
+            .autocapitalization(.words)
+            .accessibilityIdentifier("EditRecurringExpenseView.NameField.TextField")
+        }
+    }
+
+    @ViewBuilder private func KindField() -> some View {
+        FieldCard("Type") {
+            Menu {
+                ForEach(availableKinds, id: \.self) { option in
+                    Button {
+                        kind = option
+                    } label: {
+                        HStack {
+                            Image(systemName: symbol(for: option))
+                            Text(option.name)
+                            if kind == option { Image(systemName: "checkmark") }
+                        }
+                    }
+                }
+            } label: {
+                MenuLabel(systemName: symbol(for: kind), text: kind.name)
+            }
+            .accessibilityIdentifier("EditRecurringExpenseView.KindField.Menu")
+        }
+    }
+
+    @ViewBuilder private func PriceField() -> some View {
+        FieldCard("Price") {
+            Button {
+                showPriceEntryView = true
+            } label: {
+                ValueLabel(text: price.formatted())
+            }
+            .accessibilityIdentifier("EditRecurringExpenseView.PriceField.TextField")
+        }
     }
 
     @ViewBuilder private func BillingCycleField() -> some View {
-        HStack {
-            Text("Billed")
-                .foregroundStyle(Color.text)
-            Spacer(minLength: 0)
+        FieldCard("Billed") {
             Menu {
                 ForEach(Self.cycleOptions, id: \.self) { months in
                     Button {
@@ -340,50 +336,25 @@ struct EditRecurringExpenseView: View {
                     }
                 }
             } label: {
-                Text(cycleName(monthsPerCycle))
-                    .buttonLabelSmall()
-                    .contentTransition(.numericText())
+                MenuLabel(systemName: "calendar", text: cycleName(monthsPerCycle))
             }
-        }
-        .listRow()
-    }
-
-    @ViewBuilder private func BalanceSection() -> some View {
-        if kind == .debt {
-            Section {
-                HStack {
-                    Text("Amount")
-                        .foregroundStyle(Color.text)
-                    Spacer(minLength: 0)
-                    Button {
-                        showBalanceEntryView = true
-                    } label: {
-                        HStack {
-                            Spacer(minLength: 0)
-                            Text(remainingBalance.formatted())
-                                .multilineTextAlignment(.trailing)
-                        }
-                    }
-                    .frame(width: 128)
-                    .textFieldSmall()
-                    .accessibilityIdentifier("EditRecurringExpenseView.BalanceField.TextField")
-                }
-                .listRow()
-                .fullScreenCover(isPresented: $showBalanceEntryView) {
-                    MoneyFieldEntryView(
-                        title: "Still Owed",
-                        money: $remainingBalance
-                    )
-                }
-            } header: {
-                Text("Still Owed")
-                    .foregroundStyle(Color.text)
-            }
+            .accessibilityIdentifier("EditRecurringExpenseView.BillingCycleField.Menu")
         }
     }
 
-    @ViewBuilder private func CategorySection() -> some View {
-        Section {
+    @ViewBuilder private func BalanceField() -> some View {
+        FieldCard("Still Owed") {
+            Button {
+                showBalanceEntryView = true
+            } label: {
+                ValueLabel(text: remainingBalance.formatted())
+            }
+            .accessibilityIdentifier("EditRecurringExpenseView.BalanceField.TextField")
+        }
+    }
+
+    @ViewBuilder private func CategoryField() -> some View {
+        FieldCard("Linked Category (Optional)") {
             NavigationLink {
                 TransactionCategoryPickerView(
                     budget: budget,
@@ -391,107 +362,115 @@ struct EditRecurringExpenseView: View {
                 )
                 .pickerMode(.pickerAndEditor)
             } label: {
-                HStack {
-                    Text("Category")
-                        .foregroundStyle(Color.text)
-                    Spacer(minLength: 0)
-                    Text(selectedCategoryName)
-                        .buttonLabelSmall()
-                }
+                ValueLabel(text: selectedCategoryName)
             }
-            .listRow()
             .accessibilityIdentifier("EditRecurringExpenseView.CategoryField.SelectCategoryButton")
             if categoryId != nil {
                 Button {
                     categoryId = nil
                 } label: {
-                    HStack {
+                    HStack(spacing: .paddingSmall) {
                         Image(systemName: "xmark.circle")
                         Text("Unlink Category")
                         Spacer(minLength: 0)
                     }
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.appMutedText)
                 }
-                .listRow()
-            }
-        } header: {
-            Text("Linked Category (Optional)")
-                .foregroundStyle(Color.text)
-        }
-    }
-
-    private var selectedCategoryName: String {
-        guard let categoryId else { return String(localized: "None") }
-        return budget.getCategoryBy(id: categoryId).name.value
-    }
-
-    @ViewBuilder private func ConvertToAccountSection() -> some View {
-        if canConvertToAccount {
-            Section {
-                Button {
-                    showConvertConfirmation = true
-                } label: {
-                    HStack {
-                        Image(systemName: "building.columns")
-                        Text("Convert to Liability Account")
-                        Spacer(minLength: 0)
-                    }
-                }
-                .listRow()
-                .accessibilityIdentifier("EditRecurringExpenseView.ConvertButton")
-            } footer: {
-                Text("Track this debt as a liability account instead — its balance counts toward your net worth, and its price becomes the monthly payment.")
-                    .foregroundStyle(Color.text.opacity(.opacityMutedText))
+                .padding(.top, 6)
             }
         }
     }
 
-    @ViewBuilder private func DeleteSection() -> some View {
-        if expenseToEdit.expense != nil {
-            Section {
-                Button(role: .destructive) {
-                    showDeleteConfirmation = true
-                } label: {
-                    HStack {
-                        Image(systemName: "trash")
-                        Text("Delete Recurring Expense")
-                        Spacer(minLength: 0)
-                    }
+    @ViewBuilder private func ConvertToAccountButton() -> some View {
+        FieldCard(
+            "Track as Account",
+            footer: "Track this debt as a liability account instead — its balance counts toward your net worth, and its price becomes the monthly payment."
+        ) {
+            Button {
+                showConvertConfirmation = true
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "building.columns")
+                        .foregroundStyle(Color.brandTeal)
+                    Text("Convert to Liability Account")
+                        .foregroundStyle(Color.appText)
+                    Spacer(minLength: 0)
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(Color.appMutedText)
                 }
-                .listRow()
-                .accessibilityIdentifier("EditRecurringExpenseView.DeleteButton")
+                .font(.body.weight(.semibold))
+            }
+            .accessibilityIdentifier("EditRecurringExpenseView.ConvertButton")
+        }
+    }
+
+    @ViewBuilder private func MenuLabel(systemName: String, text: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: systemName)
+                .foregroundStyle(Color.brandTeal)
+            Text(text)
+                .foregroundStyle(Color.appText)
+                .contentTransition(.numericText())
+            Spacer(minLength: 0)
+            Image(systemName: "chevron.up.chevron.down")
+                .font(.caption)
+                .foregroundStyle(Color.appMutedText)
+        }
+        .font(.body.weight(.semibold))
+    }
+
+    @ViewBuilder private func ValueLabel(text: String) -> some View {
+        HStack(spacing: 8) {
+            Text(text)
+                .foregroundStyle(Color.appText)
+            Spacer(minLength: 0)
+            Image(systemName: "chevron.right")
+                .font(.caption)
+                .foregroundStyle(Color.appMutedText)
+        }
+        .font(.body.weight(.semibold))
+    }
+
+    @ViewBuilder private func DeleteButton() -> some View {
+        Button(role: .destructive) {
+            showDeleteConfirmation = true
+        } label: {
+            HStack(spacing: .paddingSmall) {
+                Image(systemName: "trash")
+                Text("Delete Recurring Expense")
+            }
+            .font(.headline)
+            .foregroundStyle(Color.negative)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, .paddingVerticalButtonMedium)
+            .background {
+                RoundedRectangle(cornerRadius: .cornerRadiusMedium, style: .continuous)
+                    .foregroundStyle(Color.appSurface)
             }
         }
+        .accessibilityIdentifier("EditRecurringExpenseView.DeleteButton")
+        .padding(.top, .paddingSmall)
     }
 }
 
 #Preview("New") {
     NavigationStack {
-        EditRecurringExpenseView(
-            budget: .previewSample(),
-            subscriptionLevelProvider: MockSubscriptionLevelProvider(level: .boldBudgetPlus)
-        )
+        EditRecurringExpenseView(budget: .previewSample())
     }
-    .environmentObject(AdProviderFactory.forScreenshots)
 }
 
 #Preview("Edit Debt") {
     NavigationStack {
-        EditRecurringExpenseView(
-            budget: .previewSample(recurringExpenses: RecurringExpense.samples),
-            subscriptionLevelProvider: MockSubscriptionLevelProvider(level: .boldBudgetPlus)
-        )
-        .editing(.sampleCarLoan)
+        EditRecurringExpenseView(budget: .previewSample(recurringExpenses: RecurringExpense.samples))
+            .editing(.sampleCarLoan)
     }
-    .environmentObject(AdProviderFactory.forScreenshots)
 }
 
 #Preview("Edit Annual Subscription") {
     NavigationStack {
-        EditRecurringExpenseView(
-            budget: .previewSample(recurringExpenses: RecurringExpense.samples),
-            subscriptionLevelProvider: MockSubscriptionLevelProvider(level: .boldBudgetPlus)
-        )
-        .editing(.sampleAnnualSubscription)
+        EditRecurringExpenseView(budget: .previewSample(recurringExpenses: RecurringExpense.samples))
+            .editing(.sampleAnnualSubscription)
     }
-    .environmentObject(AdProviderFactory.forScreenshots)
 }
