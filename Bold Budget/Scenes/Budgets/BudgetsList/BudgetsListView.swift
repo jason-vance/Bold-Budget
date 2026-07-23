@@ -117,6 +117,7 @@ struct BudgetsListView: View {
         .background(Color.appBackground.ignoresSafeArea())
         .navigationDestination(for: BudgetInfo.self) { info in
             BudgetDetailView(budget: Budget(info: info))
+                .id(info.id)
         }
         .overlay(alignment: .bottomTrailing) { AddBudgetButton() }
         .toolbar(.hidden, for: .navigationBar)

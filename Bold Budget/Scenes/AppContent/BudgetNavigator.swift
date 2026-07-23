@@ -16,9 +16,21 @@ final class BudgetNavigator: ObservableObject {
 
     @Published var path: [BudgetInfo] = []
 
-    /// Switches the app to show the given budget, replacing whatever budget (and its sub-screens)
-    /// is currently on the stack.
+    /// Switches the app to show the given budget's detail screen.
+    ///
+    /// Resetting the path in a single assignment doesn't reliably switch budgets: when view-based
+    /// screens (settings, pickers) are pushed on top of the budget detail, SwiftUI pops those but
+    /// keeps the existing detail rather than rebuilding it for the new budget — so the newly
+    /// selected budget never renders. Fully pop to the root, then push the new budget on the next
+    /// runloop tick so SwiftUI processes two distinct updates and rebuilds the detail. Animations
+    /// are suppressed so the root list doesn't flash during the hop.
     func open(_ budget: BudgetInfo) {
-        path = [budget]
+        var transaction = SwiftUI.Transaction()
+        transaction.disablesAnimations = true
+
+        withTransaction(transaction) { path = [] }
+        DispatchQueue.main.async {
+            withTransaction(transaction) { self.path = [budget] }
+        }
     }
 }
