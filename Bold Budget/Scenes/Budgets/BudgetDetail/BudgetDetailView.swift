@@ -249,7 +249,7 @@ struct BudgetDetailView: View {
         }
         .navigationTitle(budget.info.name.value)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar(usesRedesignPalette ? .hidden : .visible, for: .navigationBar)
+        .toolbar(.hidden, for: .navigationBar)
         .toolbar { Toolbar() }
         .foregroundStyle(chromeText)
         .background(chromeBackground.ignoresSafeArea())
@@ -268,17 +268,10 @@ struct BudgetDetailView: View {
         .onChange(of: scenePhase) { old, new in onChangeOf(scenePhase: new) }
     }
 
-    /// Every screen has now been migrated to the redesign palette, so the chrome (bottom bar,
-    /// mode switcher) always uses the redesign (black/white) tokens.
-    private var usesRedesignPalette: Bool {
-        topTab == .netWorth || topTab == .spending
-    }
-
-    private var chromeBackground: Color { usesRedesignPalette ? .appBackground : .background }
-    private var chromeText: Color { usesRedesignPalette ? .appText : .text }
-    private var chromeMuted: Color {
-        usesRedesignPalette ? .appMutedText : Color.text.opacity(.opacityMutedText)
-    }
+    // The chrome (bottom bar, mode switcher) uses the redesign (black/white) tokens.
+    private var chromeBackground: Color { .appBackground }
+    private var chromeText: Color { .appText }
+    private var chromeMuted: Color { .appMutedText }
 
     @ViewBuilder private func SpendingContent() -> some View {
         if viewMode == .pieChart {
@@ -472,10 +465,10 @@ struct BudgetDetailView: View {
         } label: {
             Image(systemName: "plus")
                 .font(.title2.weight(.heavy))
-                .foregroundStyle(usesRedesignPalette ? Color.appBackground : Color.background)
+                .foregroundStyle(Color.appBackground)
                 .frame(width: 52, height: 52)
                 .background {
-                    Circle().foregroundStyle(usesRedesignPalette ? Color.brandTeal : Color.text)
+                    Circle().foregroundStyle(Color.brandTeal)
                 }
                 .frame(maxWidth: .infinity)
         }
