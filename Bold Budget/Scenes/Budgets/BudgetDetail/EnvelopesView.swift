@@ -94,7 +94,7 @@ struct EnvelopesView: View {
                         }
                         ForEach(Array(selectedTransactions.enumerated()), id: \.element.id) { index, transaction in
                             TransactionRow(transaction)
-                                .transition(transactionTransition(index: index, count: selectedTransactions.count))
+                                .transition(transactionTransition(index: index))
                         }
                     }
                 }
@@ -120,13 +120,13 @@ struct EnvelopesView: View {
         withAnimation(.snappy) { selectedCategory = nil }
     }
 
-    /// Transactions reveal top-to-bottom on selection and retract bottom-to-top on deselection.
-    private func transactionTransition(index: Int, count: Int) -> AnyTransition {
+    /// Transactions reveal top-to-bottom on selection with a quick, capped stagger; deselecting
+    /// hides them immediately (no removal animation).
+    private func transactionTransition(index: Int) -> AnyTransition {
         .asymmetric(
             insertion: .move(edge: .top).combined(with: .opacity)
-                .animation(.snappy.delay(Double(index) * 0.06)),
-            removal: .opacity
-                .animation(.snappy.delay(Double(max(0, count - 1 - index)) * 0.04))
+                .animation(.snappy.delay(min(Double(index) * 0.02, 0.15))),
+            removal: .identity
         )
     }
 
