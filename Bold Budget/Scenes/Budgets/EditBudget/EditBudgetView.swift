@@ -116,89 +116,131 @@ struct EditBudgetView: View {
     }
     
     var body: some View {
-        Form {
-            AdSection()
-            Section {
-                NameField()
+        VStack(spacing: 0) {
+            Header()
+            ScrollView {
+                VStack(spacing: .padding) {
+                    Profile()
+                    AdCard()
+                    NameField()
+                }
+                .padding()
             }
+            .scrollDismissesKeyboard(.immediately)
+            .scrollIndicators(.hidden)
         }
-        .scrollDismissesKeyboard(.immediately)
-        .formStyle(.grouped)
-        .scrollContentBackground(.hidden)
-        .toolbar { Toolbar() }
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationTitle(screenTitle)
+        .foregroundStyle(Color.appText)
+        .background(Color.appBackground.ignoresSafeArea())
+        .toolbar(.hidden, for: .navigationBar)
         .navigationBarBackButtonHidden()
-        .foregroundStyle(Color.text)
-        .background(Color.background.ignoresSafeArea())
         .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
         .alert(alertMessage, isPresented: $showAlert) {}
         .onChange(of: budgetToEdit, initial: true) { _, budget in populateFields(budget) }
         .onReceive(subscriptionManager.subscriptionLevelPublisher) { subscriptionLevel = $0 }
         .animation(.snappy, value: nameInstructions)
     }
-    
-    @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
-        ToolbarItemGroup(placement: .topBarLeading) {
-            CloseButton()
-        }
-        ToolbarItemGroup(placement: .topBarTrailing) {
-            SaveButton()
-        }
-    }
-    
-    @ViewBuilder func CloseButton() -> some View {
-        Button {
-            dismiss()
-        } label: {
-            Image(systemName: "xmark")
-        }
-        .accessibilityIdentifier("EditBudgetView.Toolbar.DismissButton")
-    }
-    
-    @ViewBuilder func SaveButton() -> some View {
-        Button {
-            saveBudget()
-        } label: {
-            Image(systemName: "checkmark")
-        }
-        .opacity(isFormComplete ? 1 : .opacityButtonBackground)
-        .disabled(!isFormComplete)
-        .accessibilityIdentifier("EditBudgetView.Toolbar.SaveButton")
-    }
-    
-    @ViewBuilder func AdSection() -> some View {
-        if subscriptionLevel == SubscriptionLevel.none {
-            Section {
-                NativeAdListRow(ad: $ad, size: .small)
-                    .listRow()
-            }
-        }
-    }
-    
-    @ViewBuilder func NameField() -> some View {
-        VStack {
+
+    @ViewBuilder private func Header() -> some View {
+        ZStack {
+            Text(screenTitle)
+                .font(.headline)
+                .foregroundStyle(Color.appText)
             HStack {
-                Text("Name")
-                    .foregroundStyle(Color.text)
+                Button("Cancel") { dismiss() }
+                    .foregroundStyle(Color.appMutedText)
+                    .accessibilityIdentifier("EditBudgetView.Toolbar.DismissButton")
                 Spacer(minLength: 0)
-                Text(nameInstructions)
-                    .font(.caption2)
-                    .foregroundStyle(Color.text.opacity(.opacityMutedText))
-                    .padding(.horizontal, .paddingHorizontalButtonXSmall)
+                Button("Save") { saveBudget() }
+                    .fontWeight(.semibold)
+                    .foregroundStyle(Color.brandTeal)
+                    .opacity(isFormComplete ? 1 : .opacityButtonBackground)
+                    .disabled(!isFormComplete)
+                    .accessibilityIdentifier("EditBudgetView.Toolbar.SaveButton")
             }
-            TextField("Name",
-                      text: $nameString,
-                      prompt: Text("Family Budget, etc...").foregroundStyle(Color.text.opacity(.opacityTextFieldPrompt))
+        }
+        .frame(height: .barHeight)
+        .padding(.horizontal)
+    }
+
+    @ViewBuilder private func Profile() -> some View {
+        IconCircle(systemName: "chart.pie.fill", size: 64, tint: .brandTeal)
+            .frame(maxWidth: .infinity)
+            .padding(.top, .paddingSmall)
+    }
+
+    @ViewBuilder private func FieldCard<Content: View>(
+        _ label: LocalizedStringKey,
+        footer: LocalizedStringKey? = nil,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label)
+                .font(.caption2.weight(.semibold))
+                .textCase(.uppercase)
+                .kerning(0.5)
+                .foregroundStyle(Color.appMutedText)
+            content()
+            if let footer {
+                Text(footer)
+                    .font(.caption2)
+                    .foregroundStyle(Color.appMutedText)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background {
+            RoundedRectangle(cornerRadius: .cornerRadiusMedium, style: .continuous)
+                .foregroundStyle(Color.appSurface)
+        }
+    }
+
+    @ViewBuilder private func AdCard() -> some View {
+        if subscriptionLevel == SubscriptionLevel.none {
+            NativeAdListRow(ad: $ad, size: .small)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background {
+                    RoundedRectangle(cornerRadius: .cornerRadiusMedium, style: .continuous)
+                        .foregroundStyle(Color.appSurface)
+                }
+        }
+    }
+
+    @ViewBuilder private func NameField() -> some View {
+        FieldCard("Name", footer: nameInstructions.isEmpty ? nil : LocalizedStringKey(nameInstructions)) {
+            TextField(
+                "Name",
+                text: $nameString,
+                prompt: Text("Family Budget, etc...").foregroundStyle(Color.appMutedText)
             )
-            .textFieldSmall()
+            .font(.title3)
+            .foregroundStyle(Color.appText)
+            .tint(Color.brandTeal)
             .autocapitalization(.words)
             .accessibilityIdentifier("EditBudgetView.NameField.TextField")
         }
-        .listRow()
     }
 }
 
-#Preview {
-    EditBudgetView()
+#Preview("Add") {
+    NavigationStack {
+        EditBudgetView(
+            currentUserIdProvider: MockCurrentUserIdProvider(),
+            budgetCreator: MockBudgetSaver(throwing: false),
+            subscriptionManager: MockSubscriptionLevelProvider(level: .boldBudgetPlus)
+        )
+    }
+    .environmentObject(AdProviderFactory.forScreenshots)
+}
+
+#Preview("Rename") {
+    NavigationStack {
+        EditBudgetView(
+            currentUserIdProvider: MockCurrentUserIdProvider(),
+            budgetCreator: MockBudgetSaver(throwing: false),
+            subscriptionManager: MockSubscriptionLevelProvider(level: .boldBudgetPlus)
+        )
+        .editing(Budget(info: .sample))
+    }
+    .environmentObject(AdProviderFactory.forScreenshots)
 }
