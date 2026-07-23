@@ -57,6 +57,9 @@ struct PieChart: View {
     
     init(slices: [Slice]) {
         self.slices = slices
+        // Seed the animatable state so the first render already draws the slices, instead of
+        // flashing the empty circle for a frame and then filling in via `onChange`.
+        self._slicesState = State(initialValue: slices)
         formatValue = { value in value.formatted() }
     }
     
