@@ -122,24 +122,26 @@ struct UserProfileView: View {
     }
     
     var body: some View {
-        List {
-            ProfileImageSection()
-            AdSection()
-            AdminSection()
-            EditUserProfileSection()
-            FeedbackSection()
-            SignOutDeleteAccountSection()
-            AppVersionSection()
+        VStack(spacing: 0) {
+            Header()
+            ScrollView {
+                VStack(spacing: .padding) {
+                    Profile()
+                    AdCard()
+                    AdminCard()
+                    ActionsCard()
+                    SignOutButton()
+                    DeleteAccountButton()
+                    AppVersion()
+                }
+                .padding()
+            }
+            .scrollIndicators(.hidden)
         }
-        .listStyle(.insetGrouped)
-        .scrollContentBackground(.hidden)
-        .scrollIndicators(.hidden)
-        .toolbar { Toolbar() }
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationTitle(userData?.username?.value ?? "User Profile")
+        .foregroundStyle(Color.appText)
+        .background(Color.appBackground.ignoresSafeArea())
+        .toolbar(.hidden, for: .navigationBar)
         .navigationBarBackButtonHidden()
-        .foregroundStyle(Color.text)
-        .background(Color.background)
         .onChange(of: __userId, initial: true) { _, userId in self.userId = userId }
         .onChange(of: __userId, initial: true) { _, userId in userDataProvider.startListeningToUser(withId: userId) }
         .onReceive(userDataProvider.userDataPublisher) { userData = $0 }
@@ -150,60 +152,108 @@ struct UserProfileView: View {
         .animation(.snappy, value: showAdminControls)
         .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
     }
-    
-    @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
-        ToolbarItemGroup(placement: .topBarLeading) {
-            Button {
-                dismiss()
-            } label: {
-                Image(systemName: "chevron.backward")
+
+    // MARK: - Header
+
+    @ViewBuilder private func Header() -> some View {
+        ZStack {
+            Text(userData?.username?.value ?? "User Profile")
+                .font(.headline)
+                .foregroundStyle(Color.appText)
+                .lineLimit(1)
+                .padding(.horizontal, .barHeight)
+            HStack {
+                Button { dismiss() } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(Color.appMutedText)
+                }
+                .accessibilityIdentifier("UserProfileView.Toolbar.DismissButton")
+                Spacer(minLength: 0)
             }
-            .accessibilityIdentifier("UserProfileView.Toolbar.DismissButton")
         }
+        .frame(height: .barHeight)
+        .padding(.horizontal)
     }
-    
-    @ViewBuilder private func ProfileImageSection() -> some View {
-        Section {
-            ProfileImage()
+
+    // MARK: - Profile
+
+    @ViewBuilder private func Profile() -> some View {
+        VStack(spacing: .paddingSmall) {
+            ProfileImageView(userData?.profileImageUrl, size: 120)
+            if let username = userData?.username {
+                Text(username.value)
+                    .font(.title3.weight(.bold))
+                    .foregroundStyle(Color.appText)
+                    .multilineTextAlignment(.center)
+            }
         }
+        .frame(maxWidth: .infinity)
+        .padding(.top, .paddingSmall)
     }
-    
-    @ViewBuilder private func ProfileImage() -> some View {
-        HStack {
-            Spacer(minLength: 0)
-            ProfileImageView(userData?.profileImageUrl)
-            Spacer(minLength: 0)
-        }
-        .listRowBackground(Color.background)
-        .listRowSeparator(.hidden)
-    }
-    
-    @ViewBuilder func AdSection() -> some View {
+
+    // MARK: - Ad
+
+    @ViewBuilder private func AdCard() -> some View {
         if subscriptionLevel == SubscriptionLevel.none {
-            Section {
-                NativeAdListRow(ad: $ad, size: .small)
-                    .listRow()
-            }
+            NativeAdListRow(ad: $ad, size: .small)
+                .frame(maxWidth: .infinity)
+                .card()
         }
     }
-    
-    @ViewBuilder private func AdminSection() -> some View {
+
+    // MARK: - Row building blocks
+
+    @ViewBuilder private func NavRow(systemName: String, title: LocalizedStringKey, tint: Color = .brandTeal) -> some View {
+        HStack(spacing: .padding) {
+            IconCircle(systemName: systemName, size: 40, tint: tint)
+            Text(title)
+                .fontWeight(.semibold)
+                .foregroundStyle(Color.appText)
+            Spacer(minLength: 0)
+            Image(systemName: "chevron.right")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Color.appMutedText)
+        }
+        .padding(.padding)
+        .contentShape(Rectangle())
+    }
+
+    @ViewBuilder private func RowDivider(opacity: Double = 0.15) -> some View {
+        Rectangle()
+            .fill(Color.appMutedText.opacity(opacity))
+            .frame(height: 1)
+            .padding(.leading, .padding)
+    }
+
+    // MARK: - Admin
+
+    @ViewBuilder private func AdminCard() -> some View {
         if showAdminControls {
-            Section {
-                ChangeSubscriptionLevelButton()
-                ViewUserFeedbackButton()
-            } header: {
+            VStack(alignment: .leading, spacing: .paddingSmall) {
                 Text("Admin")
+                    .font(.caption2.weight(.semibold))
+                    .textCase(.uppercase)
+                    .kerning(0.5)
+                    .foregroundStyle(Color.appMutedText)
+                    .padding(.horizontal, .paddingSmall)
+                VStack(spacing: 0) {
+                    ChangeSubscriptionLevelRow()
+                    RowDivider()
+                    ViewUserFeedbackButton()
+                }
+                .card(0)
             }
         }
     }
-    
-    @ViewBuilder private func ChangeSubscriptionLevelButton() -> some View {
-        HStack {
-            Image(systemName: "dollarsign")
-                .listRowIcon()
+
+    @ViewBuilder private func ChangeSubscriptionLevelRow() -> some View {
+        HStack(spacing: .padding) {
+            IconCircle(systemName: "dollarsign", size: 40, tint: .brandTeal)
             Text("Subscription Level")
-            Spacer()
+                .fontWeight(.semibold)
+                .foregroundStyle(Color.appText)
+            Spacer(minLength: 0)
             Menu {
                 Button("None") {
                     subscriptionLevelProvider.set(subscriptionLevel: .none)
@@ -213,111 +263,92 @@ struct UserProfileView: View {
                 }
             } label: {
                 Text(String(describing: subscriptionLevel))
-                    .foregroundStyle(Color.text)
-                    .padding(.horizontal, .paddingHorizontalButtonXSmall)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.appText)
+                    .padding(.horizontal, .paddingHorizontalButtonSmall)
                     .padding(.vertical, .paddingVerticalButtonXSmall)
-                    .background {
-                        RoundedRectangle(cornerRadius: .cornerRadiusSmall, style: .continuous)
-                            .foregroundStyle(Color.text)
-                            .opacity(.opacityButtonBackground)
-                    }
+                    .background { Capsule().foregroundStyle(Color.appSurface) }
             }
         }
-        .listRow()
+        .padding(.padding)
     }
-    
+
     @ViewBuilder private func ViewUserFeedbackButton() -> some View {
         NavigationLink {
             UserFeedbackListView()
         } label: {
-            HStack {
-                Image(systemName: "envelope")
-                    .listRowIcon()
-                Text("View User Feedback")
-                Spacer(minLength: 0)
-            }
+            NavRow(systemName: "envelope", title: "View User Feedback")
         }
-        .listRow()
+        .buttonStyle(.plain)
         .accessibilityIdentifier("UserProfileView.ViewUserFeedbackButton")
     }
-    
-    @ViewBuilder private func EditUserProfileSection() -> some View {
-        if isMe {
-            Section {
+
+    // MARK: - Actions
+
+    @ViewBuilder private func ActionsCard() -> some View {
+        VStack(spacing: 0) {
+            if isMe {
                 EditUserProfileButton()
+                RowDivider()
             }
+            SubmitFeedbackButton()
         }
+        .card(0)
     }
-    
+
     @ViewBuilder private func EditUserProfileButton() -> some View {
         Button {
             showEditUserProfile = true
         } label: {
-            HStack {
-                Image(systemName: "person")
-                    .listRowIcon()
-                Text("Edit User Profile")
-                Spacer(minLength: 0)
-            }
+            NavRow(systemName: "person", title: "Edit User Profile")
         }
-        .listRow()
+        .buttonStyle(.plain)
         .fullScreenCover(isPresented: $showEditUserProfile) {
             NavigationStack {
                 EditUserProfileView(mode: .editProfile)
             }
         }
     }
-    
-    @ViewBuilder private func FeedbackSection() -> some View {
-        Section {
-            SubmitFeedbackButton()
-        }
-    }
-    
+
     @ViewBuilder private func SubmitFeedbackButton() -> some View {
         NavigationLink {
             SendUserFeedbackView()
         } label: {
-            HStack {
-                Image(systemName: "envelope")
-                    .listRowIcon()
-                Text("Submit Feedback")
-                Spacer(minLength: 0)
-            }
+            NavRow(systemName: "envelope", title: "Submit Feedback")
         }
-        .listRow()
+        .buttonStyle(.plain)
         .accessibilityIdentifier("UserProfileView.SubmitFeedbackButton")
     }
-    
-    @ViewBuilder private func SignOutDeleteAccountSection() -> some View {
-        if isMe {
-            Section {
-                SignOutButton()
-                DeleteAccountButton()
-            }
-        }
-    }
-    
+
+    // MARK: - Sign Out / Delete
+
     @ViewBuilder private func SignOutButton() -> some View {
-        Button {
-            showSignOutDialog = true
-        } label: {
-            HStack {
-                Image(systemName: "iphone.and.arrow.forward")
-                    .listRowIcon()
-                Text("Sign Out")
-                Spacer(minLength: 0)
+        if isMe {
+            Button {
+                showSignOutDialog = true
+            } label: {
+                HStack(spacing: .paddingSmall) {
+                    Image(systemName: "iphone.and.arrow.forward")
+                    Text("Sign Out")
+                }
+                .font(.headline)
+                .foregroundStyle(Color.appText)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, .paddingVerticalButtonMedium)
+                .background {
+                    RoundedRectangle(cornerRadius: .cornerRadiusMedium, style: .continuous)
+                        .foregroundStyle(Color.appSurface)
+                }
             }
-        }
-        .listRow()
-        .accessibilityIdentifier("UserProfileView.SignOutButton")
-        .confirmationDialog(
-            "Are you sure you want to sign out?",
-            isPresented: $showSignOutDialog,
-            titleVisibility: .visible
-        ) {
-            ConfirmSignOutButton()
-            CancelSignOutButton()
+            .accessibilityIdentifier("UserProfileView.SignOutButton")
+            .confirmationDialog(
+                "Are you sure you want to sign out?",
+                isPresented: $showSignOutDialog,
+                titleVisibility: .visible
+            ) {
+                ConfirmSignOutButton()
+                CancelSignOutButton()
+            }
         }
     }
     
@@ -339,32 +370,38 @@ struct UserProfileView: View {
     }
     
     @ViewBuilder func DeleteAccountButton() -> some View {
-        Button {
-            showDeleteAccountDialog = true
-        } label: {
-            HStack {
-                Image(systemName: "trash")
-                    .listRowIcon()
-                Text("Delete Account")
-                Spacer(minLength: 0)
+        if isMe {
+            Button {
+                showDeleteAccountDialog = true
+            } label: {
+                HStack(spacing: .paddingSmall) {
+                    Image(systemName: "trash")
+                    Text("Delete Account")
+                }
+                .font(.headline)
+                .foregroundStyle(Color.negative)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, .paddingVerticalButtonMedium)
+                .background {
+                    RoundedRectangle(cornerRadius: .cornerRadiusMedium, style: .continuous)
+                        .foregroundStyle(Color.appSurface)
+                }
+            }
+            .accessibilityIdentifier("UserProfileView.DeleteAccountButton")
+            .confirmationDialog(
+                "Are you sure you want to delete your account?",
+                isPresented: $showDeleteAccountDialog,
+                titleVisibility: .visible
+            ) {
+                ConfirmDeleteAccountButton()
+                CancelDeleteAccountButton()
+            }
+            .sheet(isPresented: $showConfirmDeleteAccountSheet) {
+                ConfirmDeleteAccountSheet()
             }
         }
-        .listRow()
-        .accessibilityIdentifier("UserProfileView.DeleteAccountButton")
-        .listRowBackground(Color.background)
-        .confirmationDialog(
-            "Are you sure you want to delete your account?",
-            isPresented: $showDeleteAccountDialog,
-            titleVisibility: .visible
-        ) {
-            ConfirmDeleteAccountButton()
-            CancelDeleteAccountButton()
-        }
-        .sheet(isPresented: $showConfirmDeleteAccountSheet) {
-            ConfirmDeleteAccountSheet()
-        }
     }
-    
+
     @ViewBuilder func ConfirmDeleteAccountSheet() -> some View {
         ZStack(alignment: .bottom) {
             LinearGradient(colors: [.clear, .text], startPoint: .top, endPoint: .bottom)
@@ -419,17 +456,15 @@ struct UserProfileView: View {
         .frame(height: 48)
     }
     
-    @ViewBuilder private func AppVersionSection() -> some View {
-        Section {
-            HStack {
-                Spacer()
-                Text("Version:")
-                Text("\(AppInfo.versionString)(\(AppInfo.buildNumberString))")
-                Spacer()
-            }
-            .foregroundStyle(Color.text.opacity(.opacityMutedText))
-            .listRowNoChrome()
+    @ViewBuilder private func AppVersion() -> some View {
+        HStack(spacing: .paddingSmall) {
+            Text("Version:")
+            Text("\(AppInfo.versionString)(\(AppInfo.buildNumberString))")
         }
+        .font(.footnote)
+        .foregroundStyle(Color.appMutedText)
+        .frame(maxWidth: .infinity)
+        .padding(.top, .paddingSmall)
     }
 }
 
@@ -445,6 +480,7 @@ struct UserProfileView: View {
             accountDeleter: MockUserAccountDeleter()
         )
     }
+    .environmentObject(AdProviderFactory.forScreenshots)
 }
 
 #Preview("Other's") {
@@ -459,4 +495,5 @@ struct UserProfileView: View {
             accountDeleter: MockUserAccountDeleter()
         )
     }
+    .environmentObject(AdProviderFactory.forScreenshots)
 }
