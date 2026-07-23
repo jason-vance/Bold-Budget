@@ -60,10 +60,24 @@ struct NetWorthChartView: View {
         let high = Swift.max(maxV, 0)
         let range = Swift.max(high - low, 1)
 
+        // Space points along the x-axis by their actual date, so distant dates spread
+        // out and clustered dates sit close together. Falls back to even index spacing
+        // when dates are missing or all identical.
+        let times = history.map { $0.date.toDate()?.timeIntervalSince1970 }
+        let knownTimes = times.compactMap { $0 }
+        let minT = knownTimes.min()
+        let maxT = knownTimes.max()
+        let timeSpan = (maxT ?? 0) - (minT ?? 0)
+
         return values.enumerated().map { index, value in
-            let x = values.count == 1
-                ? size.width / 2
-                : size.width * CGFloat(index) / CGFloat(values.count - 1)
+            let x: CGFloat
+            if values.count == 1 {
+                x = size.width / 2
+            } else if let minT, timeSpan > 0, let time = times[index] {
+                x = size.width * CGFloat((time - minT) / timeSpan)
+            } else {
+                x = size.width * CGFloat(index) / CGFloat(values.count - 1)
+            }
             let y = size.height - CGFloat((value - low) / range) * size.height
             return CGPoint(x: x, y: y)
         }
