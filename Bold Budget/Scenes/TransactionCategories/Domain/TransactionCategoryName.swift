@@ -11,7 +11,7 @@ extension Transaction.Category {
     class Name {
         
         static let minTextLength: Int = 3
-        static let maxTextLength: Int = 20
+        static let maxTextLength: Int = 50
         
         let value: String
         
