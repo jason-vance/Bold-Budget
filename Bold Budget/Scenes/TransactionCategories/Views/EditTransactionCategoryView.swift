@@ -8,6 +8,10 @@
 import SwiftUI
 import SwinjectAutoregistration
 
+/// Adds or edits a transaction category, redesign palette: a title header with cancel/save, a symbol
+/// profile badge, and surface field cards for the name, symbol, and optional spending goal. Self-
+/// contained (own header + scroll) so it carries the redesign look without the shared Form chrome,
+/// mirroring `EditRecurringExpenseView`.
 struct EditTransactionCategoryView: View {
     
     private struct OptionalCategory: Equatable {
@@ -139,41 +143,36 @@ struct EditTransactionCategoryView: View {
     }
     
     var body: some View {
-        Form {
-            AdSection()
-            Section {
-                NameField()
-                SymbolField()
-            } header: {
-                Text("")
-                    .foregroundStyle(Color.text)
+        VStack(spacing: 0) {
+            Header()
+            ScrollView {
+                VStack(spacing: .padding) {
+                    Profile()
+                    AdCard()
+                    NameField()
+                    SymbolField()
+                    GoalCard()
+                    if categoryToEdit.category != nil {
+                        DeleteButton()
+                    }
+                }
+                .padding()
             }
-            Section {
-                GoalComparisonField()
-                LimitPeriodField()
-                LimitAmountField()
-            } header: {
-                Text("Goal")
-                    .foregroundStyle(Color.text)
-                    .contentTransition(.numericText())
-            } footer: {
-                Text(goalComparison == .lessThan
-                     ? "Track spending that should stay under this amount."
-                     : "Track a target you want to reach or exceed.")
-                    .foregroundStyle(Color.text.opacity(.opacityMutedText))
-            }
-            DeleteSection()
+            .scrollDismissesKeyboard(.immediately)
+            .scrollIndicators(.hidden)
         }
-        .scrollDismissesKeyboard(.immediately)
-        .formStyle(.grouped)
-        .scrollContentBackground(.hidden)
-        .toolbar { Toolbar() }
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationTitle(screenTitle)
-        .foregroundStyle(Color.text)
-        .background(Color.background.ignoresSafeArea())
+        .foregroundStyle(Color.appText)
+        .background(Color.appBackground.ignoresSafeArea())
+        .toolbar(.hidden, for: .navigationBar)
+        .navigationBarBackButtonHidden()
         .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
         .alert(alertMessage, isPresented: $showAlert) {}
+        .fullScreenCover(isPresented: $showAmountEntryView) {
+            TransactionAmountEntryView(
+                amount: $limitAmount,
+                budget: budget
+            )
+        }
         .confirmationDialog(
             "Delete '\(categoryToEdit.category?.name.value ?? "")'?",
             isPresented: $showDeleteConfirmation,
@@ -201,140 +200,146 @@ struct EditTransactionCategoryView: View {
         .onReceive(subscriptionLevelProvider.subscriptionLevelPublisher) { subscriptionLevel = $0 }
         .animation(.snappy, value: limitPeriod)
         .animation(.snappy, value: goalComparison)
+        .animation(.snappy, value: symbolString)
     }
 
-    @ViewBuilder private func DeleteSection() -> some View {
-        if categoryToEdit.category != nil {
-            Section {
-                Button(role: .destructive) {
-                    startDelete()
-                } label: {
-                    HStack {
-                        Image(systemName: "trash")
-                        Text("Delete Category")
-                        Spacer(minLength: 0)
-                    }
-                }
-                .listRow()
-                .accessibilityIdentifier("EditTransactionCategoryView.DeleteButton")
-            }
-        }
-    }
-    
-    @ToolbarContentBuilder private func Toolbar() -> some ToolbarContent {
-        ToolbarItemGroup(placement: .topBarTrailing) {
-            SaveButton()
-        }
-    }
-    
-    @ViewBuilder func SaveButton() -> some View {
-        Button {
-            saveCategory()
-        } label: {
-            Image(systemName: "checkmark")
-        }
-        .opacity(isFormComplete ? 1 : .opacityButtonBackground)
-        .disabled(!isFormComplete)
-        .accessibilityIdentifier("EditTransactionCategoryView.Toolbar.SaveButton")
-    }
-    
-    @ViewBuilder func AdSection() -> some View {
-        if subscriptionLevel == SubscriptionLevel.none {
-            Section {
-                NativeAdListRow(ad: $ad, size: .small)
-                    .listRow()
-            }
-        }
-    }
-    
-    @ViewBuilder func NameField() -> some View {
-        VStack {
+    // MARK: - Header
+
+    @ViewBuilder private func Header() -> some View {
+        ZStack {
+            Text(screenTitle)
+                .font(.headline)
+                .foregroundStyle(Color.appText)
+                .padding(.horizontal, .barHeight)
             HStack {
-                Text("Name")
-                    .foregroundStyle(Color.text)
+                Button("Cancel") { dismiss() }
+                    .foregroundStyle(Color.appMutedText)
                 Spacer(minLength: 0)
+                Button("Save") { saveCategory() }
+                    .fontWeight(.semibold)
+                    .foregroundStyle(Color.brandTeal)
+                    .opacity(isFormComplete ? 1 : .opacityButtonBackground)
+                    .disabled(!isFormComplete)
+                    .accessibilityIdentifier("EditTransactionCategoryView.Toolbar.SaveButton")
             }
-            TextField("Name",
-                      text: $nameString,
-                      prompt: Text("Groceries, Rent, Paycheck, etc...").foregroundStyle(Color.text.opacity(.opacityTextFieldPrompt))
+        }
+        .frame(height: .barHeight)
+        .padding(.horizontal)
+    }
+
+    // MARK: - Profile
+
+    @ViewBuilder private func Profile() -> some View {
+        IconCircle(systemName: symbolString ?? "tag.fill", size: 64, tint: .brandTeal)
+            .frame(maxWidth: .infinity)
+            .padding(.top, .paddingSmall)
+    }
+
+    // MARK: - Cards
+
+    @ViewBuilder private func FieldCard<Content: View>(
+        _ label: LocalizedStringKey,
+        footer: LocalizedStringKey? = nil,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label)
+                .font(.caption2.weight(.semibold))
+                .textCase(.uppercase)
+                .kerning(0.5)
+                .foregroundStyle(Color.appMutedText)
+            content()
+            if let footer {
+                Text(footer)
+                    .font(.caption2)
+                    .foregroundStyle(Color.appMutedText)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background {
+            RoundedRectangle(cornerRadius: .cornerRadiusMedium, style: .continuous)
+                .foregroundStyle(Color.appSurface)
+        }
+    }
+
+    @ViewBuilder private func AdCard() -> some View {
+        if subscriptionLevel == SubscriptionLevel.none {
+            NativeAdListRow(ad: $ad, size: .small)
+                .frame(maxWidth: .infinity)
+                .card()
+        }
+    }
+
+    @ViewBuilder private func NameField() -> some View {
+        FieldCard("Name", footer: nameInstructions.isEmpty ? nil : LocalizedStringKey(nameInstructions)) {
+            TextField(
+                "Name",
+                text: $nameString,
+                prompt: Text("Groceries, Rent, Paycheck, etc...").foregroundStyle(Color.appMutedText)
             )
-            .textFieldSmall()
+            .font(.title3)
+            .foregroundStyle(Color.appText)
+            .tint(Color.brandTeal)
             .autocapitalization(.words)
             .accessibilityIdentifier("EditTransactionCategoryView.NameField.TextField")
-            HStack {
-                Spacer(minLength: 0)
-                Text(nameInstructions)
-                    .font(.caption2)
-                    .foregroundStyle(Color.text.opacity(.opacityMutedText))
-                    .padding(.horizontal, .paddingHorizontalButtonXSmall)
-            }
         }
-        .listRow()
-    }
-    
-    @ViewBuilder func SymbolField() -> some View {
-        NavigationLink {
-            SfSymbolPickerView(selectedSymbol: $symbolString)
-        } label: {
-            HStack {
-                Text("Symbol")
-                    .foregroundStyle(Color.text)
-                Spacer(minLength: 0)
-                if let sfSymbol = symbolString {
-                    Image(systemName: sfSymbol)
-                        .buttonLabelSmall()
-                } else {
-                    Text("N/A")
-                        .buttonLabelSmall()
-                }
-            }
-        }
-        .listRow()
-        .accessibilityIdentifier("EditTransactionCategoryView.SymbolField.SelectSymbolButton")
-    }
-    
-    @ViewBuilder func GoalComparisonField() -> some View {
-        HStack {
-            Text("Target")
-                .foregroundStyle(Color.text)
-            Spacer(minLength: 0)
-            Menu {
-                ForEach(Transaction.Category.Goal.Comparison.allCases, id: \.self) { option in
-                    Button {
-                        goalComparison = option
-                    } label: {
-                        HStack {
-                            Text(option.name)
-                            if goalComparison == option { Image(systemName: "checkmark") }
-                        }
-                    }
-                }
-            } label: {
-                Text(goalComparison.name)
-                    .buttonLabelSmall()
-            }
-        }
-        .listRow()
     }
 
-    @ViewBuilder func LimitPeriodField() -> some View {
-        HStack {
-            Text("Period")
-                .foregroundStyle(Color.text)
-            Spacer(minLength: 0)
+    @ViewBuilder private func SymbolField() -> some View {
+        FieldCard("Symbol") {
+            NavigationLink {
+                SfSymbolPickerView(selectedSymbol: $symbolString)
+            } label: {
+                HStack(spacing: 8) {
+                    Text(symbolString == nil ? "Choose a symbol" : "Change symbol")
+                        .foregroundStyle(symbolString == nil ? Color.appMutedText : Color.appText)
+                    Spacer(minLength: 0)
+                    if let sfSymbol = symbolString {
+                        Image(systemName: sfSymbol)
+                            .foregroundStyle(Color.brandTeal)
+                    }
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(Color.appMutedText)
+                }
+                .font(.body.weight(.semibold))
+            }
+            .accessibilityIdentifier("EditTransactionCategoryView.SymbolField.SelectSymbolButton")
+        }
+    }
+
+    // MARK: - Goal
+
+    @ViewBuilder private func GoalCard() -> some View {
+        let footer: LocalizedStringKey = goalComparison == .lessThan
+            ? "Track spending that should stay under this amount."
+            : "Track a target you want to reach or exceed."
+
+        FieldCard("Goal", footer: limitPeriod == nil ? "Add a goal to track this category against a target." : footer) {
+            VStack(alignment: .leading, spacing: .padding) {
+                PeriodRow()
+                if limitPeriod != nil {
+                    TargetRow()
+                    AmountRow()
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private func PeriodRow() -> some View {
+        SubField("Period") {
             Menu {
                 LimitPeriodButton(period: nil)
                 LimitPeriodButton(period: .week)
                 LimitPeriodButton(period: .month)
                 LimitPeriodButton(period: .year)
             } label: {
-                Text(limitPeriod?.rawValue ?? "None")
-                    .buttonLabelSmall()
+                MenuLabel(systemName: "calendar", text: limitPeriod?.rawValue ?? String(localized: "None"))
             }
         }
-        .listRow()
     }
-    
+
     @ViewBuilder private func LimitPeriodButton(period: TimeFrame.Period?) -> some View {
         Button {
             limitPeriod = period
@@ -345,35 +350,89 @@ struct EditTransactionCategoryView: View {
             }
         }
     }
-    
-    @ViewBuilder func LimitAmountField() -> some View {
-        HStack {
-            Text("Amount")
-                .foregroundStyle(Color.text)
-            Spacer(minLength: 0)
+
+    @ViewBuilder private func TargetRow() -> some View {
+        SubField("Target") {
+            PillSegmentedControl(
+                selection: $goalComparison,
+                options: Transaction.Category.Goal.Comparison.allCases,
+                title: { $0.name }
+            )
+        }
+    }
+
+    @ViewBuilder private func AmountRow() -> some View {
+        SubField("Amount") {
             Button {
                 showAmountEntryView = true
             } label: {
-                HStack {
-                    Spacer(minLength: 0)
-                    Text(limitAmount.formatted())
-                        .multilineTextAlignment(.trailing)
-                }
+                ValueLabel(text: limitAmount.formatted())
             }
-            .frame(width: 128)
-            .textFieldSmall()
             .accessibilityIdentifier("EditTransactionCategoryView.LimitAmountField.TextField")
         }
-        .listRow()
-        .listRowSeparator(limitAmount.amount == .zero ? .hidden : .visible)
-        .fullScreenCover(isPresented: $showAmountEntryView) {
-            TransactionAmountEntryView(
-                amount: $limitAmount,
-                budget: budget
-            )
+    }
+
+    @ViewBuilder private func SubField<Content: View>(
+        _ label: LocalizedStringKey,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Color.appMutedText)
+            content()
         }
-        .disabled(limitPeriod == nil)
-        .opacity(limitPeriod == nil ? 0.3 : 1.0)
+    }
+
+    @ViewBuilder private func MenuLabel(systemName: String, text: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: systemName)
+                .foregroundStyle(Color.brandTeal)
+            Text(text)
+                .foregroundStyle(Color.appText)
+                .contentTransition(.numericText())
+            Spacer(minLength: 0)
+            Image(systemName: "chevron.up.chevron.down")
+                .font(.caption)
+                .foregroundStyle(Color.appMutedText)
+        }
+        .font(.body.weight(.semibold))
+    }
+
+    @ViewBuilder private func ValueLabel(text: String) -> some View {
+        HStack(spacing: 8) {
+            Text(text)
+                .foregroundStyle(Color.appText)
+                .contentTransition(.numericText())
+            Spacer(minLength: 0)
+            Image(systemName: "chevron.right")
+                .font(.caption)
+                .foregroundStyle(Color.appMutedText)
+        }
+        .font(.body.weight(.semibold))
+    }
+
+    // MARK: - Delete
+
+    @ViewBuilder private func DeleteButton() -> some View {
+        Button(role: .destructive) {
+            startDelete()
+        } label: {
+            HStack(spacing: .paddingSmall) {
+                Image(systemName: "trash")
+                Text("Delete Category")
+            }
+            .font(.headline)
+            .foregroundStyle(Color.negative)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, .paddingVerticalButtonMedium)
+            .background {
+                RoundedRectangle(cornerRadius: .cornerRadiusMedium, style: .continuous)
+                    .foregroundStyle(Color.appSurface)
+            }
+        }
+        .accessibilityIdentifier("EditTransactionCategoryView.DeleteButton")
+        .padding(.top, .paddingSmall)
     }
 }
 
@@ -384,6 +443,7 @@ struct EditTransactionCategoryView: View {
             subscriptionLevelProvider: MockSubscriptionLevelProvider(level: .boldBudgetPlus)
         )
     }
+    .environmentObject(AdProviderFactory.forScreenshots)
 }
 
 #Preview("Edit") {
