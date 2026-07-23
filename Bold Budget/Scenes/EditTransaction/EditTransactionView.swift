@@ -41,6 +41,8 @@ struct EditTransactionView: View {
     @State private var tags: Set<Transaction.Tag> = []
     @State private var showTagsEditorView: Bool = false
     @State private var showTransactionDatePicker: Bool = false
+    @State private var showAddAccount: Bool = false
+    @State private var showAddCategory: Bool = false
 
 
     @State private var hasPopulatedFields: Bool = false
@@ -252,6 +254,12 @@ struct EditTransactionView: View {
         .fullScreenCover(isPresented: $showTagsEditorView) {
             TagsEditorView(tags: $tags, budget: budget)
         }
+        .fullScreenCover(isPresented: $showAddAccount) {
+            NavigationStack { EditAccountView(budget: budget) }
+        }
+        .fullScreenCover(isPresented: $showAddCategory) {
+            NavigationStack { EditTransactionCategoryView(budget: budget) }
+        }
         .onChange(of: transactionToEdit, initial: true) { _, new in populateFields(new) }
         .alert(alertMessage, isPresented: $showAlert) {}
         .animation(.snappy, value: kind)
@@ -358,6 +366,12 @@ struct EditTransactionView: View {
                     }
                 }
             }
+            Divider()
+            Button {
+                showAddAccount = true
+            } label: {
+                Label("Add Account", systemImage: "plus")
+            }
         } label: {
             ChipCard(
                 title: title,
@@ -403,6 +417,12 @@ struct EditTransactionView: View {
                         if categoryId == category.id { Image(systemName: "checkmark") }
                     }
                 }
+            }
+            Divider()
+            Button {
+                showAddCategory = true
+            } label: {
+                Label("Add Category", systemImage: "plus")
             }
         } label: {
             let category = categoryId.map { budget.getCategoryBy(id: $0) }
