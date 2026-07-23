@@ -14,6 +14,8 @@ struct ContentView: View {
     @State var userAuthState: UserAuthState = .working
     @State var onboardingState: UserOnboardingState = .unknown
 
+    @StateObject private var budgetNavigator = BudgetNavigator()
+
     private let userAuthStatePublisher: AnyPublisher<UserAuthState,Never>
     private let userOnboardingStatePublisher: AnyPublisher<UserOnboardingState,Never>
 
@@ -73,10 +75,11 @@ struct ContentView: View {
     }
     
     @ViewBuilder private func OnboardedView() -> some View {
-        NavigationStack {
+        NavigationStack(path: $budgetNavigator.path) {
             BudgetsListView()
         }
         .background(Color.background)
+        .environmentObject(budgetNavigator)
     }
 
     @ViewBuilder private func NotOnboardedView() -> some View {

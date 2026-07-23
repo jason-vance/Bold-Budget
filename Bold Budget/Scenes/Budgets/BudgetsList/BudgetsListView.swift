@@ -115,6 +115,9 @@ struct BudgetsListView: View {
         }
         .foregroundStyle(Color.appText)
         .background(Color.appBackground.ignoresSafeArea())
+        .navigationDestination(for: BudgetInfo.self) { info in
+            BudgetDetailView(budget: Budget(info: info))
+        }
         .overlay(alignment: .bottomTrailing) { AddBudgetButton() }
         .toolbar(.hidden, for: .navigationBar)
         .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
@@ -173,9 +176,7 @@ struct BudgetsListView: View {
     }
 
     @ViewBuilder private func BudgetRow(_ budget: BudgetInfo) -> some View {
-        NavigationLink {
-            BudgetDetailView(budget: Budget(info: budget))
-        } label: {
+        NavigationLink(value: budget) {
             HStack(spacing: .padding) {
                 IconCircle(systemName: "chart.pie.fill", size: 40, tint: .brandTeal)
                 Text(budget.name.value)

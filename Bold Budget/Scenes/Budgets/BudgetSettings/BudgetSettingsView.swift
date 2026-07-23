@@ -17,6 +17,7 @@ struct BudgetSettingsView: View {
     @Environment(\.dismiss) private var dismiss: DismissAction
 
     @EnvironmentObject private var adProviderFactory: AdProviderFactory
+    @EnvironmentObject private var budgetNavigator: BudgetNavigator
     @State private var adProvider: AdProvider?
     @State private var ad: Ad?
 
@@ -24,19 +25,24 @@ struct BudgetSettingsView: View {
 
     @State private var users: [UserData] = []
     @State private var budgetUsers: [UserId:Budget.User] = [:]
-    
+    @State private var allBudgets: [BudgetInfo] = []
+
     @State private var subscriptionLevel: SubscriptionLevel = .none
     private let subscriptionLevelProvider: SubscriptionLevelProvider
-    
+
     private let userDataFetcher: UserDataFetcher
     private let budgetUserFetcher: BudgetUserFetcher
+    private let budgetFetcher: BudgetFetcher
+    private let currentUserIdProvider: CurrentUserIdProvider
 
     init(budget: StateObject<Budget>) {
         self.init(
             budget: budget,
             userDataFetcher: iocContainer~>UserDataFetcher.self,
             budgetUserFetcher: iocContainer~>BudgetUserFetcher.self,
-            subscriptionLevelProvider: iocContainer~>SubscriptionLevelProvider.self
+            subscriptionLevelProvider: iocContainer~>SubscriptionLevelProvider.self,
+            budgetFetcher: iocContainer~>BudgetFetcher.self,
+            currentUserIdProvider: iocContainer~>CurrentUserIdProvider.self
         )
     }
 
@@ -44,12 +50,34 @@ struct BudgetSettingsView: View {
         budget: StateObject<Budget>,
         userDataFetcher: UserDataFetcher,
         budgetUserFetcher: BudgetUserFetcher,
-        subscriptionLevelProvider: SubscriptionLevelProvider
+        subscriptionLevelProvider: SubscriptionLevelProvider,
+        budgetFetcher: BudgetFetcher,
+        currentUserIdProvider: CurrentUserIdProvider
     ) {
         self._budget = budget
         self.userDataFetcher = userDataFetcher
         self.budgetUserFetcher = budgetUserFetcher
         self.subscriptionLevelProvider = subscriptionLevelProvider
+        self.budgetFetcher = budgetFetcher
+        self.currentUserIdProvider = currentUserIdProvider
+    }
+
+    /// Budgets other than the one being viewed, for the switcher menu.
+    private var otherBudgets: [BudgetInfo] {
+        allBudgets
+            .filter { $0.id != budget.id }
+            .sorted { $0.name.value < $1.name.value }
+    }
+
+    private func fetchBudgets() {
+        Task {
+            guard let userId = currentUserIdProvider.currentUserId else { return }
+            do {
+                allBudgets = try await budgetFetcher.fetchBudgets(for: userId)
+            } catch {
+                print("Failed to fetch budgets. \(error.localizedDescription)")
+            }
+        }
     }
     
     private func fetchUsers() {
@@ -108,6 +136,7 @@ struct BudgetSettingsView: View {
         .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
         .onAppear { fetchUsers() }
         .onAppear { fetchUserRoles() }
+        .onAppear { fetchBudgets() }
         .animation(.snappy, value: users)
         .animation(.snappy, value: budgetUsers)
         .onReceive(subscriptionLevelProvider.subscriptionLevelPublisher) { subscriptionLevel = $0 }
@@ -139,12 +168,36 @@ struct BudgetSettingsView: View {
     // MARK: - Profile
 
     @ViewBuilder private func Profile() -> some View {
+        if otherBudgets.isEmpty {
+            ProfileLabel(showsSwitcher: false)
+        } else {
+            Menu {
+                Section("Switch Budget") {
+                    ForEach(otherBudgets) { info in
+                        Button(info.name.value) { budgetNavigator.open(info) }
+                    }
+                }
+            } label: {
+                ProfileLabel(showsSwitcher: true)
+            }
+            .accessibilityIdentifier("BudgetSettingsView.SwitchBudgetMenu")
+        }
+    }
+
+    @ViewBuilder private func ProfileLabel(showsSwitcher: Bool) -> some View {
         VStack(spacing: .paddingSmall) {
             IconCircle(systemName: "chart.pie.fill", size: 64, tint: .brandTeal)
-            Text(budget.info.name.value)
-                .font(.title3.weight(.bold))
-                .foregroundStyle(Color.appText)
-                .multilineTextAlignment(.center)
+            HStack(spacing: 4) {
+                Text(budget.info.name.value)
+                    .font(.title3.weight(.bold))
+                    .foregroundStyle(Color.appText)
+                    .multilineTextAlignment(.center)
+                if showsSwitcher {
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(Color.appMutedText)
+                }
+            }
         }
         .frame(maxWidth: .infinity)
         .padding(.top, .paddingSmall)
@@ -259,8 +312,15 @@ struct BudgetSettingsView: View {
             budget: .init(wrappedValue: Budget(info: .sample)),
             userDataFetcher: MockUserDataFetcher(),
             budgetUserFetcher: MockBudgetUserFetcher(),
-            subscriptionLevelProvider: MockSubscriptionLevelProvider(level: .boldBudgetPlus)
+            subscriptionLevelProvider: MockSubscriptionLevelProvider(level: .boldBudgetPlus),
+            budgetFetcher: MockBudgetFetcher(budgets: [
+                .sample,
+                .init(id: UUID().uuidString, name: .init("Personal")!, users: [.sample]),
+                .init(id: UUID().uuidString, name: .init("Side Business")!, users: [.sample]),
+            ]),
+            currentUserIdProvider: MockCurrentUserIdProvider()
         )
     }
     .environmentObject(AdProviderFactory.forScreenshots)
+    .environmentObject(BudgetNavigator())
 }

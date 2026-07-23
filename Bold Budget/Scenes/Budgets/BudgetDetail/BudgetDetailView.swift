@@ -669,4 +669,5 @@ struct BudgetDetailView: View {
         )
     }
     .environmentObject(AdProviderFactory.forScreenshots)
+    .environmentObject(BudgetNavigator())
 }

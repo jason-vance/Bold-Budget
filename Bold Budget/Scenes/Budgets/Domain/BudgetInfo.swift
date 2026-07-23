@@ -22,6 +22,12 @@ struct BudgetInfo {
 extension BudgetInfo: Identifiable {}
 extension BudgetInfo: Equatable {}
 
+extension BudgetInfo: Hashable {
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+}
+
 extension BudgetInfo {
     struct Name: Equatable {
         
