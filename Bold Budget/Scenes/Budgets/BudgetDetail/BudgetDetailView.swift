@@ -268,10 +268,10 @@ struct BudgetDetailView: View {
         .onChange(of: scenePhase) { old, new in onChangeOf(scenePhase: new) }
     }
 
-    /// Screens already migrated to the redesign palette. Net Worth and the Spending Chart mode use
-    /// the redesign (black/white) palette; Envelopes and Recurring still use the app palette.
+    /// Screens already migrated to the redesign palette. Net Worth and the Spending Chart /
+    /// Envelopes modes use the redesign (black/white) palette; Recurring still uses the app palette.
     private var usesRedesignPalette: Bool {
-        topTab == .netWorth || (topTab == .spending && viewMode == .pieChart)
+        topTab == .netWorth || (topTab == .spending && viewMode != .recurringExpenses)
     }
 
     private var chromeBackground: Color { usesRedesignPalette ? .appBackground : .background }
@@ -291,20 +291,21 @@ struct BudgetDetailView: View {
                 if budget.isLoading { BlockingSpinnerView() }
             }
             SpendingModeBar()
+        } else if viewMode == .envelopes {
+            EnvelopesView(
+                budget: budget,
+                timeFrame: $timeFrame,
+                transactionsFilter: $transactionsFilter
+            )
+            .overlay {
+                if budget.isLoading { BlockingSpinnerView() }
+            }
+            SpendingModeBar()
         } else {
             TopBar()
             List {
-                switch viewMode {
-                case .envelopes:
-                    AdSection()
-                    IncomeExpenseTotals()
-                    EnvelopesView(budget: budget, timeFrame: timeFrame)
-                case .recurringExpenses:
-                    AdSection()
-                    RecurringExpensesListContent(budget: budget)
-                case .pieChart:
-                    EmptyView()
-                }
+                AdSection()
+                RecurringExpensesListContent(budget: budget)
             }
             .refreshable { budget.refresh() }
             .listStyle(.insetGrouped)
