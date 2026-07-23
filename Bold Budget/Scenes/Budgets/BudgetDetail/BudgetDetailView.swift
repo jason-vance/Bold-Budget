@@ -268,10 +268,10 @@ struct BudgetDetailView: View {
         .onChange(of: scenePhase) { old, new in onChangeOf(scenePhase: new) }
     }
 
-    /// Screens already migrated to the redesign palette. Net Worth and the Spending Chart /
-    /// Envelopes modes use the redesign (black/white) palette; Recurring still uses the app palette.
+    /// Every screen has now been migrated to the redesign palette, so the chrome (bottom bar,
+    /// mode switcher) always uses the redesign (black/white) tokens.
     private var usesRedesignPalette: Bool {
-        topTab == .netWorth || (topTab == .spending && viewMode != .recurringExpenses)
+        topTab == .netWorth || topTab == .spending
     }
 
     private var chromeBackground: Color { usesRedesignPalette ? .appBackground : .background }
@@ -302,26 +302,10 @@ struct BudgetDetailView: View {
             }
             SpendingModeBar()
         } else {
-            TopBar()
-            List {
-                AdSection()
-                RecurringExpensesListContent(budget: budget)
-            }
-            .refreshable { budget.refresh() }
-            .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
-            .scrollIndicators(.hidden)
-            .overlay(alignment: .top) {
-                Rectangle()
-                    .opacity(0)
-                    .overlay(alignment: .top) { ExtraOptionsMenuOverlay() }
-                    .clipped()
-            }
-            .overlay {
-                if budget.isLoading {
-                    BlockingSpinnerView()
+            RecurringExpensesView(budget: budget)
+                .overlay {
+                    if budget.isLoading { BlockingSpinnerView() }
                 }
-            }
             SpendingModeBar()
         }
     }

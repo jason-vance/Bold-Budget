@@ -7,9 +7,11 @@
 
 import SwiftUI
 
-/// List `Section` content for recurring expenses, meant to be embedded inside a parent `List`
-/// (mirrors `EnvelopesView`) rather than owning its own screen chrome.
-struct RecurringExpensesListContent: View {
+/// The Spending tab's Recurring mode, redesign palette: a title header, month/debt totals, and a
+/// section per kind (debts, bills, subscriptions) with a row for each expense. Self-contained (own
+/// header + scroll) so it carries the redesign look without the shared List chrome, mirroring
+/// `EnvelopesView`.
+struct RecurringExpensesView: View {
 
     @StateObject var budget: Budget
 
@@ -54,117 +56,175 @@ struct RecurringExpensesListContent: View {
     }
 
     var body: some View {
-        if !hasContent {
-            NoExpensesView()
-        } else {
-            TotalsSection()
-            ForEach(RecurringExpense.Kind.allCases, id: \.self) { kind in
-                KindSection(kind)
+        VStack(spacing: 0) {
+            Header()
+            ScrollView {
+                VStack(spacing: 0) {
+                    if !hasContent {
+                        EmptyState()
+                    } else {
+                        Totals()
+                            .padding(.vertical, .padding)
+                        ForEach(RecurringExpense.Kind.allCases, id: \.self) { kind in
+                            KindSection(kind)
+                        }
+                    }
+                }
+                .padding(.horizontal)
+                .padding(.bottom)
+            }
+            .refreshable { budget.refresh() }
+            .scrollIndicators(.hidden)
+        }
+        .foregroundStyle(Color.appText)
+        .background(Color.appBackground.ignoresSafeArea())
+    }
+
+    // MARK: - Header
+
+    @ViewBuilder private func Header() -> some View {
+        HStack(spacing: .paddingSmall) {
+            Text("Recurring Expenses")
+                .font(.headline)
+                .foregroundStyle(Color.appText)
+            Spacer(minLength: 0)
+            NavigationLink {
+                BudgetSettingsView(budget: _budget)
+            } label: {
+                Image(systemName: "gearshape")
+                    .font(.body)
+                    .foregroundStyle(Color.appMutedText)
+            }
+            .accessibilityIdentifier("BudgetDetailView.SettingsButton")
+        }
+        .frame(height: .barHeight)
+        .padding(.horizontal)
+    }
+
+    // MARK: - Totals
+
+    @ViewBuilder private func Totals() -> some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Expected / Month")
+                    .font(.caption2.weight(.semibold))
+                    .textCase(.uppercase)
+                    .kerning(0.5)
+                    .foregroundStyle(Color.appMutedText)
+                Text(totalMonthly.formatted())
+                    .font(.headline)
+                    .foregroundStyle(Color.appText)
+                    .contentTransition(.numericText())
+            }
+            Spacer()
+            VStack(alignment: .trailing, spacing: 2) {
+                Text("Debt Owed")
+                    .font(.caption2.weight(.semibold))
+                    .textCase(.uppercase)
+                    .kerning(0.5)
+                    .foregroundStyle(Color.appMutedText)
+                Text(totalOwed.formatted())
+                    .font(.headline)
+                    .foregroundStyle(Color.appText)
+                    .contentTransition(.numericText())
             }
         }
     }
 
-    @ViewBuilder private func TotalsSection() -> some View {
-        Section {
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Expected / Month")
-                        .font(.caption2.weight(.semibold))
-                        .textCase(.uppercase)
-                        .foregroundStyle(Color.text.opacity(0.5))
-                    Text(totalMonthly.formatted())
-                        .foregroundStyle(Color.text)
-                        .contentTransition(.numericText())
-                }
-                Spacer()
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text("Debt Owed")
-                        .font(.caption2.bold())
-                        .textCase(.uppercase)
-                        .foregroundStyle(Color.text.opacity(0.5))
-                    Text(totalOwed.formatted())
-                        .foregroundStyle(Color.text)
-                        .contentTransition(.numericText())
-                }
-            }
-            .listRowBackground(Color.background)
-            .listRowSeparator(.hidden)
-        }
-        .listSectionSeparator(.hidden)
-        .listSectionSpacing(0)
-    }
+    // MARK: - Kind section
 
     @ViewBuilder private func KindSection(_ kind: RecurringExpense.Kind) -> some View {
         let expenses = expenses(of: kind)
         let accounts = kind == .debt ? debtAccounts : []
         if !expenses.isEmpty || !accounts.isEmpty {
             let monthly = expenses.totalMonthlyCost + accounts.totalMonthlyPayments
-            Section {
-                ForEach(expenses) { expense in
-                    ExpenseRow(expense)
+            VStack(spacing: 0) {
+                RowDivider(opacity: 0.2)
+                SectionHeader(title: kind.pluralName, monthly: monthly)
+                ForEach(Array(expenses.enumerated()), id: \.element.id) { index, expense in
+                    ExpenseRow(expense, showTopDivider: index > 0)
                 }
-                ForEach(accounts) { account in
-                    AccountRow(account)
+                ForEach(Array(accounts.enumerated()), id: \.element.id) { index, account in
+                    AccountRow(account, showTopDivider: !expenses.isEmpty || index > 0)
                 }
-            } header: {
-                HStack {
-                    Text(kind.pluralName)
-                    Spacer()
-                    Text("\(monthly.formatted())/mo")
-                }
-                .foregroundStyle(Color.text)
             }
-            .listSectionSeparator(.hidden)
-            .listSectionSpacing(0)
         }
     }
 
-    @ViewBuilder private func AccountRow(_ account: Account) -> some View {
-        NavigationLink {
-            AccountDetailView(budget: budget, accountId: account.id)
-        } label: {
-            HStack(spacing: .padding) {
-                IconCircle(systemName: account.kind.sfSymbol, size: 40)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(account.name.value)
-                        .fontWeight(.semibold)
-                    Text("\(account.balance.formatted()) still owed")
+    @ViewBuilder private func SectionHeader(title: String, monthly: Money) -> some View {
+        HStack {
+            Text(title)
+                .font(.caption2.weight(.semibold))
+                .textCase(.uppercase)
+                .kerning(0.5)
+            Spacer()
+            Text("\(monthly.formatted())/mo")
+                .font(.caption2.weight(.semibold))
+                .contentTransition(.numericText())
+        }
+        .foregroundStyle(Color.appMutedText)
+        .padding(.vertical, .paddingSmall)
+    }
+
+    // MARK: - Rows
+
+    @ViewBuilder private func AccountRow(_ account: Account, showTopDivider: Bool) -> some View {
+        VStack(spacing: 0) {
+            if showTopDivider { RowDivider() }
+            NavigationLink {
+                AccountDetailView(budget: budget, accountId: account.id)
+            } label: {
+                Row(
+                    systemName: account.kind.sfSymbol,
+                    title: account.name.value,
+                    subtitle: String(localized: "\(account.balance.formatted()) still owed"),
+                    trailing: "\((account.monthlyPayment ?? .zero).formatted())/mo"
+                )
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    @ViewBuilder private func ExpenseRow(_ expense: RecurringExpense, showTopDivider: Bool) -> some View {
+        VStack(spacing: 0) {
+            if showTopDivider { RowDivider() }
+            NavigationLink {
+                EditRecurringExpenseView(budget: budget)
+                    .editing(expense)
+            } label: {
+                Row(
+                    systemName: symbol(for: expense.kind),
+                    title: expense.name.value,
+                    subtitle: rowSubtitle(for: expense),
+                    trailing: "\(expense.monthlyCost.formatted())/mo"
+                )
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    @ViewBuilder private func Row(systemName: String, title: String, subtitle: String?, trailing: String) -> some View {
+        HStack(spacing: .padding) {
+            IconCircle(systemName: systemName, size: 40, tint: .brandTeal)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(Color.appText)
+                if let subtitle {
+                    Text(subtitle)
                         .font(.caption)
-                        .foregroundStyle(Color.text.opacity(.opacityMutedText))
+                        .foregroundStyle(Color.appMutedText)
                         .lineLimit(1)
                 }
-                Spacer(minLength: 0)
-                Text("\((account.monthlyPayment ?? .zero).formatted())/mo")
-                    .fontWeight(.semibold)
-                    .contentTransition(.numericText())
             }
+            Spacer(minLength: 0)
+            Text(trailing)
+                .fontWeight(.semibold)
+                .foregroundStyle(Color.appText)
+                .contentTransition(.numericText())
         }
-        .listRow()
-    }
-
-    @ViewBuilder private func ExpenseRow(_ expense: RecurringExpense) -> some View {
-        NavigationLink {
-            EditRecurringExpenseView(budget: budget)
-                .editing(expense)
-        } label: {
-            HStack(spacing: .padding) {
-                IconCircle(systemName: symbol(for: expense.kind), size: 40)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(expense.name.value)
-                        .fontWeight(.semibold)
-                    if let subtitle = rowSubtitle(for: expense) {
-                        Text(subtitle)
-                            .font(.caption)
-                            .foregroundStyle(Color.text.opacity(.opacityMutedText))
-                    }
-                }
-                Spacer(minLength: 0)
-                Text("\(expense.monthlyCost.formatted())/mo")
-                    .fontWeight(.semibold)
-                    .contentTransition(.numericText())
-            }
-        }
-        .listRow()
+        .padding(.vertical, .padding)
+        .contentShape(Rectangle())
     }
 
     private func symbol(for kind: RecurringExpense.Kind) -> String {
@@ -182,35 +242,37 @@ struct RecurringExpensesListContent: View {
         return billingNote(for: expense)
     }
 
-    @ViewBuilder private func NoExpensesView() -> some View {
-        ContentUnavailableView(
-            "No Recurring Expenses",
-            systemImage: "calendar.badge.clock",
-            description: Text("Track debts, bills, and subscriptions to see what you owe and what each month costs you")
-        )
-        .listRowBackground(Color.background)
-        .listRowSeparator(.hidden)
+    @ViewBuilder private func RowDivider(opacity: Double = 0.15) -> some View {
+        Rectangle()
+            .fill(Color.appMutedText.opacity(opacity))
+            .frame(height: 1)
+    }
+
+    // MARK: - Empty state
+
+    @ViewBuilder private func EmptyState() -> some View {
+        VStack(spacing: .paddingSmall) {
+            IconCircle(systemName: "calendar.badge.clock", size: 56, tint: .brandTeal)
+            Text("No Recurring Expenses")
+                .font(.title3.weight(.bold))
+            Text("Track debts, bills, and subscriptions to see what you owe and what each month costs you.")
+                .font(.subheadline)
+                .foregroundStyle(Color.appMutedText)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, .padding * 2)
     }
 }
 
 #Preview("Populated") {
-    List {
-        RecurringExpensesListContent(budget: .previewSample(recurringExpenses: RecurringExpense.samples))
+    NavigationStack {
+        RecurringExpensesView(budget: .previewSample(recurringExpenses: RecurringExpense.samples))
     }
-    .listStyle(.insetGrouped)
-    .scrollContentBackground(.hidden)
-    .scrollIndicators(.hidden)
-    .foregroundStyle(Color.text)
-    .background(Color.background)
 }
 
 #Preview("Empty") {
-    List {
-        RecurringExpensesListContent(budget: .previewSample())
+    NavigationStack {
+        RecurringExpensesView(budget: .previewSample())
     }
-    .listStyle(.insetGrouped)
-    .scrollContentBackground(.hidden)
-    .scrollIndicators(.hidden)
-    .foregroundStyle(Color.text)
-    .background(Color.background)
 }
