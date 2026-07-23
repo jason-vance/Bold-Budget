@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import FirebaseFirestore
 import Combine
 
 class FirebaseUserDataProvider: UserDataProvider {
@@ -22,8 +21,6 @@ class FirebaseUserDataProvider: UserDataProvider {
             .compactMap { $0 }
             .eraseToAnyPublisher()
     }
-    
-    var userDocListener: ListenerRegistration?
     
     let userRepo = FirebaseUserRepository()
     
