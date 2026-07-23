@@ -11,11 +11,11 @@ struct BlockingSpinnerView: View {
     var body: some View {
         ZStack {
             Rectangle()
-                .fill(Color.background)
+                .fill(Color.appBackground)
                 .ignoresSafeArea()
             VStack(spacing: 8) {
                 ProgressView()
-                    .tint(Color.text)
+                    .tint(Color.brandTeal)
             }
         }
         .id("BlockingSpinnerView")
