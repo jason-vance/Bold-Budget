@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import Kingfisher
 
 struct ProfileImageView: View {
     
@@ -26,19 +25,19 @@ struct ProfileImageView: View {
     }
 
     var body: some View {
-        KFImage(profileImageUrl)
-            .resizable()
-            .cacheOriginalImage()
-            .diskCacheExpiration(.days(7))
-//            .forceRefresh()
-            .placeholder(PlaceholderView)
-            .scaledToFill()
-            .frame(width: imageSize, height: imageSize)
-            .clipShape(Circle())
-            .padding(padding)
-            .background(Circle().fill(Color.text))
+        CachedAsyncImage(url: profileImageUrl) { image in
+            image
+                .resizable()
+                .scaledToFill()
+        } placeholder: {
+            PlaceholderView()
+        }
+        .frame(width: imageSize, height: imageSize)
+        .clipShape(Circle())
+        .padding(padding)
+        .background(Circle().fill(Color.text))
     }
-    
+
     @ViewBuilder func PlaceholderView() -> some View {
         Image(systemName: "person.crop.circle.fill")
             .resizable()

@@ -17,7 +17,6 @@
 		569203792F1048010008B2E6 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 569203782F1048010008B2E6 /* FirebaseStorage */; };
 		569207602F104A280008B2E6 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 5692075F2F104A280008B2E6 /* MarkdownUI */; };
 		569207632F104A510008B2E6 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 569207622F104A510008B2E6 /* GoogleMobileAds */; };
-		569207742F10507A0008B2E6 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 569207732F10507A0008B2E6 /* Kingfisher */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -211,7 +210,6 @@
 				569203752F1048010008B2E6 /* FirebaseAuth in Frameworks */,
 				569203732F1048010008B2E6 /* FirebaseAnalytics in Frameworks */,
 				569207632F104A510008B2E6 /* GoogleMobileAds in Frameworks */,
-				569207742F10507A0008B2E6 /* Kingfisher in Frameworks */,
 				569207602F104A280008B2E6 /* MarkdownUI in Frameworks */,
 				569203792F1048010008B2E6 /* FirebaseStorage in Frameworks */,
 				569203702F1047BA0008B2E6 /* SwinjectAutoregistration in Frameworks */,
@@ -294,7 +292,6 @@
 				569203782F1048010008B2E6 /* FirebaseStorage */,
 				5692075F2F104A280008B2E6 /* MarkdownUI */,
 				569207622F104A510008B2E6 /* GoogleMobileAds */,
-				569207732F10507A0008B2E6 /* Kingfisher */,
 			);
 			productName = "Bold Budget";
 			productReference = 5673DA0F2CA7FA58007833E0 /* Bold Budget.app */;
@@ -384,7 +381,6 @@
 				569203712F1048010008B2E6 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				5692075E2F104A280008B2E6 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
 				569207612F104A510008B2E6 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
-				569207722F10507A0008B2E6 /* XCRemoteSwiftPackageReference "Kingfisher" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 5673DA102CA7FA58007833E0 /* Products */;
@@ -835,14 +831,6 @@
 				minimumVersion = 12.14.0;
 			};
 		};
-		569207722F10507A0008B2E6 /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/onevcat/Kingfisher.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 8.6.2;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -885,11 +873,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 569207612F104A510008B2E6 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
 			productName = GoogleMobileAds;
-		};
-		569207732F10507A0008B2E6 /* Kingfisher */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 569207722F10507A0008B2E6 /* XCRemoteSwiftPackageReference "Kingfisher" */;
-			productName = Kingfisher;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
