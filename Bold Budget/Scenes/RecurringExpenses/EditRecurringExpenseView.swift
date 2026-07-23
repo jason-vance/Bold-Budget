@@ -360,7 +360,7 @@ struct EditRecurringExpenseView: View {
                     budget: budget,
                     selectedCategoryId: $categoryId
                 )
-                .pickerMode(.pickerAndEditor)
+                .pickerMode(.picker)
             } label: {
                 ValueLabel(text: selectedCategoryName)
             }

@@ -17,7 +17,6 @@ struct TransactionCategoryPickerView: View {
 
     enum Mode {
         case picker
-        case pickerAndEditor
         case editor
     }
 
@@ -32,7 +31,6 @@ struct TransactionCategoryPickerView: View {
 
     @State private var mode: Mode? = nil
     @State private var searchText: String = ""
-    @State private var isEditing: Bool = false
     
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
@@ -82,10 +80,6 @@ struct TransactionCategoryPickerView: View {
     
     private func set(mode: Mode?) {
         self.mode = mode
-        
-        if mode == .editor {
-            isEditing = true
-        }
     }
     
     private func select(category: Transaction.Category) {
@@ -127,14 +121,13 @@ struct TransactionCategoryPickerView: View {
         .onChange(of: __mode, initial: true) { _, mode in set(mode: mode) }
         .onReceive(subscriptionLevelProvider.subscriptionLevelPublisher) { subscriptionLevel = $0 }
         .alert(alertMessage, isPresented: $showAlert) {}
-        .animation(.snappy, value: isEditing)
     }
 
     // MARK: - Header
 
     @ViewBuilder private func Header() -> some View {
         ZStack {
-            Text(isEditing ? "Edit a Category" : "Pick a Category")
+            Text(mode == .editor ? "Edit a Category" : "Pick a Category")
                 .font(.headline)
                 .foregroundStyle(Color.appText)
                 .padding(.horizontal, .barHeight)
@@ -146,25 +139,10 @@ struct TransactionCategoryPickerView: View {
                 }
                 .accessibilityIdentifier("TransactionCategoryPickerView.CloseButton")
                 Spacer(minLength: 0)
-                if mode != .editor {
-                    EditButton()
-                }
             }
         }
         .frame(height: .barHeight)
         .padding(.horizontal)
-    }
-
-    @ViewBuilder private func EditButton() -> some View {
-        Button {
-            withAnimation(.snappy) { isEditing.toggle() }
-        } label: {
-            Image(systemName: isEditing ? "pencil.slash" : "pencil")
-                .font(.body.weight(.semibold))
-                .foregroundStyle(isEditing ? Color.brandTeal : Color.appMutedText)
-        }
-        .opacity(mode == .pickerAndEditor && budget.transactionCategories.isEmpty ? 0 : 1)
-        .accessibilityIdentifier("TransactionCategoryPickerView.Toolbar.EditButton")
     }
 
     // MARK: - Search
@@ -223,7 +201,7 @@ struct TransactionCategoryPickerView: View {
     }
 
     @ViewBuilder private func CategoryButton(_ category: Transaction.Category) -> some View {
-        if isEditing {
+        if mode == .editor {
             NavigationLink {
                 EditTransactionCategoryView(budget: budget)
                     .editing(category)
@@ -268,15 +246,7 @@ struct TransactionCategoryPickerView: View {
     }
 
     @ViewBuilder private func TrailingIndicator(_ category: Transaction.Category) -> some View {
-        if isEditing {
-            Image(systemName: "pencil")
-                .font(.body.weight(.semibold))
-                .foregroundStyle(Color.appMutedText)
-        } else if selectedCategoryId == category.id {
-            Image(systemName: "checkmark")
-                .font(.body.weight(.semibold))
-                .foregroundStyle(Color.brandTeal)
-        } else {
+        if mode == .editor {
             Image(systemName: "chevron.right")
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(Color.appMutedText)
@@ -346,14 +316,14 @@ struct TransactionCategoryPickerView: View {
     .environmentObject(AdProviderFactory.forScreenshots)
 }
 
-#Preview("Picker And Editor") {
+#Preview("Editor") {
     NavigationStack {
         TransactionCategoryPickerView(
             budget: Budget(info: .sample),
             selectedCategoryId: .constant(nil),
             subscriptionLevelProvider: MockSubscriptionLevelProvider(level: .boldBudgetPlus)
         )
-        .pickerMode(.pickerAndEditor)
+        .pickerMode(.editor)
     }
     .environmentObject(AdProviderFactory.forScreenshots)
 }
