@@ -87,17 +87,36 @@ struct SpendingChartView: View {
         .foregroundStyle(Color.appText)
         .background(Color.appBackground.ignoresSafeArea())
         .overlay(alignment: .top) { PeriodDropdown() }
-        .sheet(isPresented: $showFilter) {
-            TransactionsFilterMenu(
-                budget: budget,
-                isMenuVisible: $showFilter,
-                transactionsFilter: $transactionsFilter,
-                transactionCount: .init(get: { filteredTransactions.count }, set: { _ in })
-            )
-            .foregroundStyle(Color.text)
-            .background(Color.background.ignoresSafeArea())
-            .presentationDetents([.medium, .large])
-            .presentationBackground(Color.background)
+        .overlay(alignment: .top) { FilterDropdown() }
+    }
+
+    // MARK: - Filter dropdown
+
+    /// The transaction filter as a panel dropping in under the toolbar, over the content — the same
+    /// presentation the timeframe picker landed on, instead of a bottom sheet.
+    @ViewBuilder private func FilterDropdown() -> some View {
+        if showFilter {
+            ZStack(alignment: .top) {
+                // Full-screen tap-catcher to dismiss when tapping outside the panel.
+                Rectangle()
+                    .fill(Color.appBackground.opacity(0.01))
+                    .ignoresSafeArea()
+                    .onTapGesture { withAnimation(.snappy) { showFilter = false } }
+
+                TransactionsFilterMenu(
+                    budget: budget,
+                    isMenuVisible: $showFilter,
+                    transactionsFilter: $transactionsFilter,
+                    transactionCount: .init(get: { filteredTransactions.count }, set: { _ in })
+                )
+                .background(Color.appBackground)
+                .overlay(alignment: .bottom) {
+                    Rectangle().fill(Color.appMutedText.opacity(0.2)).frame(height: 1)
+                }
+                .shadow(color: .black.opacity(0.12), radius: 12, y: 6)
+                .padding(.top, .barHeight)
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
         }
     }
 
@@ -131,7 +150,10 @@ struct SpendingChartView: View {
     @ViewBuilder private func Header() -> some View {
         HStack(spacing: .paddingSmall) {
             Button {
-                showFilter = true
+                withAnimation(.snappy) {
+                    showFilter.toggle()
+                    if showFilter { showPeriodPicker = false }
+                }
             } label: {
                 Image(systemName: "line.3.horizontal.decrease")
                     .font(.body.weight(.semibold))
@@ -149,7 +171,10 @@ struct SpendingChartView: View {
             HStack(spacing: .paddingSmall) {
                 StepButton(systemName: "chevron.left", disabled: !canGoBack) { timeFrame = timeFrame.previous }
                 Button {
-                    withAnimation(.snappy) { showPeriodPicker.toggle() }
+                    withAnimation(.snappy) {
+                        showPeriodPicker.toggle()
+                        if showPeriodPicker { showFilter = false }
+                    }
                 } label: {
                     HStack(spacing: 4) {
                         Text(timeFrame.toUiString())
