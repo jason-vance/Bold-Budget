@@ -26,6 +26,7 @@ struct BudgetSettingsView: View {
     @State private var users: [UserData] = []
     @State private var budgetUsers: [UserId:Budget.User] = [:]
     @State private var allBudgets: [BudgetInfo] = []
+    @State private var showAddBudget: Bool = false
 
     @State private var subscriptionLevel: SubscriptionLevel = .none
     private let subscriptionLevelProvider: SubscriptionLevelProvider
@@ -134,6 +135,9 @@ struct BudgetSettingsView: View {
         .toolbar(.hidden, for: .navigationBar)
         .navigationBarBackButtonHidden()
         .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
+        .fullScreenCover(isPresented: $showAddBudget, onDismiss: { fetchBudgets() }) {
+            NavigationStack { EditBudgetView() }
+        }
         .onAppear { fetchUsers() }
         .onAppear { fetchUserRoles() }
         .onAppear { fetchBudgets() }
@@ -168,23 +172,26 @@ struct BudgetSettingsView: View {
     // MARK: - Profile
 
     @ViewBuilder private func Profile() -> some View {
-        if otherBudgets.isEmpty {
-            ProfileLabel(showsSwitcher: false)
-        } else {
-            Menu {
+        Menu {
+            if !otherBudgets.isEmpty {
                 Section("Switch Budget") {
                     ForEach(otherBudgets) { info in
                         Button(info.name.value) { budgetNavigator.open(info) }
                     }
                 }
-            } label: {
-                ProfileLabel(showsSwitcher: true)
             }
-            .accessibilityIdentifier("BudgetSettingsView.SwitchBudgetMenu")
+            Button {
+                showAddBudget = true
+            } label: {
+                Label("Add Budget", systemImage: "plus")
+            }
+        } label: {
+            ProfileLabel()
         }
+        .accessibilityIdentifier("BudgetSettingsView.SwitchBudgetMenu")
     }
 
-    @ViewBuilder private func ProfileLabel(showsSwitcher: Bool) -> some View {
+    @ViewBuilder private func ProfileLabel() -> some View {
         VStack(spacing: .paddingSmall) {
             IconCircle(systemName: "chart.pie.fill", size: 64, tint: .brandTeal)
             HStack(spacing: 4) {
@@ -192,11 +199,9 @@ struct BudgetSettingsView: View {
                     .font(.title3.weight(.bold))
                     .foregroundStyle(Color.appText)
                     .multilineTextAlignment(.center)
-                if showsSwitcher {
-                    Image(systemName: "chevron.up.chevron.down")
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(Color.appMutedText)
-                }
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(Color.appMutedText)
             }
         }
         .frame(maxWidth: .infinity)
