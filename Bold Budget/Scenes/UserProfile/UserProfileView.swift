@@ -22,6 +22,7 @@ struct UserProfileView: View {
     
     @State private var showAdminControls: Bool = false
     @State private var subscriptionLevel: SubscriptionLevel = .none
+    @State private var pendingInvitationCount: Int = 0
     
     @State private var showEditUserProfile: Bool = false
     @State private var showSignOutDialog: Bool = false
@@ -39,8 +40,21 @@ struct UserProfileView: View {
     private let userDataProvider: UserDataProvider
     private let signOutService: UserSignOutService
     private let accountDeleter: UserAccountDeleter
-    
+    private let invitationFetcher: BudgetInvitationFetcher
+
     private var isMe: Bool { currentUserIdProvider.currentUserId == userId }
+
+    private func fetchPendingInvitationCount() {
+        guard isMe, let userId = currentUserIdProvider.currentUserId else { return }
+
+        Task {
+            do {
+                pendingInvitationCount = try await invitationFetcher.fetchInvitations(for: userId).count
+            } catch {
+                print("Could not fetch pending invitations. \(error.localizedDescription)")
+            }
+        }
+    }
     
     private func checkIsAdmin() {
         guard let userId = currentUserIdProvider.currentUserId else { return }
@@ -99,10 +113,11 @@ struct UserProfileView: View {
             subscriptionLevelProvider: iocContainer~>SubscriptionLevelProvider.self,
             userDataProvider: iocContainer~>UserDataProvider.self,
             signOutService: iocContainer~>UserSignOutService.self,
-            accountDeleter: iocContainer~>UserAccountDeleter.self
+            accountDeleter: iocContainer~>UserAccountDeleter.self,
+            invitationFetcher: iocContainer~>BudgetInvitationFetcher.self
         )
     }
-    
+
     init(
         userId: UserId,
         currentUserIdProvider: CurrentUserIdProvider,
@@ -110,7 +125,8 @@ struct UserProfileView: View {
         subscriptionLevelProvider: SubscriptionLevelProvider,
         userDataProvider: UserDataProvider,
         signOutService: UserSignOutService,
-        accountDeleter: UserAccountDeleter
+        accountDeleter: UserAccountDeleter,
+        invitationFetcher: BudgetInvitationFetcher
     ) {
         self.__userId = userId
         self.currentUserIdProvider = currentUserIdProvider
@@ -119,6 +135,7 @@ struct UserProfileView: View {
         self.userDataProvider = userDataProvider
         self.signOutService = signOutService
         self.accountDeleter = accountDeleter
+        self.invitationFetcher = invitationFetcher
     }
     
     var body: some View {
@@ -149,7 +166,9 @@ struct UserProfileView: View {
         .onDisappear { userDataProvider.stopListeningToUser() }
         .onReceive(subscriptionLevelProvider.subscriptionLevelPublisher) { subscriptionLevel = $0 }
         .onAppear { checkIsAdmin() }
+        .onAppear { fetchPendingInvitationCount() }
         .animation(.snappy, value: showAdminControls)
+        .animation(.snappy, value: pendingInvitationCount)
         .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
     }
 
@@ -288,12 +307,42 @@ struct UserProfileView: View {
     @ViewBuilder private func ActionsCard() -> some View {
         VStack(spacing: 0) {
             if isMe {
+                InvitationsButton()
+                RowDivider()
                 EditUserProfileButton()
                 RowDivider()
             }
             SubmitFeedbackButton()
         }
         .card(0)
+    }
+
+    @ViewBuilder private func InvitationsButton() -> some View {
+        NavigationLink {
+            BudgetInvitationsView()
+        } label: {
+            HStack(spacing: .padding) {
+                IconCircle(systemName: "envelope.badge", size: 40, tint: .brandTeal)
+                Text("Invitations")
+                    .fontWeight(.semibold)
+                    .foregroundStyle(Color.appText)
+                Spacer(minLength: 0)
+                if pendingInvitationCount > 0 {
+                    Text("\(pendingInvitationCount)")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(.white)
+                        .frame(minWidth: 22, minHeight: 22)
+                        .background { Circle().foregroundStyle(Color.brandTeal) }
+                }
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Color.appMutedText)
+            }
+            .padding(.padding)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("UserProfileView.InvitationsButton")
     }
 
     @ViewBuilder private func EditUserProfileButton() -> some View {
@@ -477,7 +526,8 @@ struct UserProfileView: View {
             subscriptionLevelProvider: MockSubscriptionLevelProvider(level: .none),
             userDataProvider: MockUserDataProvider(),
             signOutService: MockUserSignOutService(),
-            accountDeleter: MockUserAccountDeleter()
+            accountDeleter: MockUserAccountDeleter(),
+            invitationFetcher: MockBudgetInvitationFetcher()
         )
     }
     .environmentObject(AdProviderFactory.forScreenshots)
@@ -492,7 +542,8 @@ struct UserProfileView: View {
             subscriptionLevelProvider: MockSubscriptionLevelProvider(level: .none),
             userDataProvider: MockUserDataProvider(),
             signOutService: MockUserSignOutService(),
-            accountDeleter: MockUserAccountDeleter()
+            accountDeleter: MockUserAccountDeleter(),
+            invitationFetcher: MockBudgetInvitationFetcher(invitations: [])
         )
     }
     .environmentObject(AdProviderFactory.forScreenshots)

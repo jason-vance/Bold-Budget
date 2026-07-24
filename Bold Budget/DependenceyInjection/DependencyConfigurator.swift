@@ -15,6 +15,7 @@ func setup(iocContainer: Container) {
     iocContainer.autoregister(CurrentUserDataProvider.self, initializer: getCurrentUserDataProvider)
     iocContainer.autoregister(UserDataProvider.self, initializer: getUserDataProvider)
     iocContainer.autoregister(UserDataFetcher.self, initializer: getUserDataFetcher)
+    registerUserFinder()
     iocContainer.autoregister(SubscriptionLevelProvider.self, initializer: { StoreKitSubscriptionLevelProvider.instance })
     registerReviewPrompter()
     registerIsAdminChecker()
@@ -39,6 +40,10 @@ func setup(iocContainer: Container) {
     registerBudgetUserFetcher()
     registerBudgetRenamer()
     registerBudgetDeleter()
+    registerBudgetInviter()
+    registerBudgetInvitationFetcher()
+    registerBudgetInvitationResponder()
+    registerBudgetUserRemover()
 
     // TransactionCategories
     registerTransactionCategoryFetcher()
@@ -94,6 +99,14 @@ fileprivate func getUserDataFetcher() -> UserDataFetcher {
         return mock
     }
     return FirebaseUserRepository()
+}
+
+fileprivate func registerUserFinder() {
+    var service: UserFinder = FirebaseUserRepository()
+    if let mock = MockUserFinder.getTestInstance() {
+        service = mock
+    }
+    iocContainer.autoregister(UserFinder.self, initializer: { service })
 }
 
 fileprivate func registerReviewPrompter() {
@@ -193,6 +206,38 @@ fileprivate func registerBudgetDeleter() {
         service = mock
     }
     iocContainer.autoregister(BudgetDeleter.self, initializer: { service })
+}
+
+fileprivate func registerBudgetInviter() {
+    var service: BudgetInviter = FirebaseBudgetInvitationRepository()
+    if let mock = MockBudgetInviter.getTestInstance() {
+        service = mock
+    }
+    iocContainer.autoregister(BudgetInviter.self, initializer: { service })
+}
+
+fileprivate func registerBudgetInvitationFetcher() {
+    var service: BudgetInvitationFetcher = FirebaseBudgetInvitationRepository()
+    if let mock = MockBudgetInvitationFetcher.getTestInstance() {
+        service = mock
+    }
+    iocContainer.autoregister(BudgetInvitationFetcher.self, initializer: { service })
+}
+
+fileprivate func registerBudgetInvitationResponder() {
+    var service: BudgetInvitationResponder = FirebaseBudgetInvitationRepository()
+    if let mock = MockBudgetInvitationResponder.getTestInstance() {
+        service = mock
+    }
+    iocContainer.autoregister(BudgetInvitationResponder.self, initializer: { service })
+}
+
+fileprivate func registerBudgetUserRemover() {
+    var service: BudgetUserRemover = FirebaseBudgetRepository()
+    if let mock = MockBudgetUserRemover.getTestInstance() {
+        service = mock
+    }
+    iocContainer.autoregister(BudgetUserRemover.self, initializer: { service })
 }
 
 //MARK: TransactionCategories

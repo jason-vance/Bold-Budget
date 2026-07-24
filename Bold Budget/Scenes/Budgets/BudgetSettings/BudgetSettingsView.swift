@@ -27,6 +27,7 @@ struct BudgetSettingsView: View {
     @State private var budgetUsers: [UserId:Budget.User] = [:]
     @State private var allBudgets: [BudgetInfo] = []
     @State private var showAddBudget: Bool = false
+    @State private var showInviteUser: Bool = false
 
     @State private var subscriptionLevel: SubscriptionLevel = .none
     private let subscriptionLevelProvider: SubscriptionLevelProvider
@@ -35,6 +36,11 @@ struct BudgetSettingsView: View {
     private let budgetUserFetcher: BudgetUserFetcher
     private let budgetFetcher: BudgetFetcher
     private let currentUserIdProvider: CurrentUserIdProvider
+    private let budgetUserRemover: BudgetUserRemover
+    private let popupNotificationCenter: PopupNotificationCenter
+
+    @State private var userPendingRemoval: UserData?
+    @State private var showLeaveConfirmation: Bool = false
 
     init(budget: StateObject<Budget>) {
         self.init(
@@ -43,7 +49,9 @@ struct BudgetSettingsView: View {
             budgetUserFetcher: iocContainer~>BudgetUserFetcher.self,
             subscriptionLevelProvider: iocContainer~>SubscriptionLevelProvider.self,
             budgetFetcher: iocContainer~>BudgetFetcher.self,
-            currentUserIdProvider: iocContainer~>CurrentUserIdProvider.self
+            currentUserIdProvider: iocContainer~>CurrentUserIdProvider.self,
+            budgetUserRemover: iocContainer~>BudgetUserRemover.self,
+            popupNotificationCenter: iocContainer~>PopupNotificationCenter.self
         )
     }
 
@@ -53,7 +61,9 @@ struct BudgetSettingsView: View {
         budgetUserFetcher: BudgetUserFetcher,
         subscriptionLevelProvider: SubscriptionLevelProvider,
         budgetFetcher: BudgetFetcher,
-        currentUserIdProvider: CurrentUserIdProvider
+        currentUserIdProvider: CurrentUserIdProvider,
+        budgetUserRemover: BudgetUserRemover,
+        popupNotificationCenter: PopupNotificationCenter
     ) {
         self._budget = budget
         self.userDataFetcher = userDataFetcher
@@ -61,6 +71,40 @@ struct BudgetSettingsView: View {
         self.subscriptionLevelProvider = subscriptionLevelProvider
         self.budgetFetcher = budgetFetcher
         self.currentUserIdProvider = currentUserIdProvider
+        self.budgetUserRemover = budgetUserRemover
+        self.popupNotificationCenter = popupNotificationCenter
+    }
+
+    /// Removes a user from the budget and syncs local state. When the current user leaves, the
+    /// settings screen pops back to the root budget list (they no longer have access).
+    private func remove(_ user: UserData) {
+        let isLeaving = user.id == currentUserIdProvider.currentUserId
+        Task {
+            do {
+                try await budgetUserRemover.remove(user: user.id, from: budget.info)
+                users.removeAll { $0.id == user.id }
+                budgetUsers[user.id] = nil
+                budget.info = .init(
+                    id: budget.info.id,
+                    name: budget.info.name,
+                    users: budget.info.users.filter { $0 != user.id }
+                )
+                if isLeaving {
+                    popupNotificationCenter.genericNotification(
+                        String(localized: "Left budget"),
+                        subtitle: budget.info.name.value,
+                        sfSymbol: "figure.walk.departure"
+                    )
+                    budgetNavigator.path = []
+                    dismiss()
+                }
+            } catch {
+                popupNotificationCenter.errorNotification(
+                    String(localized: "Couldn't remove user"),
+                    error: error
+                )
+            }
+        }
     }
 
     /// Budgets other than the one being viewed, for the switcher menu.
@@ -81,6 +125,11 @@ struct BudgetSettingsView: View {
         }
     }
     
+    private func removeUserPrompt(for user: UserData) -> String {
+        let name = user.username?.value ?? String(localized: "this user")
+        return String(localized: "Remove \(name) from \(budget.info.name.value)?")
+    }
+
     private func fetchUsers() {
         Task {
             do {
@@ -137,6 +186,34 @@ struct BudgetSettingsView: View {
         .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
         .fullScreenCover(isPresented: $showAddBudget, onDismiss: { fetchBudgets() }) {
             NavigationStack { EditBudgetView() }
+        }
+        .sheet(isPresented: $showInviteUser, onDismiss: { fetchUsers() }) {
+            InviteUserView(budget: budget.info, existingMemberIds: budget.info.users)
+        }
+        .confirmationDialog(
+            userPendingRemoval.flatMap { removeUserPrompt(for: $0) } ?? "",
+            isPresented: Binding(
+                get: { userPendingRemoval != nil },
+                set: { if !$0 { userPendingRemoval = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            if let user = userPendingRemoval {
+                Button("Remove", role: .destructive) { remove(user) }
+                Button("Cancel", role: .cancel) {}
+            }
+        }
+        .confirmationDialog(
+            "Leave \(budget.info.name.value)? You'll lose access to this budget.",
+            isPresented: $showLeaveConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Leave Budget", role: .destructive) {
+                if let me = users.first(where: { $0.id == currentUserIdProvider.currentUserId }) {
+                    remove(me)
+                }
+            }
+            Button("Cancel", role: .cancel) {}
         }
         .onAppear { fetchUsers() }
         .onAppear { fetchUserRoles() }
@@ -264,12 +341,24 @@ struct BudgetSettingsView: View {
     @ViewBuilder private func UsersCard() -> some View {
         if !users.isEmpty {
             VStack(alignment: .leading, spacing: .paddingSmall) {
-                Text("Users")
-                    .font(.caption2.weight(.semibold))
-                    .textCase(.uppercase)
-                    .kerning(0.5)
-                    .foregroundStyle(Color.appMutedText)
-                    .padding(.horizontal, .paddingSmall)
+                HStack(spacing: 0) {
+                    Text("Users")
+                        .font(.caption2.weight(.semibold))
+                        .textCase(.uppercase)
+                        .kerning(0.5)
+                        .foregroundStyle(Color.appMutedText)
+                    Spacer(minLength: 0)
+                    Button { showInviteUser = true } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "plus")
+                            Text("Add")
+                        }
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Color.brandTeal)
+                    }
+                    .accessibilityIdentifier("BudgetSettingsView.AddUserButton")
+                }
+                .padding(.horizontal, .paddingSmall)
                 VStack(spacing: 0) {
                     ForEach(Array(users.enumerated()), id: \.element.id) { index, user in
                         if index > 0 { RowDivider() }
@@ -282,16 +371,17 @@ struct BudgetSettingsView: View {
                             .buttonStyle(.plain)
                             .accessibilityIdentifier("BudgetSettingsView.CurrentUserRow")
                         } else {
-                            UserRow(user: user)
+                            UserRow(user: user, showsRemoveMenu: true)
                         }
                     }
                 }
                 .card(0)
+                LeaveBudgetButton()
             }
         }
     }
 
-    @ViewBuilder private func UserRow(user: UserData, showsChevron: Bool = false) -> some View {
+    @ViewBuilder private func UserRow(user: UserData, showsChevron: Bool = false, showsRemoveMenu: Bool = false) -> some View {
         HStack(spacing: .padding) {
             ProfileImageView(
                 user.profileImageUrl,
@@ -314,9 +404,46 @@ struct BudgetSettingsView: View {
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(Color.appMutedText)
             }
+            if showsRemoveMenu {
+                Menu {
+                    Button(role: .destructive) {
+                        userPendingRemoval = user
+                    } label: {
+                        Label("Remove from Budget", systemImage: "person.badge.minus")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(Color.appMutedText)
+                        .frame(width: 24, height: 24)
+                        .contentShape(Rectangle())
+                }
+                .accessibilityIdentifier("BudgetSettingsView.UserOptionsMenu")
+            }
         }
         .padding(.padding)
         .contentShape(Rectangle())
+    }
+
+    @ViewBuilder private func LeaveBudgetButton() -> some View {
+        Button {
+            showLeaveConfirmation = true
+        } label: {
+            HStack(spacing: .paddingSmall) {
+                Image(systemName: "figure.walk.departure")
+                Text("Leave Budget")
+            }
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(Color.negative)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, .paddingVerticalButtonMedium)
+            .background {
+                RoundedRectangle(cornerRadius: .cornerRadiusMedium, style: .continuous)
+                    .foregroundStyle(Color.appSurface)
+            }
+        }
+        .padding(.top, .paddingSmall)
+        .accessibilityIdentifier("BudgetSettingsView.LeaveBudgetButton")
     }
 
     @ViewBuilder private func RowDivider(opacity: Double = 0.15) -> some View {
@@ -339,7 +466,9 @@ struct BudgetSettingsView: View {
                 .init(id: UUID().uuidString, name: .init("Personal")!, users: [.sample]),
                 .init(id: UUID().uuidString, name: .init("Side Business")!, users: [.sample]),
             ]),
-            currentUserIdProvider: MockCurrentUserIdProvider()
+            currentUserIdProvider: MockCurrentUserIdProvider(),
+            budgetUserRemover: MockBudgetUserRemover(),
+            popupNotificationCenter: PopupNotificationCenter()
         )
     }
     .environmentObject(AdProviderFactory.forScreenshots)

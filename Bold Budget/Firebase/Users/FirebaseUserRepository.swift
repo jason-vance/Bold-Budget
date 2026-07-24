@@ -72,6 +72,17 @@ extension FirebaseUserRepository: UsernameAvailabilityChecker {
     }
 }
 
+extension FirebaseUserRepository: UserFinder {
+    func findUser(byUsername username: Username) async throws -> UserData? {
+        try await usersCollection
+            .whereField(usernameField, isEqualTo: username.value)
+            .getDocuments()
+            .documents
+            .compactMap { try? $0.data(as: FirebaseUserDoc.self).toUserData() }
+            .first
+    }
+}
+
 extension FirebaseUserRepository: UserDataFetcher {
     func fetchUserData(withId userId: UserId) async throws -> UserData {
         let document = try await usersCollection

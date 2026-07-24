@@ -53,3 +53,22 @@ extension FirebaseBudgetRepository: BudgetDeleter {
         try await budgetsCollection.document(budget.id).delete()
     }
 }
+
+extension FirebaseBudgetRepository: BudgetUserRemover {
+    func remove(user userId: UserId, from budget: BudgetInfo) async throws {
+        let batch = Firestore.firestore().batch()
+
+        let budgetRef = budgetsCollection.document(budget.id)
+        batch.updateData(
+            [usersField: FieldValue.arrayRemove([userId.value])],
+            forDocument: budgetRef
+        )
+
+        let memberRef = budgetRef
+            .collection(FirebaseBudgetUserRepository.USERS)
+            .document(userId.value)
+        batch.deleteDocument(memberRef)
+
+        try await batch.commit()
+    }
+}

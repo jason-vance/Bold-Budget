@@ -6,26 +6,156 @@ service cloud.firestore {
     match /{document=**} {
       allow read, write: if false;
     }
-    
+
     // Users
-    
+
     match /Users/{userId} {
       allow read: if loggedIn();
       allow write: if belongsToRequester(userId);
-    }   
-    
+    }
+
+    // Admin
+
+    match /Admin/{userId} {
+      allow read: if loggedIn();
+    }
+
+    function requesterIsAdmin() {
+    	return exists(/databases/$(database)/documents/Admin/$(userId()))
+    }
+
+    // Budgets
+
+    match /Budgets/{budgetId} {
+    	allow read: if userId() in resource.data.users;
+      allow create, delete: if budgetOwnedByRequester(budgetId);
+      // Owners may update freely (rename, manage members). An invitee with a pending
+      // invitation may update only to add themselves to the members array.
+      allow update: if budgetOwnedByRequester(budgetId)
+      							 || requesterIsAcceptingInvite(budgetId);
+    }
+
+    function requesterIsBudgetUser(budgetId) {
+    	return budgetUserExists(budgetId, userId())
+    }
+
+    function budgetOwnedByRequester(budgetId) {
+    	return budgetUser(budgetId, userId()).role == 'owner'
+    }
+
+    function budget(budgetId) {
+    	return get(/databases/$(database)/documents/Budgets/$(budgetId)).data
+    }
+
+    // The requester is accepting an invitation: they hold a pending invite for this budget
+    // and the only change is adding themselves to the members array (nothing else touched).
+    function requesterIsAcceptingInvite(budgetId) {
+    	return hasInvitation(budgetId)
+    				 && !(userId() in existingData().users)
+    				 && userId() in incomingData().users
+    				 && incomingData().users.size() == existingData().users.size() + 1
+    				 && incomingData().users.hasAll(existingData().users)
+    				 && incomingData().name == existingData().name
+    }
+
+    function hasInvitation(budgetId) {
+    	return exists(/databases/$(database)/documents/BudgetInvitations/$(budgetId + '_' + userId()))
+    }
+
+    // BudgetUsers
+
+    match /Budgets/{budgetId}/Users/{userId} {
+    	allow read: if requesterIsBudgetUser(budgetId);
+    	// Own membership doc, either at budget creation (before the budget exists) or when
+    	// accepting an invitation to an existing budget.
+    	allow create: if userId == userId() && (budgetDoesNotExist(budgetId) || hasInvitation(budgetId));
+    	// Owners may remove members (including themselves, i.e. leaving).
+    	allow delete: if budgetOwnedByRequester(budgetId);
+    }
+
+    function budgetDoesNotExist(budgetId) {
+    	return !exists(/databases/$(database)/documents/Budgets/$(budgetId))
+    }
+
+    function budgetUserExists(budgetId, userId) {
+    	return exists(/databases/$(database)/documents/Budgets/$(budgetId)/Users/$(userId))
+    }
+
+    function budgetUser(budgetId, userId) {
+    	return get(/databases/$(database)/documents/Budgets/$(budgetId)/Users/$(userId)).data
+    }
+
+    // BudgetInvitations
+
+    match /BudgetInvitations/{inviteId} {
+    	allow read: if requesterIsInvitee() || requesterIsInviter();
+    	// Only a member of the budget may invite, and only in their own name.
+    	allow create: if incomingData().inviterUserId == userId()
+    								 && requesterIsBudgetUser(incomingData().budgetId);
+    	// The invitee (accept/decline) or the inviter (cancel) may remove it.
+    	allow delete: if requesterIsInvitee() || requesterIsInviter();
+    }
+
+    function requesterIsInvitee() {
+    	return existingData().inviteeUserId == userId()
+    }
+
+    function requesterIsInviter() {
+    	return existingData().inviterUserId == userId()
+    }
+
+    // TransactionCategories
+
+    match /Budgets/{budgetId}/TransactionCategories/{categoryId} {
+    	allow read: if requesterIsBudgetUser(budgetId);
+      allow create, update, delete: if budgetOwnedByRequester(budgetId);
+    }
+
+    // Transactions
+
+    match /Budgets/{budgetId}/Transactions/{transactionId} {
+    	allow read: if requesterIsBudgetUser(budgetId);
+      allow create, update, delete: if budgetOwnedByRequester(budgetId);
+    }
+
+    // RecurringExpenses
+
+    match /Budgets/{budgetId}/RecurringExpenses/{recurringExpenseId} {
+    	allow read: if requesterIsBudgetUser(budgetId);
+      allow create, update, delete: if budgetOwnedByRequester(budgetId);
+    }
+
+    // Accounts
+
+    match /Budgets/{budgetId}/Accounts/{accountId} {
+    	allow read: if requesterIsBudgetUser(budgetId);
+      allow create, update, delete: if budgetOwnedByRequester(budgetId);
+    }
+
+    // Feedback
+
+    match /Feedback/{feedbackId} {
+      allow read: if requesterIsAdmin();
+      allow create: if requesterIsFeedbackCreator();
+      allow update: if requesterIsAdmin();
+    }
+
+    function requesterIsFeedbackCreator() {
+    	return belongsToRequester(incomingData().userId)
+    }
+
     // Misc
 
     function loggedIn() {
-      return request.auth.uid != null
+      return userId() != null
     }
 
-    function requesterUserId() {
+    function userId() {
       return request.auth.uid
     }
 
     function belongsToRequester(userId) {
-      return request.auth.uid == userId
+      return userId() == userId
     }
 
     // [READ] Data that exists on the Firestore document
