@@ -53,14 +53,14 @@
                 </label>
                 <button opaque="NO" userInteractionEnabled="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="wEU-pw-G8h">
                     <rect key="frame" x="95" y="50" width="260" height="30"/>
-                    <color key="backgroundColor" name="TextColor"/>
+                    <color key="backgroundColor" name="BrandTeal"/>
                     <constraints>
                         <constraint firstAttribute="height" constant="30" id="oFL-9d-89C"/>
                     </constraints>
                     <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="17"/>
-                    <color key="tintColor" name="BackgroundColor"/>
+                    <color key="tintColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                     <state key="normal" title="Install">
-                        <color key="titleColor" name="BackgroundColor"/>
+                        <color key="titleColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <color key="titleShadowColor" red="0.5" green="0.5" blue="0.5" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                     </state>
                     <userDefinedRuntimeAttributes>
@@ -101,6 +101,9 @@
     </objects>
     <resources>
         <namedColor name="BackgroundColor">
+            <color red="0.0" green="0.5690000057220459" blue="0.57599997520446777" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="BrandTeal">
             <color red="0.0" green="0.5690000057220459" blue="0.57599997520446777" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>
         <namedColor name="TextColor">
