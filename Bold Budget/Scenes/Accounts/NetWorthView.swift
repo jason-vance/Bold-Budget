@@ -241,12 +241,14 @@ struct NetWorthView: View {
                 .font(.subheadline)
                 .foregroundStyle(Color.appMutedText)
                 .multilineTextAlignment(.center)
-            NavigationLink {
-                EditAccountView(budget: budget)
-            } label: {
-                PrimaryButtonLabel(title: "Add Account", systemName: "plus", background: .brandTeal, foreground: .appBackground)
+            if budget.canEdit {
+                NavigationLink {
+                    EditAccountView(budget: budget)
+                } label: {
+                    PrimaryButtonLabel(title: "Add Account", systemName: "plus", background: .brandTeal, foreground: .appBackground)
+                }
+                .frame(maxWidth: 280)
             }
-            .frame(maxWidth: 280)
         }
         .padding()
     }

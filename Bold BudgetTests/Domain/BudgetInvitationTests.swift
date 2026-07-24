@@ -46,6 +46,7 @@ struct BudgetInvitationTests {
             inviterUserId: base.inviterUserId,
             inviterUsername: base.inviterUsername,
             inviteeUserId: base.inviteeUserId,
+            role: base.role,
             createdAt: base.createdAt
         )
 
@@ -62,6 +63,7 @@ struct BudgetInvitationTests {
             inviterUserId: base.inviterUserId,
             inviterUsername: base.inviterUsername,
             inviteeUserId: base.inviteeUserId,
+            role: base.role,
             createdAt: base.createdAt
         )
 

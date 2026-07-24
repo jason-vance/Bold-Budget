@@ -16,7 +16,7 @@ class FirebaseBudgetInvitationRepository {
 }
 
 extension FirebaseBudgetInvitationRepository: BudgetInviter {
-    func invite(_ invitee: UserData, to budget: BudgetInfo, from inviter: UserData) async throws {
+    func invite(_ invitee: UserData, as role: Budget.User.Role, to budget: BudgetInfo, from inviter: UserData) async throws {
         let invitation = BudgetInvitation(
             id: BudgetInvitation.id(budgetId: budget.id, inviteeUserId: invitee.id),
             budgetId: budget.id,
@@ -24,6 +24,7 @@ extension FirebaseBudgetInvitationRepository: BudgetInviter {
             inviterUserId: inviter.id,
             inviterUsername: inviter.username,
             inviteeUserId: invitee.id,
+            role: role,
             createdAt: .now
         )
 
@@ -56,11 +57,11 @@ extension FirebaseBudgetInvitationRepository: BudgetInvitationResponder {
             forDocument: budgetRef
         )
 
-        // 2. Create the invitee's membership doc (equal co-owner).
+        // 2. Create the invitee's membership doc with the role they were invited as.
         let memberRef = budgetRef
             .collection(FirebaseBudgetUserRepository.USERS)
             .document(invitation.inviteeUserId.value)
-        let memberDoc = FirebaseBudgetUserDoc.from(user: .init(id: invitation.inviteeUserId, role: .owner))
+        let memberDoc = FirebaseBudgetUserDoc.from(user: .init(id: invitation.inviteeUserId, role: invitation.role))
         try batch.setData(from: memberDoc, forDocument: memberRef)
 
         // 3. Consume the invitation.

@@ -8,7 +8,7 @@
 import Foundation
 
 protocol BudgetInviter {
-    func invite(_ invitee: UserData, to budget: BudgetInfo, from inviter: UserData) async throws
+    func invite(_ invitee: UserData, as role: Budget.User.Role, to budget: BudgetInfo, from inviter: UserData) async throws
 }
 
 class MockBudgetInviter: BudgetInviter {
@@ -19,7 +19,7 @@ class MockBudgetInviter: BudgetInviter {
         self.throwing = throwing
     }
 
-    func invite(_ invitee: UserData, to budget: BudgetInfo, from inviter: UserData) async throws {
+    func invite(_ invitee: UserData, as role: Budget.User.Role, to budget: BudgetInfo, from inviter: UserData) async throws {
         try await Task.sleep(for: .seconds(0.5))
         if throwing { throw TextError("MockBudgetInviter.throwing") }
     }

@@ -183,18 +183,24 @@ struct RecurringExpensesView: View {
     }
 
     @ViewBuilder private func ExpenseRow(_ expense: RecurringExpense) -> some View {
-        NavigationLink {
-            EditRecurringExpenseView(budget: budget)
-                .editing(expense)
-        } label: {
-            Row(
-                systemName: symbol(for: expense.kind),
-                title: expense.name.value,
-                subtitle: rowSubtitle(for: expense),
-                trailing: "\(expense.monthlyCost.formatted())/mo"
-            )
+        let row = Row(
+            systemName: symbol(for: expense.kind),
+            title: expense.name.value,
+            subtitle: rowSubtitle(for: expense),
+            trailing: "\(expense.monthlyCost.formatted())/mo"
+        )
+        // The only recurring-expense detail screen is the editor, so viewers get a static row.
+        if budget.canEdit {
+            NavigationLink {
+                EditRecurringExpenseView(budget: budget)
+                    .editing(expense)
+            } label: {
+                row
+            }
+            .buttonStyle(.plain)
+        } else {
+            row
         }
-        .buttonStyle(.plain)
     }
 
     @ViewBuilder private func Row(systemName: String, title: String, subtitle: String?, trailing: String) -> some View {

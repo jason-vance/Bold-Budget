@@ -26,6 +26,14 @@ class Budget: ObservableObject {
     @Published var transactionCategories: [Transaction.Category.Id:Transaction.Category] = [:]
     @Published var recurringExpenses: [RecurringExpense.Id:RecurringExpense] = [:]
     @Published var accounts: [Account.Id:Account] = [:]
+
+    /// The current user's role in this budget. Defaults to `.owner` so owners (the common case)
+    /// never see a flash of read-only chrome while it loads; it's corrected once membership loads.
+    @Published var currentUserRole: Budget.User.Role = .owner
+
+    /// Whether the current user may modify this budget's data. Viewers are read-only; the Firestore
+    /// rules enforce the same split server-side, so this only governs the UI.
+    var canEdit: Bool { currentUserRole.canEdit }
     
     var transactionTags: Set<Transaction.Tag> {
         transactions
@@ -99,6 +107,9 @@ class Budget: ObservableObject {
     let accountSaver: AccountSaver
     let accountDeleter: AccountDeleter
 
+    let budgetUserFetcher: BudgetUserFetcher
+    let currentUserIdProvider: CurrentUserIdProvider
+
     convenience init(
         info: BudgetInfo
     ) {
@@ -116,7 +127,9 @@ class Budget: ObservableObject {
             recurringExpenseDeleter: iocContainer~>RecurringExpenseDeleter.self,
             accountFetcher: iocContainer~>AccountFetcher.self,
             accountSaver: iocContainer~>AccountSaver.self,
-            accountDeleter: iocContainer~>AccountDeleter.self
+            accountDeleter: iocContainer~>AccountDeleter.self,
+            budgetUserFetcher: iocContainer~>BudgetUserFetcher.self,
+            currentUserIdProvider: iocContainer~>CurrentUserIdProvider.self
         )
     }
 
@@ -134,7 +147,9 @@ class Budget: ObservableObject {
         recurringExpenseDeleter: RecurringExpenseDeleter,
         accountFetcher: AccountFetcher,
         accountSaver: AccountSaver,
-        accountDeleter: AccountDeleter
+        accountDeleter: AccountDeleter,
+        budgetUserFetcher: BudgetUserFetcher,
+        currentUserIdProvider: CurrentUserIdProvider
     ) {
         self.id = info.id
         self.info = info
@@ -151,6 +166,8 @@ class Budget: ObservableObject {
         self.accountFetcher = accountFetcher
         self.accountSaver = accountSaver
         self.accountDeleter = accountDeleter
+        self.budgetUserFetcher = budgetUserFetcher
+        self.currentUserIdProvider = currentUserIdProvider
 
         fetchData()
     }
@@ -176,6 +193,9 @@ class Budget: ObservableObject {
                 }
                 group.addTask {
                     await self.fetchAccounts()
+                }
+                group.addTask {
+                    await self.fetchCurrentUserRole()
                 }
             }
 
@@ -221,10 +241,26 @@ class Budget: ObservableObject {
         }
     }
 
+    /// Loads the current user's role in this budget so the UI can present a read-only experience
+    /// for viewers. Leaves the `.owner` default in place if it can't be resolved (rules still guard
+    /// the actual writes).
+    private func fetchCurrentUserRole() async {
+        guard let userId = currentUserIdProvider.currentUserId else { return }
+        do {
+            let users = try await budgetUserFetcher.fetchUsers(in: info)
+            if let role = users.first(where: { $0.id == userId })?.role {
+                currentUserRole = role
+            }
+        } catch {
+            onError("Failed to fetch your role in this budget.", error: error)
+        }
+    }
+
     /// One-time backfill of `Transaction.kind` from the legacy category kind, for rows that predate
     /// transaction-level kinds. After this, income/expense lives on the transaction, not the
     /// category. Runs once per budget; legacy rows are account-less, so balances are unaffected.
     private func backfillTransactionKindsIfNeeded() async {
+        guard canEdit else { return } // Viewers can't write; leave the backfill to an owner.
         let doneKey = "kindBackfillDone.\(info.id)"
         guard !UserDefaults.standard.bool(forKey: doneKey) else { return }
 
@@ -257,6 +293,7 @@ class Budget: ObservableObject {
     }
 
     func save(transaction: Transaction) {
+        guard canEdit else { return }
         let previous = transactions[transaction.id]
         let tmp = transactions.updateValue(transaction, forKey: transaction.id)
 
@@ -277,6 +314,7 @@ class Budget: ObservableObject {
     }
 
     func remove(transaction: Transaction) {
+        guard canEdit else { return }
         let tmp = transactions.removeValue(forKey: transaction.id)
         applyBalanceEffects(of: transaction, reverse: true)
 
@@ -330,6 +368,7 @@ class Budget: ObservableObject {
     }
     
     func save(recurringExpense: RecurringExpense) {
+        guard canEdit else { return }
         let tmp = recurringExpenses.updateValue(recurringExpense, forKey: recurringExpense.id)
         Task {
             do {
@@ -343,6 +382,7 @@ class Budget: ObservableObject {
     }
 
     func remove(recurringExpense: RecurringExpense) {
+        guard canEdit else { return }
         let tmp = recurringExpenses.removeValue(forKey: recurringExpense.id)
         Task {
             do {
@@ -356,6 +396,7 @@ class Budget: ObservableObject {
     }
 
     func save(account: Account) {
+        guard canEdit else { return }
         let tmp = accounts.updateValue(account, forKey: account.id)
         Task {
             do {
@@ -369,6 +410,7 @@ class Budget: ObservableObject {
     }
 
     func remove(account: Account) {
+        guard canEdit else { return }
         let tmp = accounts.removeValue(forKey: account.id)
         Task {
             do {
@@ -382,6 +424,7 @@ class Budget: ObservableObject {
     }
 
     func save(transactionCategory: Transaction.Category) {
+        guard canEdit else { return }
         let tmp = transactionCategories.updateValue(transactionCategory, forKey: transactionCategory.id)
         Task {
             do {
@@ -396,6 +439,7 @@ class Budget: ObservableObject {
 
     func remove(transactionCategory category: Transaction.Category,
                 replacingWith replacement: Transaction.Category?) {
+        guard canEdit else { return }
         let affected = transactions.values.filter { $0.categoryId == category.id }
 
         if !affected.isEmpty && replacement == nil { return }
@@ -467,6 +511,7 @@ class Budget: ObservableObject {
     }
     
     func set(name: BudgetInfo.Name) {
+        guard canEdit else { return }
         let prevInfo = info
         info = .init(id: info.id, name: name, users: info.users)
         Task {
@@ -526,7 +571,9 @@ extension Budget {
             recurringExpenseDeleter: MockRecurringExpenseDeleter(),
             accountFetcher: accountFetcher,
             accountSaver: MockAccountSaver(),
-            accountDeleter: MockAccountDeleter()
+            accountDeleter: MockAccountDeleter(),
+            budgetUserFetcher: MockBudgetUserFetcher(),
+            currentUserIdProvider: MockCurrentUserIdProvider()
         )
     }
 }

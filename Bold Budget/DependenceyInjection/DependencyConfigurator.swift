@@ -38,6 +38,7 @@ func setup(iocContainer: Container) {
     registerBudgetCreator()
     registerBudgetFetcher()
     registerBudgetUserFetcher()
+    registerBudgetUserRoleUpdater()
     registerBudgetRenamer()
     registerBudgetDeleter()
     registerBudgetInviter()
@@ -190,6 +191,14 @@ fileprivate func registerBudgetUserFetcher() {
         service = mock
     }
     iocContainer.autoregister(BudgetUserFetcher.self, initializer: { service })
+}
+
+fileprivate func registerBudgetUserRoleUpdater() {
+    var service: BudgetUserRoleUpdater = FirebaseBudgetUserRepository()
+    if let mock = MockBudgetUserRoleUpdater.getTestInstance() {
+        service = mock
+    }
+    iocContainer.autoregister(BudgetUserRoleUpdater.self, initializer: { service })
 }
 
 fileprivate func registerBudgetRenamer() {

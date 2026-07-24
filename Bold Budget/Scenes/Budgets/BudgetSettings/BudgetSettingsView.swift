@@ -37,6 +37,7 @@ struct BudgetSettingsView: View {
     private let budgetFetcher: BudgetFetcher
     private let currentUserIdProvider: CurrentUserIdProvider
     private let budgetUserRemover: BudgetUserRemover
+    private let budgetUserRoleUpdater: BudgetUserRoleUpdater
     private let popupNotificationCenter: PopupNotificationCenter
 
     @State private var userPendingRemoval: UserData?
@@ -51,6 +52,7 @@ struct BudgetSettingsView: View {
             budgetFetcher: iocContainer~>BudgetFetcher.self,
             currentUserIdProvider: iocContainer~>CurrentUserIdProvider.self,
             budgetUserRemover: iocContainer~>BudgetUserRemover.self,
+            budgetUserRoleUpdater: iocContainer~>BudgetUserRoleUpdater.self,
             popupNotificationCenter: iocContainer~>PopupNotificationCenter.self
         )
     }
@@ -63,6 +65,7 @@ struct BudgetSettingsView: View {
         budgetFetcher: BudgetFetcher,
         currentUserIdProvider: CurrentUserIdProvider,
         budgetUserRemover: BudgetUserRemover,
+        budgetUserRoleUpdater: BudgetUserRoleUpdater,
         popupNotificationCenter: PopupNotificationCenter
     ) {
         self._budget = budget
@@ -72,6 +75,7 @@ struct BudgetSettingsView: View {
         self.budgetFetcher = budgetFetcher
         self.currentUserIdProvider = currentUserIdProvider
         self.budgetUserRemover = budgetUserRemover
+        self.budgetUserRoleUpdater = budgetUserRoleUpdater
         self.popupNotificationCenter = popupNotificationCenter
     }
 
@@ -101,6 +105,24 @@ struct BudgetSettingsView: View {
             } catch {
                 popupNotificationCenter.errorNotification(
                     String(localized: "Couldn't remove user"),
+                    error: error
+                )
+            }
+        }
+    }
+
+    /// Changes another member's role (owner ⇄ viewer) and reflects it locally. Owner-only, which the
+    /// UI enforces by only surfacing the control for owners; the Firestore rules enforce it too.
+    private func changeRole(of user: UserData, to role: Budget.User.Role) {
+        let previous = budgetUsers[user.id]
+        budgetUsers[user.id] = .init(id: user.id, role: role)
+        Task {
+            do {
+                try await budgetUserRoleUpdater.update(user: user.id, to: role, in: budget.info)
+            } catch {
+                budgetUsers[user.id] = previous
+                popupNotificationCenter.errorNotification(
+                    String(localized: "Couldn't change role"),
                     error: error
                 )
             }
@@ -172,7 +194,7 @@ struct BudgetSettingsView: View {
                 VStack(spacing: .padding) {
                     Profile()
                     AdCard()
-                    ActionsCard()
+                    if budget.canEdit { ActionsCard() }
                     UsersCard()
                 }
                 .padding()
@@ -348,15 +370,17 @@ struct BudgetSettingsView: View {
                         .kerning(0.5)
                         .foregroundStyle(Color.appMutedText)
                     Spacer(minLength: 0)
-                    Button { showInviteUser = true } label: {
-                        HStack(spacing: 4) {
-                            Image(systemName: "plus")
-                            Text("Add")
+                    if budget.canEdit {
+                        Button { showInviteUser = true } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "plus")
+                                Text("Add")
+                            }
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(Color.brandTeal)
                         }
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(Color.brandTeal)
+                        .accessibilityIdentifier("BudgetSettingsView.AddUserButton")
                     }
-                    .accessibilityIdentifier("BudgetSettingsView.AddUserButton")
                 }
                 .padding(.horizontal, .paddingSmall)
                 VStack(spacing: 0) {
@@ -371,7 +395,7 @@ struct BudgetSettingsView: View {
                             .buttonStyle(.plain)
                             .accessibilityIdentifier("BudgetSettingsView.CurrentUserRow")
                         } else {
-                            UserRow(user: user, showsRemoveMenu: true)
+                            UserRow(user: user, showsRemoveMenu: budget.canEdit)
                         }
                     }
                 }
@@ -406,6 +430,19 @@ struct BudgetSettingsView: View {
             }
             if showsRemoveMenu {
                 Menu {
+                    let currentRole = budgetUsers[user.id]?.role
+                    ForEach(Budget.User.Role.allCases, id: \.self) { role in
+                        Button {
+                            changeRole(of: user, to: role)
+                        } label: {
+                            Label(
+                                String(localized: "Make \(role.displayName)"),
+                                systemImage: currentRole == role ? "checkmark" : "person.fill"
+                            )
+                        }
+                        .disabled(currentRole == role)
+                    }
+                    Divider()
                     Button(role: .destructive) {
                         userPendingRemoval = user
                     } label: {
@@ -468,6 +505,7 @@ struct BudgetSettingsView: View {
             ]),
             currentUserIdProvider: MockCurrentUserIdProvider(),
             budgetUserRemover: MockBudgetUserRemover(),
+            budgetUserRoleUpdater: MockBudgetUserRoleUpdater(),
             popupNotificationCenter: PopupNotificationCenter()
         )
     }

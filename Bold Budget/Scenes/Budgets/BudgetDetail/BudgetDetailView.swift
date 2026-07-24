@@ -460,19 +460,26 @@ struct BudgetDetailView: View {
     }
 
     @ViewBuilder private func AddTabButton() -> some View {
-        NavigationLink {
-            AddDestination()
-        } label: {
-            Image(systemName: "plus")
-                .font(.title2.weight(.heavy))
-                .foregroundStyle(Color.appBackground)
+        if budget.canEdit {
+            NavigationLink {
+                AddDestination()
+            } label: {
+                Image(systemName: "plus")
+                    .font(.title2.weight(.heavy))
+                    .foregroundStyle(Color.appBackground)
+                    .frame(width: 52, height: 52)
+                    .background {
+                        Circle().foregroundStyle(Color.brandTeal)
+                    }
+                    .frame(maxWidth: .infinity)
+            }
+            .accessibilityIdentifier("BudgetDetailView.TabBar.add")
+        } else {
+            // Viewers can't add anything; keep the two tabs balanced with an equal-width spacer.
+            Color.clear
                 .frame(width: 52, height: 52)
-                .background {
-                    Circle().foregroundStyle(Color.brandTeal)
-                }
                 .frame(maxWidth: .infinity)
         }
-        .accessibilityIdentifier("BudgetDetailView.TabBar.add")
     }
     
     @ViewBuilder func FilterTransactionsButton() -> some View {

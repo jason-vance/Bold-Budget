@@ -32,7 +32,7 @@ struct AccountDetailView: View {
                             Profile(account)
                             BalanceBlock(account)
                             ChartCard(account)
-                            UpdateBalanceButton(account)
+                            if budget.canEdit { UpdateBalanceButton(account) }
                             HistorySection(account)
                         }
                         .padding()
@@ -70,14 +70,16 @@ struct AccountDetailView: View {
                     .foregroundStyle(Color.appMutedText)
                 }
                 Spacer(minLength: 0)
-                NavigationLink {
-                    EditAccountView(budget: budget).editing(account)
-                } label: {
-                    Text("Edit")
-                        .fontWeight(.semibold)
-                        .foregroundStyle(Color.brandTeal)
+                if budget.canEdit {
+                    NavigationLink {
+                        EditAccountView(budget: budget).editing(account)
+                    } label: {
+                        Text("Edit")
+                            .fontWeight(.semibold)
+                            .foregroundStyle(Color.brandTeal)
+                    }
+                    .accessibilityIdentifier("AccountDetailView.EditButton")
                 }
-                .accessibilityIdentifier("AccountDetailView.EditButton")
             }
         }
         .frame(height: .barHeight)
@@ -227,14 +229,17 @@ struct AccountDetailView: View {
                 Text(snapshot.value.formattedRounded())
                     .fontWeight(.semibold)
                     .foregroundStyle(Color.appText)
-                Image(systemName: "chevron.right")
-                    .font(.caption2)
-                    .foregroundStyle(Color.appMutedText)
+                if budget.canEdit {
+                    Image(systemName: "chevron.right")
+                        .font(.caption2)
+                        .foregroundStyle(Color.appMutedText)
+                }
             }
             .padding(.vertical, .paddingSmall)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .disabled(!budget.canEdit) // Viewers can read history but not edit snapshots.
     }
 }
 

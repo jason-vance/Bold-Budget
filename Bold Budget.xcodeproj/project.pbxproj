@@ -88,6 +88,7 @@
 				Scenes/Budgets/Workers/BudgetRenamer/BudgetRenamer.swift,
 				Scenes/Budgets/Workers/BudgetUserFetcher/BudgetUserFetcher.swift,
 				Scenes/Budgets/Workers/BudgetUserRemover/BudgetUserRemover.swift,
+				Scenes/Budgets/Workers/BudgetUserRoleUpdater/BudgetUserRoleUpdater.swift,
 				Scenes/EditTransaction/PartialTransaction.swift,
 				Scenes/EditTransaction/TransactionPropertySuggestions.swift,
 				Scenes/PopupNotifications/PopupNotification.swift,

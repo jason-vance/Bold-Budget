@@ -180,6 +180,9 @@ struct BudgetInvitationsView: View {
                             .font(.caption)
                             .foregroundStyle(Color.appMutedText)
                     }
+                    Text("As \(invitation.role.displayName)")
+                        .font(.caption)
+                        .foregroundStyle(Color.appMutedText)
                 }
                 Spacer(minLength: 0)
             }
@@ -234,6 +237,7 @@ struct BudgetInvitationsView: View {
                     inviterUserId: .sample,
                     inviterUsername: Username("shiva"),
                     inviteeUserId: .sample,
+                    role: .viewer,
                     createdAt: .now
                 ),
             ]),

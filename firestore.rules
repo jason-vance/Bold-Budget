@@ -66,15 +66,27 @@ service cloud.firestore {
 
     match /Budgets/{budgetId}/Users/{userId} {
     	allow read: if requesterIsBudgetUser(budgetId);
-    	// Own membership doc, either at budget creation (before the budget exists) or when
-    	// accepting an invitation to an existing budget.
-    	allow create: if userId == userId() && (budgetDoesNotExist(budgetId) || hasInvitation(budgetId));
+    	// Own membership doc, either at budget creation (before the budget exists, always as owner)
+    	// or when accepting an invitation, in which case the role must match the invite (so an
+    	// invitee can't grant themselves a higher role than they were offered).
+    	allow create: if userId == userId() && (
+    									 (budgetDoesNotExist(budgetId) && incomingData().role == 'owner')
+    									 || (hasInvitation(budgetId) && incomingData().role == invitationRole(budgetId))
+    								 );
+    	// Owners may change members' roles (owner ⇄ viewer).
+    	allow update: if budgetOwnedByRequester(budgetId);
     	// Owners may remove members (including themselves, i.e. leaving).
     	allow delete: if budgetOwnedByRequester(budgetId);
     }
 
     function budgetDoesNotExist(budgetId) {
     	return !exists(/databases/$(database)/documents/Budgets/$(budgetId))
+    }
+
+    // The role recorded on the requester's pending invitation for this budget. Legacy invites
+    // predate the field and were all equal co-owners.
+    function invitationRole(budgetId) {
+    	return get(/databases/$(database)/documents/BudgetInvitations/$(budgetId + '_' + userId())).data.get('role', 'owner')
     }
 
     function budgetUserExists(budgetId, userId) {
@@ -89,9 +101,9 @@ service cloud.firestore {
 
     match /BudgetInvitations/{inviteId} {
     	allow read: if requesterIsInvitee() || requesterIsInviter();
-    	// Only a member of the budget may invite, and only in their own name.
+    	// Only an owner of the budget may invite, and only in their own name.
     	allow create: if incomingData().inviterUserId == userId()
-    								 && requesterIsBudgetUser(incomingData().budgetId);
+    								 && budgetOwnedByRequester(incomingData().budgetId);
     	// The invitee (accept/decline) or the inviter (cancel) may remove it.
     	allow delete: if requesterIsInvitee() || requesterIsInviter();
     }

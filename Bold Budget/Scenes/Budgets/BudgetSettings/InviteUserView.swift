@@ -30,6 +30,7 @@ struct InviteUserView: View {
     @State private var usernameStr: String = ""
     @State private var status: Status = .idle
     @State private var inviter: UserData?
+    @State private var selectedRole: Budget.User.Role = .owner
 
     private let userFinder: UserFinder
     private let budgetInviter: BudgetInviter
@@ -101,7 +102,7 @@ struct InviteUserView: View {
         }
 
         do {
-            try await budgetInviter.invite(invitee, to: budget, from: inviter)
+            try await budgetInviter.invite(invitee, as: selectedRole, to: budget, from: inviter)
             await MainActor.run {
                 popupNotificationCenter.genericNotification(
                     String(localized: "Invitation sent"),
@@ -212,6 +213,47 @@ struct InviteUserView: View {
         }
     }
 
+    /// Lets the inviter choose whether the new member joins as an owner (full access) or a
+    /// view-only viewer. Each role shows a one-line description of what it can do.
+    @ViewBuilder private func RolePicker() -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Role")
+                .font(.caption2.weight(.semibold))
+                .textCase(.uppercase)
+                .kerning(0.5)
+                .foregroundStyle(Color.appMutedText)
+            ForEach(Budget.User.Role.allCases, id: \.self) { role in
+                Button { selectedRole = role } label: {
+                    HStack(spacing: .padding) {
+                        Image(systemName: selectedRole == role ? "checkmark.circle.fill" : "circle")
+                            .font(.title3)
+                            .foregroundStyle(selectedRole == role ? Color.brandTeal : Color.appMutedText)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(role.displayName)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(Color.appText)
+                            Text(roleDescription(role))
+                                .font(.caption)
+                                .foregroundStyle(Color.appMutedText)
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("InviteUserView.Role.\(role.rawValue)")
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func roleDescription(_ role: Budget.User.Role) -> String {
+        switch role {
+        case .owner: return String(localized: "Can view and make changes.")
+        case .viewer: return String(localized: "Can view only.")
+        }
+    }
+
     @ViewBuilder private func HintRow(icon: String, text: String, color: Color) -> some View {
         HStack(spacing: .paddingSmall) {
             Image(systemName: icon)
@@ -239,6 +281,7 @@ struct InviteUserView: View {
                 }
                 Spacer(minLength: 0)
             }
+            RolePicker()
             TaskAwareButton(
                 buttonColor: .brandTeal,
                 contentColor: .white,

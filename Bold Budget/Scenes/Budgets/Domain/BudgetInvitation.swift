@@ -15,6 +15,8 @@ struct BudgetInvitation: Identifiable {
     let inviterUserId: UserId
     let inviterUsername: Username?
     let inviteeUserId: UserId
+    /// The role the invitee will receive on accepting.
+    let role: Budget.User.Role
     let createdAt: Date
 
     /// Deterministic id so re-inviting the same person to the same budget overwrites
@@ -30,6 +32,7 @@ struct BudgetInvitation: Identifiable {
         inviterUserId: .sample,
         inviterUsername: Username("ifrit"),
         inviteeUserId: .sample,
+        role: .owner,
         createdAt: .now
     )
 }

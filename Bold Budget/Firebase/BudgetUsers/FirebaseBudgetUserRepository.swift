@@ -26,6 +26,14 @@ class FirebaseBudgetUserRepository {
     }
 }
 
+extension FirebaseBudgetUserRepository: BudgetUserRoleUpdater {
+    func update(user userId: UserId, to role: Budget.User.Role, in budget: BudgetInfo) async throws {
+        try await usersCollection(in: budget)
+            .document(userId.value)
+            .updateData([FirebaseBudgetUserDoc.CodingKeys.role.rawValue: role.rawValue])
+    }
+}
+
 extension FirebaseBudgetUserRepository: BudgetUserFetcher {
     func fetchUsers(in budget: BudgetInfo) async throws -> [Budget.User] {
         try await usersCollection(in: budget)

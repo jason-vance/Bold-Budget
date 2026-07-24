@@ -132,13 +132,15 @@ struct TransactionDetailView: View {
     }
 
     @ViewBuilder private func ToolbarMenu() -> some View {
-        Menu {
-            EditButton()
-            DeleteButton()
-        } label: {
-            Image(systemName: "ellipsis")
-                .font(.body.weight(.semibold))
-                .foregroundStyle(Color.appMutedText)
+        if budget.canEdit {
+            Menu {
+                EditButton()
+                DeleteButton()
+            } label: {
+                Image(systemName: "ellipsis")
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(Color.appMutedText)
+            }
         }
     }
 
