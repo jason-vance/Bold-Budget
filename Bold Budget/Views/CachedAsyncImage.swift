@@ -38,7 +38,24 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
             }
         }
         .task(id: url) {
-            uiImage = await ImageLoader.shared.image(for: url)
+            guard let url else {
+                uiImage = nil
+                return
+            }
+
+            // Retry transient failures. A cancelled task (view disappeared, or the URL changed
+            // out from under a live-updating publisher) just stops without clobbering a good image
+            // — the previous behavior blanked the avatar on any cancellation and never retried,
+            // which is why it "often" didn't show up on the live-updating profile screen.
+            for attempt in 0..<3 {
+                if let image = await ImageLoader.shared.image(for: url) {
+                    uiImage = image
+                    return
+                }
+                if Task.isCancelled { return }
+                try? await Task.sleep(for: .milliseconds(300 * (attempt + 1)))
+                if Task.isCancelled { return }
+            }
         }
     }
 }
