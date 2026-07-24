@@ -30,9 +30,11 @@ service cloud.firestore {
     	allow read: if userId() in resource.data.users;
       allow create, delete: if budgetOwnedByRequester(budgetId);
       // Owners may update freely (rename, manage members). An invitee with a pending
-      // invitation may update only to add themselves to the members array.
+      // invitation may update only to add themselves to the members array, and any member
+      // may update only to remove themselves (i.e. leave the budget).
       allow update: if budgetOwnedByRequester(budgetId)
-      							 || requesterIsAcceptingInvite(budgetId);
+      							 || requesterIsAcceptingInvite(budgetId)
+      							 || requesterIsLeaving(budgetId);
     }
 
     function requesterIsBudgetUser(budgetId) {
@@ -58,6 +60,16 @@ service cloud.firestore {
     				 && incomingData().name == existingData().name
     }
 
+    // The requester is leaving: they're currently a member and the only change is removing
+    // themselves from the members array (nothing else touched). Lets viewers leave, not just owners.
+    function requesterIsLeaving(budgetId) {
+    	return userId() in existingData().users
+    				 && !(userId() in incomingData().users)
+    				 && incomingData().users.size() == existingData().users.size() - 1
+    				 && existingData().users.hasAll(incomingData().users)
+    				 && incomingData().name == existingData().name
+    }
+
     function hasInvitation(budgetId) {
     	return exists(/databases/$(database)/documents/BudgetInvitations/$(budgetId + '_' + userId()))
     }
@@ -75,8 +87,8 @@ service cloud.firestore {
     								 );
     	// Owners may change members' roles (owner ⇄ viewer).
     	allow update: if budgetOwnedByRequester(budgetId);
-    	// Owners may remove members (including themselves, i.e. leaving).
-    	allow delete: if budgetOwnedByRequester(budgetId);
+    	// Owners may remove any member; any member may remove themselves (i.e. leave the budget).
+    	allow delete: if budgetOwnedByRequester(budgetId) || userId == userId();
     }
 
     function budgetDoesNotExist(budgetId) {
