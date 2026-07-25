@@ -15,6 +15,10 @@ struct RecurringExpensesView: View {
 
     @StateObject var budget: Budget
 
+    /// The ad is loaded and gated by `BudgetDetailView`, which owns the provider for the whole tab.
+    @Binding var ad: Ad?
+    var showAds: Bool = false
+
     private var allExpenses: [RecurringExpense] {
         Array(budget.recurringExpenses.values)
     }
@@ -62,9 +66,11 @@ struct RecurringExpensesView: View {
                 VStack(spacing: 0) {
                     if !hasContent {
                         EmptyState()
+                        AdCard()
                     } else {
                         Totals()
                             .padding(.vertical, .padding)
+                        AdCard()
                         RowDivider(opacity: 0.2)
                         ForEach(RecurringExpense.Kind.allCases, id: \.self) { kind in
                             KindSection(kind)
@@ -100,6 +106,17 @@ struct RecurringExpensesView: View {
         }
         .frame(height: .barHeight)
         .padding(.horizontal)
+    }
+
+    // MARK: - Ad
+
+    @ViewBuilder private func AdCard() -> some View {
+        if showAds {
+            NativeAdListRow(ad: $ad, size: .small)
+                .frame(maxWidth: .infinity)
+                .card()
+                .padding(.bottom, .padding)
+        }
     }
 
     // MARK: - Totals
@@ -267,12 +284,15 @@ struct RecurringExpensesView: View {
 
 #Preview("Populated") {
     NavigationStack {
-        RecurringExpensesView(budget: .previewSample(recurringExpenses: RecurringExpense.samples))
+        RecurringExpensesView(
+            budget: .previewSample(recurringExpenses: RecurringExpense.samples),
+            ad: .constant(nil)
+        )
     }
 }
 
 #Preview("Empty") {
     NavigationStack {
-        RecurringExpensesView(budget: .previewSample())
+        RecurringExpensesView(budget: .previewSample(), ad: .constant(nil))
     }
 }

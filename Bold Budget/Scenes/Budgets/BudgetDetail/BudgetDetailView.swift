@@ -133,6 +133,10 @@ struct BudgetDetailView: View {
         self.subscriptionManager = subscriptionManager
     }
     
+    /// The tab content is delegated to self-contained child views, so the ad this screen loads is
+    /// handed down to whichever one is showing rather than rendered here.
+    private var showAds: Bool { subscriptionLevel == SubscriptionLevel.none }
+
     private var filteredTransactions: [Transaction] {
         budget.transactions.values
             .filter {
@@ -238,7 +242,7 @@ struct BudgetDetailView: View {
     var body: some View {
         VStack(spacing: 0) {
             if topTab == .netWorth {
-                NetWorthView(budget: budget)
+                NetWorthView(budget: budget, ad: $ad, showAds: showAds)
                     .overlay {
                         if budget.isLoading { BlockingSpinnerView() }
                     }
@@ -278,7 +282,9 @@ struct BudgetDetailView: View {
             SpendingChartView(
                 budget: budget,
                 timeFrame: $timeFrame,
-                transactionsFilter: $transactionsFilter
+                transactionsFilter: $transactionsFilter,
+                ad: $ad,
+                showAds: showAds
             )
             .overlay {
                 if budget.isLoading { BlockingSpinnerView() }
@@ -288,14 +294,16 @@ struct BudgetDetailView: View {
             EnvelopesView(
                 budget: budget,
                 timeFrame: $timeFrame,
-                transactionsFilter: $transactionsFilter
+                transactionsFilter: $transactionsFilter,
+                ad: $ad,
+                showAds: showAds
             )
             .overlay {
                 if budget.isLoading { BlockingSpinnerView() }
             }
             SpendingModeBar()
         } else {
-            RecurringExpensesView(budget: budget)
+            RecurringExpensesView(budget: budget, ad: $ad, showAds: showAds)
                 .overlay {
                     if budget.isLoading { BlockingSpinnerView() }
                 }
@@ -656,15 +664,6 @@ struct BudgetDetailView: View {
             .contentShape(Rectangle())
         }
         .listRow()
-    }
-    
-    @ViewBuilder func AdSection() -> some View {
-        if subscriptionLevel == SubscriptionLevel.none {
-            Section {
-                NativeAdListRow(ad: $ad, size: .small)
-                    .listRow()
-            }
-        }
     }
 }
 

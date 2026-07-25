@@ -17,6 +17,10 @@ struct EditAccountView: View {
 
     @Environment(\.dismiss) private var dismiss
 
+    @EnvironmentObject private var adProviderFactory: AdProviderFactory
+    @State private var adProvider: AdProvider?
+    @State private var ad: Ad?
+
     @State private var screenTitle: String = String(localized: "Add Account")
     @State private var nameString: String = ""
     @State private var nameInstructions: String = ""
@@ -30,12 +34,26 @@ struct EditAccountView: View {
     @State private var showPaymentEntryView: Bool = false
     @State private var showDeleteConfirmation: Bool = false
 
+    @State private var subscriptionLevel: SubscriptionLevel = .none
+    private let subscriptionLevelProvider: SubscriptionLevelProvider
+
     private var accountToEdit: OptionalAccount = .none
 
     @StateObject var budget: Budget
 
     init(budget: Budget) {
+        self.init(
+            budget: budget,
+            subscriptionLevelProvider: iocContainer~>SubscriptionLevelProvider.self
+        )
+    }
+
+    init(
+        budget: Budget,
+        subscriptionLevelProvider: SubscriptionLevelProvider
+    ) {
         self._budget = .init(wrappedValue: budget)
+        self.subscriptionLevelProvider = subscriptionLevelProvider
     }
 
     public func editing(_ account: Account) -> EditAccountView {
@@ -123,6 +141,7 @@ struct EditAccountView: View {
             ScrollView {
                 VStack(spacing: .padding) {
                     Profile()
+                    AdCard()
                     NameField()
                     TypeField()
                     TrackingModeField()
@@ -145,6 +164,7 @@ struct EditAccountView: View {
         .background(Color.appBackground.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
         .navigationBarBackButtonHidden()
+        .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
         .fullScreenCover(isPresented: $showBalanceEntryView) {
             MoneyFieldEntryView(
                 title: LocalizedStringKey(balanceLabel),
@@ -169,8 +189,19 @@ struct EditAccountView: View {
         }
         .onChange(of: nameString) { _, nameString in setNameInstructions(nameString) }
         .onChange(of: accountToEdit, initial: true) { _, account in populateFields(account) }
+        .onReceive(subscriptionLevelProvider.subscriptionLevelPublisher) { subscriptionLevel = $0 }
         .animation(.snappy, value: kind)
         .animation(.snappy, value: trackingMode)
+    }
+
+    // MARK: - Ad
+
+    @ViewBuilder private func AdCard() -> some View {
+        if subscriptionLevel == SubscriptionLevel.none {
+            NativeAdListRow(ad: $ad, size: .small)
+                .frame(maxWidth: .infinity)
+                .card()
+        }
     }
 
     @ViewBuilder private func Header() -> some View {
@@ -361,13 +392,21 @@ struct EditAccountView: View {
 
 #Preview("New") {
     NavigationStack {
-        EditAccountView(budget: .previewSample())
+        EditAccountView(
+            budget: .previewSample(),
+            subscriptionLevelProvider: MockSubscriptionLevelProvider(level: .boldBudgetPlus)
+        )
     }
+    .environmentObject(AdProviderFactory.forScreenshots)
 }
 
 #Preview("Edit") {
     NavigationStack {
-        EditAccountView(budget: .previewSample(accounts: Account.samples))
-            .editing(.sampleCarLoan)
+        EditAccountView(
+            budget: .previewSample(accounts: Account.samples),
+            subscriptionLevelProvider: MockSubscriptionLevelProvider(level: .boldBudgetPlus)
+        )
+        .editing(.sampleCarLoan)
     }
+    .environmentObject(AdProviderFactory.forScreenshots)
 }

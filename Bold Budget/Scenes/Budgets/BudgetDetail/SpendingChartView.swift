@@ -16,6 +16,10 @@ struct SpendingChartView: View {
     @Binding var timeFrame: TimeFrame
     @Binding var transactionsFilter: TransactionsFilter
 
+    /// The ad is loaded and gated by `BudgetDetailView`, which owns the provider for the whole tab.
+    @Binding var ad: Ad?
+    var showAds: Bool = false
+
     @State private var showPeriodPicker = false
     @State private var showFilter = false
 
@@ -76,6 +80,7 @@ struct SpendingChartView: View {
                             .containerRelativeFrame(.horizontal) { length, _ in length * 0.7 }
                     }
                     Totals()
+                    AdCard()
                     Divider().overlay(Color.appMutedText.opacity(0.3))
                     TransactionsList()
                 }
@@ -88,6 +93,16 @@ struct SpendingChartView: View {
         .background(Color.appBackground.ignoresSafeArea())
         .overlay(alignment: .top) { PeriodDropdown() }
         .overlay(alignment: .top) { FilterDropdown() }
+    }
+
+    // MARK: - Ad
+
+    @ViewBuilder private func AdCard() -> some View {
+        if showAds {
+            NativeAdListRow(ad: $ad, size: .small)
+                .frame(maxWidth: .infinity)
+                .card()
+        }
     }
 
     // MARK: - Filter dropdown

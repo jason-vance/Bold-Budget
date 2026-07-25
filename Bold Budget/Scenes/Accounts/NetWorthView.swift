@@ -13,6 +13,10 @@ struct NetWorthView: View {
 
     @StateObject var budget: Budget
 
+    /// The ad is loaded and gated by `BudgetDetailView`, which owns the provider for the whole tab.
+    @Binding var ad: Ad?
+    var showAds: Bool = false
+
     private var allAccounts: [Account] {
         Array(budget.accounts.values)
     }
@@ -35,6 +39,8 @@ struct NetWorthView: View {
             if allAccounts.isEmpty {
                 Spacer(minLength: 0)
                 NoAccountsView()
+                AdCard()
+                    .padding(.horizontal)
                 Spacer(minLength: 0)
             } else {
                 ScrollView {
@@ -42,6 +48,7 @@ struct NetWorthView: View {
                         Hero()
                         ChartCard()
                         StatCards()
+                        AdCard()
                         ForEach(Account.Class.allCases, id: \.self) { accountClass in
                             ClassGroup(accountClass)
                         }
@@ -77,6 +84,16 @@ struct NetWorthView: View {
         }
         .frame(height: .barHeight)
         .padding(.horizontal)
+    }
+
+    // MARK: - Ad
+
+    @ViewBuilder private func AdCard() -> some View {
+        if showAds {
+            NativeAdListRow(ad: $ad, size: .small)
+                .frame(maxWidth: .infinity)
+                .card()
+        }
     }
 
     // MARK: - Hero
@@ -256,12 +273,12 @@ struct NetWorthView: View {
 
 #Preview("Populated") {
     NavigationStack {
-        NetWorthView(budget: .previewSample(accounts: Account.samples))
+        NetWorthView(budget: .previewSample(accounts: Account.samples), ad: .constant(nil))
     }
 }
 
 #Preview("Empty") {
     NavigationStack {
-        NetWorthView(budget: .previewSample())
+        NetWorthView(budget: .previewSample(), ad: .constant(nil))
     }
 }

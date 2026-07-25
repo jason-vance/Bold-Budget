@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwinjectAutoregistration
 
 struct EditRecurringExpenseView: View {
 
@@ -17,6 +18,10 @@ struct EditRecurringExpenseView: View {
     private static let cycleOptions: [Int] = [1, 3, 6, 12]
 
     @Environment(\.dismiss) private var dismiss
+
+    @EnvironmentObject private var adProviderFactory: AdProviderFactory
+    @State private var adProvider: AdProvider?
+    @State private var ad: Ad?
 
     @State private var screenTitle: String = String(localized: "Add Recurring Expense")
     @State private var kind: RecurringExpense.Kind = .bill
@@ -34,12 +39,26 @@ struct EditRecurringExpenseView: View {
     @State private var showDeleteConfirmation: Bool = false
     @State private var showConvertConfirmation: Bool = false
 
+    @State private var subscriptionLevel: SubscriptionLevel = .none
+    private let subscriptionLevelProvider: SubscriptionLevelProvider
+
     private var expenseToEdit: OptionalExpense = .none
 
     @StateObject var budget: Budget
 
     init(budget: Budget) {
+        self.init(
+            budget: budget,
+            subscriptionLevelProvider: iocContainer~>SubscriptionLevelProvider.self
+        )
+    }
+
+    init(
+        budget: Budget,
+        subscriptionLevelProvider: SubscriptionLevelProvider
+    ) {
         self._budget = .init(wrappedValue: budget)
+        self.subscriptionLevelProvider = subscriptionLevelProvider
     }
 
     public func editing(_ expense: RecurringExpense) -> EditRecurringExpenseView {
@@ -174,6 +193,7 @@ struct EditRecurringExpenseView: View {
             ScrollView {
                 VStack(spacing: .padding) {
                     Profile()
+                    AdCard()
                     NameField()
                     KindField()
                     PriceField()
@@ -198,6 +218,7 @@ struct EditRecurringExpenseView: View {
         .background(Color.appBackground.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
         .navigationBarBackButtonHidden()
+        .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
         .fullScreenCover(isPresented: $showPriceEntryView) {
             MoneyFieldEntryView(
                 title: "Price",
@@ -232,7 +253,18 @@ struct EditRecurringExpenseView: View {
         }
         .onChange(of: nameString) { _, nameString in setNameInstructions(nameString) }
         .onChange(of: expenseToEdit, initial: true) { _, expense in populateFields(expense) }
+        .onReceive(subscriptionLevelProvider.subscriptionLevelPublisher) { subscriptionLevel = $0 }
         .animation(.snappy, value: kind)
+    }
+
+    // MARK: - Ad
+
+    @ViewBuilder private func AdCard() -> some View {
+        if subscriptionLevel == SubscriptionLevel.none {
+            NativeAdListRow(ad: $ad, size: .small)
+                .frame(maxWidth: .infinity)
+                .card()
+        }
     }
 
     @ViewBuilder private func Header() -> some View {
@@ -476,20 +508,32 @@ struct EditRecurringExpenseView: View {
 
 #Preview("New") {
     NavigationStack {
-        EditRecurringExpenseView(budget: .previewSample())
+        EditRecurringExpenseView(
+            budget: .previewSample(),
+            subscriptionLevelProvider: MockSubscriptionLevelProvider(level: .boldBudgetPlus)
+        )
     }
+    .environmentObject(AdProviderFactory.forScreenshots)
 }
 
 #Preview("Edit Debt") {
     NavigationStack {
-        EditRecurringExpenseView(budget: .previewSample(recurringExpenses: RecurringExpense.samples))
-            .editing(.sampleCarLoan)
+        EditRecurringExpenseView(
+            budget: .previewSample(recurringExpenses: RecurringExpense.samples),
+            subscriptionLevelProvider: MockSubscriptionLevelProvider(level: .boldBudgetPlus)
+        )
+        .editing(.sampleCarLoan)
     }
+    .environmentObject(AdProviderFactory.forScreenshots)
 }
 
 #Preview("Edit Annual Subscription") {
     NavigationStack {
-        EditRecurringExpenseView(budget: .previewSample(recurringExpenses: RecurringExpense.samples))
-            .editing(.sampleAnnualSubscription)
+        EditRecurringExpenseView(
+            budget: .previewSample(recurringExpenses: RecurringExpense.samples),
+            subscriptionLevelProvider: MockSubscriptionLevelProvider(level: .boldBudgetPlus)
+        )
+        .editing(.sampleAnnualSubscription)
     }
+    .environmentObject(AdProviderFactory.forScreenshots)
 }

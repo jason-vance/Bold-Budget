@@ -6,19 +6,48 @@
 //
 
 import SwiftUI
+import SwinjectAutoregistration
 
 /// Read-focused account screen from the redesign mockup: header, balance + change, value chart,
-/// an Update Balance action, and balance history. Editing (name/type/delete) lives in
+/// an Update Balance action, an ad card, and balance history. Editing (name/type/delete) lives in
 /// `EditAccountView`, reached via the Edit button.
 struct AccountDetailView: View {
 
     @Environment(\.dismiss) private var dismiss
+
+    @EnvironmentObject private var adProviderFactory: AdProviderFactory
+    @State private var adProvider: AdProvider?
+    @State private var ad: Ad?
 
     @StateObject var budget: Budget
     let accountId: Account.Id
 
     @State private var showEditor = false
     @State private var editorSnapshot: BalanceSnapshot?
+
+    @State private var subscriptionLevel: SubscriptionLevel = .none
+    private let subscriptionLevelProvider: SubscriptionLevelProvider
+
+    init(
+        budget: Budget,
+        accountId: Account.Id
+    ) {
+        self.init(
+            budget: budget,
+            accountId: accountId,
+            subscriptionLevelProvider: iocContainer~>SubscriptionLevelProvider.self
+        )
+    }
+
+    init(
+        budget: Budget,
+        accountId: Account.Id,
+        subscriptionLevelProvider: SubscriptionLevelProvider
+    ) {
+        self._budget = .init(wrappedValue: budget)
+        self.accountId = accountId
+        self.subscriptionLevelProvider = subscriptionLevelProvider
+    }
 
     private var account: Account? { budget.accounts[accountId] }
 
@@ -33,6 +62,7 @@ struct AccountDetailView: View {
                             BalanceBlock(account)
                             ChartCard(account)
                             if budget.canEdit { UpdateBalanceButton(account) }
+                            AdCard()
                             HistorySection(account)
                         }
                         .padding()
@@ -47,11 +77,23 @@ struct AccountDetailView: View {
         .background(Color.appBackground.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
         .navigationBarBackButtonHidden()
+        .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
         .fullScreenCover(isPresented: $showEditor) {
             BalanceSnapshotEditor(budget: budget, accountId: accountId, editing: editorSnapshot)
         }
         .onChange(of: account) { _, new in
             if new == nil { dismiss() }
+        }
+        .onReceive(subscriptionLevelProvider.subscriptionLevelPublisher) { subscriptionLevel = $0 }
+    }
+
+    // MARK: - Ad
+
+    @ViewBuilder private func AdCard() -> some View {
+        if subscriptionLevel == SubscriptionLevel.none {
+            NativeAdListRow(ad: $ad, size: .small)
+                .frame(maxWidth: .infinity)
+                .card()
         }
     }
 
@@ -253,7 +295,9 @@ private extension Array {
     NavigationStack {
         AccountDetailView(
             budget: .previewSample(accounts: Account.samples),
-            accountId: Account.sampleRobinhood.id
+            accountId: Account.sampleRobinhood.id,
+            subscriptionLevelProvider: MockSubscriptionLevelProvider(level: .boldBudgetPlus)
         )
     }
+    .environmentObject(AdProviderFactory.forScreenshots)
 }

@@ -30,6 +30,10 @@ struct EnvelopesView: View {
     @Binding var timeFrame: TimeFrame
     @Binding var transactionsFilter: TransactionsFilter
 
+    /// The ad is loaded and gated by `BudgetDetailView`, which owns the provider for the whole tab.
+    @Binding var ad: Ad?
+    var showAds: Bool = false
+
     @State private var selectedCategory: Transaction.Category?
     @State private var showPeriodPicker = false
     @State private var showFilter = false
@@ -84,6 +88,7 @@ struct EnvelopesView: View {
                 VStack(spacing: 0) {
                     Totals()
                         .padding(.vertical, .padding)
+                    AdCard()
                     RowDivider(opacity: 0.2)
                     if displayCategories.isEmpty {
                         EmptyEnvelopes()
@@ -128,6 +133,17 @@ struct EnvelopesView: View {
                 .animation(.snappy.delay(min(Double(index) * 0.02, 0.15))),
             removal: .identity
         )
+    }
+
+    // MARK: - Ad
+
+    @ViewBuilder private func AdCard() -> some View {
+        if showAds {
+            NativeAdListRow(ad: $ad, size: .small)
+                .frame(maxWidth: .infinity)
+                .card()
+                .padding(.bottom, .padding)
+        }
     }
 
     // MARK: - Header
@@ -454,7 +470,8 @@ struct EnvelopesView: View {
         EnvelopesView(
             budget: .previewSample(transactions: Transaction.screenshotSamples),
             timeFrame: .constant(.init(period: .year, containing: .now)),
-            transactionsFilter: .constant(.none)
+            transactionsFilter: .constant(.none),
+            ad: .constant(nil)
         )
     }
 }
@@ -464,7 +481,8 @@ struct EnvelopesView: View {
         EnvelopesView(
             budget: .previewSample(),
             timeFrame: .constant(.init(period: .year, containing: .now)),
-            transactionsFilter: .constant(.none)
+            transactionsFilter: .constant(.none),
+            ad: .constant(nil)
         )
     }
 }
