@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import SwiftUIFlowLayout
 
 struct MoneyFieldEntryView: View {
 
@@ -180,13 +179,12 @@ struct MoneyFieldEntryView: View {
     @ViewBuilder private func Suggestions() -> some View {
         let filtered = filteredSuggestions
         if !filtered.isEmpty {
-            FlowLayout(
-                mode: .scrollable,
-                items: filtered,
-                itemSpacing: .paddingSmall
-            ) { suggestion in
-                Suggestion(suggestion)
+            FlowLayout(spacing: .paddingSmall) {
+                ForEach(filtered) { suggestion in
+                    Suggestion(suggestion)
+                }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 

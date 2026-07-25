@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import SwiftUIFlowLayout
 
 struct TagsEditorView: View {
 
@@ -146,12 +145,10 @@ struct TagsEditorView: View {
                 .foregroundStyle(Color.appMutedText)
                 .padding(.vertical, .paddingSmall)
         } else {
-            FlowLayout(
-                mode: .scrollable,
-                items: allTags,
-                itemSpacing: .paddingSmall
-            ) { tag in
-                TagChip(tag, selected: entryTags.contains(tag))
+            FlowLayout(spacing: .paddingSmall) {
+                ForEach(allTags, id: \.self) { tag in
+                    TagChip(tag, selected: entryTags.contains(tag))
+                }
             }
         }
     }

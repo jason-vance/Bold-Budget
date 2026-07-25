@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import SwiftUIFlowLayout
 import SwinjectAutoregistration
 
 /// Read-focused transaction screen in the redesign palette: a self-contained header (back button +
@@ -274,13 +273,12 @@ struct TransactionDetailView: View {
             if transaction.title != nil || transaction.location != nil { RowDivider() }
             VStack(alignment: .leading, spacing: .paddingSmall) {
                 RowLabel(String(localized: "Tags"))
-                FlowLayout(
-                    mode: .vstack,
-                    items: transaction.tags.sorted { $0.value < $1.value },
-                    itemSpacing: .paddingSmall
-                ) { tag in
-                    Chip(text: tag.value, systemName: "tag", tint: .brandTeal)
+                FlowLayout(spacing: .paddingSmall) {
+                    ForEach(transaction.tags.sorted { $0.value < $1.value }, id: \.self) { tag in
+                        Chip(text: tag.value, systemName: "tag", tint: .brandTeal)
+                    }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(.padding)
         }
@@ -309,11 +307,22 @@ struct TransactionDetailView: View {
     }
 }
 
-#Preview {
+#Preview("Random") {
     NavigationStack {
         TransactionDetailView(
             budget: Budget(info: .sample),
             transaction: .sampleRandomBasic,
+            subscriptionManager: MockSubscriptionLevelProvider(level: .boldBudgetPlus)
+        )
+    }
+    .environmentObject(AdProviderFactory.forScreenshots)
+}
+
+#Preview("Tagged") {
+    NavigationStack {
+        TransactionDetailView(
+            budget: Budget(info: .sample),
+            transaction: .taggedSample,
             subscriptionManager: MockSubscriptionLevelProvider(level: .boldBudgetPlus)
         )
     }

@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import SwiftUIFlowLayout
 
 struct TextFieldEntryView: View {
     
@@ -120,13 +119,12 @@ struct TextFieldEntryView: View {
 
     @ViewBuilder private func Suggestions() -> some View {
         if !filteredSuggestions.isEmpty {
-            FlowLayout(
-                mode: .scrollable,
-                items: filteredSuggestions,
-                itemSpacing: .paddingCircleButtonSmall
-            ) { suggestion in
-                Suggestion(suggestion)
+            FlowLayout(spacing: .paddingCircleButtonSmall) {
+                ForEach(filteredSuggestions, id: \.self) { suggestion in
+                    Suggestion(suggestion)
+                }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 

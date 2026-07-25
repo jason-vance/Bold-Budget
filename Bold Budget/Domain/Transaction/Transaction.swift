@@ -132,7 +132,7 @@ extension Transaction {
             amount: Money(10)!,
             date: .now,
             categoryId: Transaction.Category.sampleGroceries.id,
-            tags: [.sample]
+            tags: [.sample, .init("Other Tag")!]
         )
     }
     
