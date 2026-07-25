@@ -100,13 +100,13 @@ struct TransactionsFilterMenu: View {
         .foregroundStyle(Color.appText)
         .onChange(of: selectedCategoryForWhitelist) { _, id in
             if let id {
-                withAnimation(.snappy) { transactionsFilter.whitelistedCategoryIds.insert(id) }
+                withAnimation(.snappy) { _ = transactionsFilter.whitelistedCategoryIds.insert(id) }
                 selectedCategoryForWhitelist = nil
             }
         }
         .onChange(of: selectedCategoryForBlacklist) { _, id in
             if let id {
-                withAnimation(.snappy) { transactionsFilter.blacklistedCategoryIds.insert(id) }
+                withAnimation(.snappy) { _ = transactionsFilter.blacklistedCategoryIds.insert(id) }
                 selectedCategoryForBlacklist = nil
             }
         }

@@ -99,7 +99,7 @@ struct ProfileFormUsernameField: View {
         }
     }
 
-    @ViewBuilder func UsernameErrorView() -> some View {
+    func UsernameErrorView() -> some View {
         let icon: String
         let text: String
         let color: Color
