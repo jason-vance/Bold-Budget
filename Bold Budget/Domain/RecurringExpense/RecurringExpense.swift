@@ -144,4 +144,52 @@ extension RecurringExpense {
             ),
         ]
     }
+
+    /// Curated for App Store screenshots: every section populated, an annual subscription to show the
+    /// per-cycle note, and nothing that duplicates a liability in `Account.samples` — the Recurring
+    /// screen lists loan accounts alongside recurring debts, so a shared car loan would appear twice.
+    ///
+    /// Sized so the last row clears the mode switcher on a 6.9" phone rather than being cut in half.
+    /// Adding an entry here pushes a row under the fold.
+    static let screenshotSamples: [RecurringExpense] = [
+        .init(
+            id: Id(),
+            name: .init("Student Loan")!,
+            kind: .debt,
+            price: Money(312)!,
+            remainingBalance: Money(18450)!
+        ),
+        .init(
+            id: Id(),
+            name: .init("Visa •••• 4021")!,
+            kind: .debt,
+            price: Money(185)!,
+            remainingBalance: Money(2640)!
+        ),
+        .init(
+            id: Id(),
+            name: .init("Internet")!,
+            kind: .bill,
+            price: Money(75)!
+        ),
+        .init(
+            id: Id(),
+            name: .init("Rent")!,
+            kind: .bill,
+            price: Money(2150)!
+        ),
+        .init(
+            id: Id(),
+            name: .init("Amazon Prime")!,
+            kind: .subscription,
+            price: Money(139)!,
+            monthsPerCycle: 12
+        ),
+        .init(
+            id: Id(),
+            name: .init("Netflix")!,
+            kind: .subscription,
+            price: Money(22.99)!
+        ),
+    ]
 }

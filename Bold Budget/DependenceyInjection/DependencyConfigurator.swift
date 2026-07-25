@@ -16,7 +16,7 @@ func setup(iocContainer: Container) {
     iocContainer.autoregister(UserDataProvider.self, initializer: getUserDataProvider)
     iocContainer.autoregister(UserDataFetcher.self, initializer: getUserDataFetcher)
     registerUserFinder()
-    iocContainer.autoregister(SubscriptionLevelProvider.self, initializer: { StoreKitSubscriptionLevelProvider.instance })
+    registerSubscriptionLevelProvider()
     registerReviewPrompter()
     registerIsAdminChecker()
     registerPopupNotificationCenter()
@@ -108,6 +108,13 @@ fileprivate func registerUserFinder() {
         service = mock
     }
     iocContainer.autoregister(UserFinder.self, initializer: { service })
+}
+
+fileprivate func registerSubscriptionLevelProvider() {
+    // Falls through to the singleton lazily; touching it starts StoreKit's entitlement listener
+    let service: SubscriptionLevelProvider = MockSubscriptionLevelProvider.getTestInstance()
+        ?? StoreKitSubscriptionLevelProvider.instance
+    iocContainer.autoregister(SubscriptionLevelProvider.self, initializer: { service })
 }
 
 fileprivate func registerReviewPrompter() {

@@ -29,6 +29,7 @@ extension MockRecurringExpenseFetcher {
     public enum TestCategory: String, RawRepresentable {
         case empty
         case samples
+        case screenshotSamples
         case error
     }
 
@@ -48,6 +49,8 @@ extension MockRecurringExpenseFetcher {
             mock.recurringExpenses = []
         case .samples:
             mock.recurringExpenses = RecurringExpense.samples
+        case .screenshotSamples:
+            mock.recurringExpenses = RecurringExpense.screenshotSamples
         case .error:
             mock.error = TextError("MockRecurringExpenseFetcher.TestError")
         }

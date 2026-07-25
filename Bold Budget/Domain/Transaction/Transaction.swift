@@ -184,7 +184,8 @@ extension Transaction {
             title: .init("Paycheck")!,
             amount: .init(1084.62)!,
             date: .now,
-            categoryId: Transaction.Category.samplePaycheck.id
+            categoryId: Transaction.Category.samplePaycheck.id,
+            kind: .income
         ),
         .init(
             id: Id(),

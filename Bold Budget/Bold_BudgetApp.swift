@@ -13,6 +13,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil
     ) -> Bool {
+        ScreenshotMode.applyIfActive()
         configureFirebase()
         setupToolbars()
         setupNavBars()
@@ -93,6 +94,6 @@ struct Bold_BudgetApp: App {
                 PopupNotificationContainerView()
             }
         }
-        .environmentObject(AdProviderFactory.forProd)
+        .environmentObject(ScreenshotMode.isActive ? AdProviderFactory.forScreenshots : AdProviderFactory.forProd)
     }
 }
