@@ -31,7 +31,10 @@ struct UserProfileView: View {
 
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
-    
+
+    @State private var showPaywall: Bool = false
+    @State private var isRestoring: Bool = false
+
     private let __userId: UserId
     
     private let currentUserIdProvider: CurrentUserIdProvider
@@ -41,6 +44,8 @@ struct UserProfileView: View {
     private let signOutService: UserSignOutService
     private let accountDeleter: UserAccountDeleter
     private let invitationFetcher: BudgetInvitationFetcher
+
+    @ObservedObject private var featureGate: FeatureGate
 
     private var isMe: Bool { currentUserIdProvider.currentUserId == userId }
 
@@ -102,6 +107,25 @@ struct UserProfileView: View {
         showAlert = true
         alertMessage = alert
     }
+
+    /// Restore lives here as well as on the paywall: someone reinstalling on a new phone looks in
+    /// Settings for it, not behind a buy button they think they've already pressed.
+    private func restorePurchases() {
+        isRestoring = true
+        Task {
+            defer { isRestoring = false }
+            let store = PlusStore(subscriptionLevelProvider: subscriptionLevelProvider)
+            do {
+                let didRestore = try await store.restorePurchases()
+                show(alert: didRestore
+                    ? String(localized: "Bold Budget+ restored.")
+                    : String(localized: "No previous Bold Budget+ purchase was found on this Apple Account.")
+                )
+            } catch {
+                show(alert: String(localized: "Couldn't restore purchases. \(error.localizedDescription)"))
+            }
+        }
+    }
     
     init(
         userId: UserId
@@ -114,7 +138,8 @@ struct UserProfileView: View {
             userDataProvider: iocContainer~>UserDataProvider.self,
             signOutService: iocContainer~>UserSignOutService.self,
             accountDeleter: iocContainer~>UserAccountDeleter.self,
-            invitationFetcher: iocContainer~>BudgetInvitationFetcher.self
+            invitationFetcher: iocContainer~>BudgetInvitationFetcher.self,
+            featureGate: iocContainer~>FeatureGate.self
         )
     }
 
@@ -126,7 +151,8 @@ struct UserProfileView: View {
         userDataProvider: UserDataProvider,
         signOutService: UserSignOutService,
         accountDeleter: UserAccountDeleter,
-        invitationFetcher: BudgetInvitationFetcher
+        invitationFetcher: BudgetInvitationFetcher,
+        featureGate: FeatureGate
     ) {
         self.__userId = userId
         self.currentUserIdProvider = currentUserIdProvider
@@ -136,6 +162,7 @@ struct UserProfileView: View {
         self.signOutService = signOutService
         self.accountDeleter = accountDeleter
         self.invitationFetcher = invitationFetcher
+        self.featureGate = featureGate
     }
     
     var body: some View {
@@ -144,6 +171,7 @@ struct UserProfileView: View {
             ScrollView {
                 VStack(spacing: .padding) {
                     Profile()
+                    PlusCard()
                     AdCard()
                     AdminCard()
                     ActionsCard()
@@ -163,6 +191,7 @@ struct UserProfileView: View {
         .onChange(of: __userId, initial: true) { _, userId in userDataProvider.startListeningToUser(withId: userId) }
         .onReceive(userDataProvider.userDataPublisher) { userData = $0 }
         .alert(alertMessage, isPresented: $showAlert) {}
+        .sheet(isPresented: $showPaywall) { PlusPaywallView(context: .general) }
         .onDisappear { userDataProvider.stopListeningToUser() }
         .onReceive(subscriptionLevelProvider.subscriptionLevelPublisher) { subscriptionLevel = $0 }
         .onAppear { checkIsAdmin() }
@@ -209,6 +238,72 @@ struct UserProfileView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.top, .paddingSmall)
+    }
+
+    // MARK: - Bold Budget+
+
+    /// Upsell when they don't have it, receipt when they do. Only ever shown on your own profile —
+    /// another user's subscription is none of your business.
+    @ViewBuilder private func PlusCard() -> some View {
+        if isMe {
+            if featureGate.isPlus {
+                ActivePlusCard()
+            } else {
+                UpgradeCard()
+            }
+        }
+    }
+
+    @ViewBuilder private func ActivePlusCard() -> some View {
+        HStack(spacing: .padding) {
+            IconCircle(systemName: "checkmark.seal.fill", size: 40, tint: .brandTeal)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Bold Budget+")
+                    .fontWeight(.semibold)
+                    .foregroundStyle(Color.appText)
+                Text("Active — thank you")
+                    .font(.caption)
+                    .foregroundStyle(Color.appMutedText)
+            }
+            Spacer(minLength: 0)
+            Link(destination: URL(string: "https://apps.apple.com/account/subscriptions")!) {
+                Text("Manage")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Color.brandTeal)
+            }
+        }
+        .card()
+        .accessibilityIdentifier("UserProfileView.ActivePlusCard")
+    }
+
+    @ViewBuilder private func UpgradeCard() -> some View {
+        VStack(spacing: .padding) {
+            HStack(spacing: .padding) {
+                IconCircle(systemName: "sparkles", size: 40, tint: .brandTeal)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Bold Budget+")
+                        .fontWeight(.semibold)
+                        .foregroundStyle(Color.appText)
+                    Text("Unlimited accounts, net worth history, sharing, and no ads.")
+                        .font(.caption)
+                        .foregroundStyle(Color.appMutedText)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+            }
+            Button { showPaywall = true } label: {
+                PrimaryButtonLabel(title: String(localized: "See Plans"), background: .brandTeal, foreground: .appBackground)
+            }
+            .accessibilityIdentifier("UserProfileView.SeePlansButton")
+            Button { restorePurchases() } label: {
+                Text(isRestoring ? "Restoring…" : "Restore Purchases")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Color.appMutedText)
+            }
+            .disabled(isRestoring)
+            .accessibilityIdentifier("UserProfileView.RestorePurchasesButton")
+        }
+        .card()
     }
 
     // MARK: - Ad
@@ -527,7 +622,8 @@ struct UserProfileView: View {
             userDataProvider: MockUserDataProvider(),
             signOutService: MockUserSignOutService(),
             accountDeleter: MockUserAccountDeleter(),
-            invitationFetcher: MockBudgetInvitationFetcher()
+            invitationFetcher: MockBudgetInvitationFetcher(),
+            featureGate: .previewFree
         )
     }
     .environmentObject(AdProviderFactory.forScreenshots)
@@ -543,7 +639,8 @@ struct UserProfileView: View {
             userDataProvider: MockUserDataProvider(),
             signOutService: MockUserSignOutService(),
             accountDeleter: MockUserAccountDeleter(),
-            invitationFetcher: MockBudgetInvitationFetcher(invitations: [])
+            invitationFetcher: MockBudgetInvitationFetcher(invitations: []),
+            featureGate: .previewFree
         )
     }
     .environmentObject(AdProviderFactory.forScreenshots)

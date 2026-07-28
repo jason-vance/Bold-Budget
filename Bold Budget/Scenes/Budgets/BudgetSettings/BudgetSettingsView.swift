@@ -32,6 +32,12 @@ struct BudgetSettingsView: View {
     @State private var subscriptionLevel: SubscriptionLevel = .none
     private let subscriptionLevelProvider: SubscriptionLevelProvider
 
+    @ObservedObject private var featureGate: FeatureGate
+
+    @State private var showPaywall: Bool = false
+    @State private var paywallContext: PaywallContext = .general
+    @State private var exportedCsvFile: SharedFile?
+
     private let userDataFetcher: UserDataFetcher
     private let budgetUserFetcher: BudgetUserFetcher
     private let budgetFetcher: BudgetFetcher
@@ -49,6 +55,7 @@ struct BudgetSettingsView: View {
             userDataFetcher: iocContainer~>UserDataFetcher.self,
             budgetUserFetcher: iocContainer~>BudgetUserFetcher.self,
             subscriptionLevelProvider: iocContainer~>SubscriptionLevelProvider.self,
+            featureGate: iocContainer~>FeatureGate.self,
             budgetFetcher: iocContainer~>BudgetFetcher.self,
             currentUserIdProvider: iocContainer~>CurrentUserIdProvider.self,
             budgetUserRemover: iocContainer~>BudgetUserRemover.self,
@@ -62,6 +69,7 @@ struct BudgetSettingsView: View {
         userDataFetcher: UserDataFetcher,
         budgetUserFetcher: BudgetUserFetcher,
         subscriptionLevelProvider: SubscriptionLevelProvider,
+        featureGate: FeatureGate,
         budgetFetcher: BudgetFetcher,
         currentUserIdProvider: CurrentUserIdProvider,
         budgetUserRemover: BudgetUserRemover,
@@ -72,6 +80,7 @@ struct BudgetSettingsView: View {
         self.userDataFetcher = userDataFetcher
         self.budgetUserFetcher = budgetUserFetcher
         self.subscriptionLevelProvider = subscriptionLevelProvider
+        self.featureGate = featureGate
         self.budgetFetcher = budgetFetcher
         self.currentUserIdProvider = currentUserIdProvider
         self.budgetUserRemover = budgetUserRemover
@@ -150,6 +159,34 @@ struct BudgetSettingsView: View {
     private func removeUserPrompt(for user: UserData) -> String {
         let name = user.username?.value ?? String(localized: "this user")
         return String(localized: "Remove \(name) from \(budget.info.name.value)?")
+    }
+
+    private func present(paywall context: PaywallContext) {
+        paywallContext = context
+        showPaywall = true
+    }
+
+    /// Writes the CSV to a temp file and hands the URL to the share sheet. A file (rather than a
+    /// text blob) is what lets the user drop it straight into Files, Mail, or a spreadsheet app.
+    private func exportTransactions() {
+        let csv = TransactionCsvExporter.csv(
+            transactions: Array(budget.transactions.values),
+            categories: budget.transactionCategories,
+            accounts: budget.accounts
+        )
+        let fileName = TransactionCsvExporter.fileName(for: budget.info.name.value)
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
+
+        do {
+            try csv.write(to: url, atomically: true, encoding: .utf8)
+            exportedCsvFile = SharedFile(url: url)
+        } catch {
+            print("Failed to write the transactions CSV. \(error.localizedDescription)")
+            popupNotificationCenter.errorNotification(
+                String(localized: "Couldn't create the export file."),
+                error: error
+            )
+        }
     }
 
     private func fetchUsers() {
@@ -237,9 +274,21 @@ struct BudgetSettingsView: View {
             }
             Button("Cancel", role: .cancel) {}
         }
+        .sheet(isPresented: $showPaywall) {
+            PlusPaywallView(context: paywallContext)
+        }
+        .sheet(item: $exportedCsvFile) { file in
+            ShareSheet(url: file.url)
+        }
         .onAppear { fetchUsers() }
         .onAppear { fetchUserRoles() }
         .onAppear { fetchBudgets() }
+        .onChange(of: users.count) { _, count in
+            featureGate.noteExistingUsage(isSharedBudget: count > 1)
+        }
+        .onChange(of: allBudgets.count) { _, count in
+            featureGate.noteExistingUsage(budgetCount: count)
+        }
         .animation(.snappy, value: users)
         .animation(.snappy, value: budgetUsers)
         .onReceive(subscriptionLevelProvider.subscriptionLevelPublisher) { subscriptionLevel = $0 }
@@ -280,7 +329,11 @@ struct BudgetSettingsView: View {
                 }
             }
             Button {
-                showAddBudget = true
+                if featureGate.canAddBudget(currentCount: allBudgets.count) {
+                    showAddBudget = true
+                } else {
+                    present(paywall: .budgets)
+                }
             } label: {
                 Label("Add Budget", systemImage: "plus")
             }
@@ -339,8 +392,35 @@ struct BudgetSettingsView: View {
                 NavRow(systemName: "tag.fill", title: "Transaction Categories")
             }
             .buttonStyle(.plain)
+            RowDivider()
+            ExportTransactionsRow()
         }
         .card(0)
+    }
+
+    @ViewBuilder private func ExportTransactionsRow() -> some View {
+        if featureGate.canExportTransactions {
+            Button { exportTransactions() } label: {
+                NavRow(systemName: "square.and.arrow.up", title: "Export Transactions")
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("BudgetSettingsView.ExportTransactionsButton")
+        } else {
+            Button { present(paywall: .export) } label: {
+                HStack(spacing: .padding) {
+                    IconCircle(systemName: "square.and.arrow.up", size: 40, tint: .brandTeal)
+                    Text("Export Transactions")
+                        .fontWeight(.semibold)
+                        .foregroundStyle(Color.appText)
+                    Spacer(minLength: 0)
+                    Chip(text: String(localized: "Plus"), systemName: "lock.fill")
+                }
+                .padding(.padding)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("BudgetSettingsView.ExportTransactionsButton")
+        }
     }
 
     @ViewBuilder private func NavRow(systemName: String, title: LocalizedStringKey) -> some View {
@@ -371,7 +451,13 @@ struct BudgetSettingsView: View {
                         .foregroundStyle(Color.appMutedText)
                     Spacer(minLength: 0)
                     if budget.canEdit {
-                        Button { showInviteUser = true } label: {
+                        Button {
+                            if featureGate.canShareBudget {
+                                showInviteUser = true
+                            } else {
+                                present(paywall: .sharing)
+                            }
+                        } label: {
                             HStack(spacing: 4) {
                                 Image(systemName: "plus")
                                 Text("Add")
@@ -498,6 +584,7 @@ struct BudgetSettingsView: View {
             userDataFetcher: MockUserDataFetcher(),
             budgetUserFetcher: MockBudgetUserFetcher(),
             subscriptionLevelProvider: MockSubscriptionLevelProvider(level: .boldBudgetPlus),
+            featureGate: .previewPlus,
             budgetFetcher: MockBudgetFetcher(budgets: [
                 .sample,
                 .init(id: UUID().uuidString, name: .init("Personal")!, users: [.sample]),

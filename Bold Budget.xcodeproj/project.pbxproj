@@ -42,6 +42,7 @@
 		5673DA292CA7FA5A007833E0 /* Bold BudgetUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Bold BudgetUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		5690C6F42CB3C60200A389F4 /* Screenshots.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Screenshots.xctestplan; sourceTree = "<group>"; };
 		5690C6F62CB3C83000A389F4 /* Comprehensive.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Comprehensive.xctestplan; sourceTree = "<group>"; };
+		56A1B2C32E30000000000001 /* Bold Budget.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Bold Budget.storekit"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -121,9 +122,13 @@
 				Workers/Authentication/UserAccountDeleter.swift,
 				Workers/Authentication/UserSignOutService.swift,
 				Workers/Budget/Budget.swift,
+				Workers/Export/TransactionCsvExporter.swift,
 				Workers/RecurringExpenses/RecurringExpenseDeleter.swift,
 				Workers/RecurringExpenses/RecurringExpenseFetcher.swift,
 				Workers/RecurringExpenses/RecurringExpenseSaver.swift,
+				Workers/Subscriptions/BoldBudgetProduct.swift,
+				Workers/Subscriptions/FeatureGate.swift,
+				Workers/Subscriptions/SubscriptionLevelProvider.swift,
 				Workers/Transactions/TransactionDeleter.swift,
 				Workers/Transactions/TransactionFetcher.swift,
 				Workers/Transactions/TransactionSaver.swift,
@@ -244,6 +249,7 @@
 			children = (
 				5690C6F62CB3C83000A389F4 /* Comprehensive.xctestplan */,
 				5690C6F42CB3C60200A389F4 /* Screenshots.xctestplan */,
+				56A1B2C32E30000000000001 /* Bold Budget.storekit */,
 				5673DA112CA7FA58007833E0 /* Bold Budget */,
 				5673DA222CA7FA5A007833E0 /* Bold BudgetTests */,
 				5673DA2C2CA7FA5A007833E0 /* Bold BudgetUITests */,

@@ -35,12 +35,15 @@ struct BudgetsListView: View {
     private let currentUserIdProvider: CurrentUserIdProvider
     private let subscriptionManager: SubscriptionLevelProvider
 
+    @ObservedObject private var featureGate: FeatureGate
+
     init() {
         self.init(
             budgetFetcher: iocContainer~>BudgetFetcher.self,
             budgetDeleter: iocContainer~>BudgetDeleter.self,
             currentUserIdProvider: iocContainer~>CurrentUserIdProvider.self,
-            subscriptionManager: iocContainer~>SubscriptionLevelProvider.self
+            subscriptionManager: iocContainer~>SubscriptionLevelProvider.self,
+            featureGate: iocContainer~>FeatureGate.self
         )
     }
 
@@ -48,12 +51,14 @@ struct BudgetsListView: View {
         budgetFetcher: BudgetFetcher,
         budgetDeleter: BudgetDeleter,
         currentUserIdProvider: CurrentUserIdProvider,
-        subscriptionManager: SubscriptionLevelProvider
+        subscriptionManager: SubscriptionLevelProvider,
+        featureGate: FeatureGate
     ) {
         self.budgetFetcher = budgetFetcher
         self.budgetDeleter = budgetDeleter
         self.currentUserIdProvider = currentUserIdProvider
         self.subscriptionManager = subscriptionManager
+        self.featureGate = featureGate
     }
 
     private func fetchBudgets() {
@@ -124,6 +129,10 @@ struct BudgetsListView: View {
         .adContainer(factory: adProviderFactory, adProvider: $adProvider, ad: $ad)
         .alert(alertMessage, isPresented: $showAlert) {}
         .onAppear { fetchBudgets() }
+        .onChange(of: budgets?.count) { _, count in
+            guard let count else { return }
+            featureGate.noteExistingUsage(budgetCount: count)
+        }
         .onReceive(subscriptionManager.subscriptionLevelPublisher) { subscriptionLevel = $0 }
         .confirmationDialog(
             "\(budgetToDelete?.name.value ?? "")\nAre you sure you want to delete this budget? It will no longer be accessible by you or anyone else. All of its transaction data will also be deleted. It will not be recoverable.",
@@ -239,9 +248,16 @@ struct BudgetsListView: View {
     // MARK: - Add
 
     @ViewBuilder private func AddBudgetButton() -> some View {
-        if budgets != nil {
+        if let budgets {
+            // A free account keeps one budget. The button stays put and opens the paywall instead of
+            // vanishing — a control that disappears reads as a bug, not a limit.
+            let canAdd = featureGate.canAddBudget(currentCount: budgets.count)
             NavigationLink {
-                EditBudgetView()
+                if canAdd {
+                    EditBudgetView()
+                } else {
+                    PlusPaywallView(context: .budgets)
+                }
             } label: {
                 Image(systemName: "plus")
                     .font(.title.weight(.semibold))
@@ -265,7 +281,8 @@ struct BudgetsListView: View {
             budgetFetcher: MockBudgetFetcher(),
             budgetDeleter: MockBudgetDeleter(),
             currentUserIdProvider: MockCurrentUserIdProvider(),
-            subscriptionManager: MockSubscriptionLevelProvider(level: .none)
+            subscriptionManager: MockSubscriptionLevelProvider(level: .none),
+            featureGate: .previewFree
         )
     }
     .environmentObject(AdProviderFactory.forScreenshots)
@@ -277,7 +294,8 @@ struct BudgetsListView: View {
             budgetFetcher: MockBudgetFetcher(budgets: []),
             budgetDeleter: MockBudgetDeleter(),
             currentUserIdProvider: MockCurrentUserIdProvider(),
-            subscriptionManager: MockSubscriptionLevelProvider(level: .none)
+            subscriptionManager: MockSubscriptionLevelProvider(level: .none),
+            featureGate: .previewFree
         )
     }
     .environmentObject(AdProviderFactory.forScreenshots)

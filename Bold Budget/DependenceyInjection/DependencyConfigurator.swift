@@ -17,6 +17,7 @@ func setup(iocContainer: Container) {
     iocContainer.autoregister(UserDataFetcher.self, initializer: getUserDataFetcher)
     registerUserFinder()
     registerSubscriptionLevelProvider()
+    registerFeatureGate()
     registerReviewPrompter()
     registerIsAdminChecker()
     registerPopupNotificationCenter()
@@ -115,6 +116,16 @@ fileprivate func registerSubscriptionLevelProvider() {
     let service: SubscriptionLevelProvider = MockSubscriptionLevelProvider.getTestInstance()
         ?? StoreKitSubscriptionLevelProvider.instance
     iocContainer.autoregister(SubscriptionLevelProvider.self, initializer: { service })
+}
+
+/// One gate for the whole app, so grandfathering observed in one screen is visible in every other.
+fileprivate func registerFeatureGate() {
+    iocContainer.register(FeatureGate.self) { _ in
+        MainActor.assumeIsolated {
+            FeatureGate(subscriptionLevelProvider: iocContainer~>SubscriptionLevelProvider.self)
+        }
+    }
+    .inObjectScope(.container)
 }
 
 fileprivate func registerReviewPrompter() {

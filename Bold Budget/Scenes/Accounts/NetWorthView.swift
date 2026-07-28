@@ -17,6 +17,10 @@ struct NetWorthView: View {
     @Binding var ad: Ad?
     var showAds: Bool = false
 
+    @ObservedObject var featureGate: FeatureGate
+
+    @State private var showPaywall: Bool = false
+
     private var allAccounts: [Account] {
         Array(budget.accounts.values)
     }
@@ -61,6 +65,12 @@ struct NetWorthView: View {
         }
         .foregroundStyle(Color.appText)
         .background(Color.appBackground.ignoresSafeArea())
+        .sheet(isPresented: $showPaywall) {
+            PlusPaywallView(context: .netWorthHistory)
+        }
+        .onChange(of: allAccounts.count, initial: true) { _, count in
+            featureGate.noteExistingUsage(accountCount: count)
+        }
     }
 
     // MARK: - Header
@@ -125,9 +135,41 @@ struct NetWorthView: View {
     @ViewBuilder private func ChartCard() -> some View {
         let history = budget.netWorthHistory
         if history.count >= 2 {
-            NetWorthChartView(history: history)
-                .appCard()
+            if featureGate.canSeeNetWorthHistory {
+                NetWorthChartView(history: history)
+                    .appCard()
+            } else {
+                LockedChartCard(history: history)
+            }
         }
+    }
+
+    /// The real chart, blurred behind an unlock prompt. Showing that the history *exists* — rather
+    /// than hiding the card outright — is the whole upsell: the data is already theirs, they just
+    /// can't read it yet.
+    @ViewBuilder private func LockedChartCard(history: [(date: SimpleDate, value: SignedMoney)]) -> some View {
+        Button {
+            showPaywall = true
+        } label: {
+            ZStack {
+                NetWorthChartView(history: history)
+                    .blur(radius: 12)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+                VStack(spacing: .paddingSmall) {
+                    IconCircle(systemName: "lock", size: 40, tint: .brandTeal)
+                    Text("Net worth over time")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color.appText)
+                    Text("Unlock with Bold Budget+")
+                        .font(.caption)
+                        .foregroundStyle(Color.appMutedText)
+                }
+            }
+            .appCard()
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("NetWorthView.LockedChartCard")
     }
 
     // MARK: - Stat cards
@@ -273,12 +315,18 @@ struct NetWorthView: View {
 
 #Preview("Populated") {
     NavigationStack {
-        NetWorthView(budget: .previewSample(accounts: Account.samples), ad: .constant(nil))
+        NetWorthView(budget: .previewSample(accounts: Account.samples), ad: .constant(nil), featureGate: .previewPlus)
+    }
+}
+
+#Preview("Locked history") {
+    NavigationStack {
+        NetWorthView(budget: .previewSample(accounts: Account.samples), ad: .constant(nil), featureGate: .previewFree)
     }
 }
 
 #Preview("Empty") {
     NavigationStack {
-        NetWorthView(budget: .previewSample(), ad: .constant(nil))
+        NetWorthView(budget: .previewSample(), ad: .constant(nil), featureGate: .previewPlus)
     }
 }

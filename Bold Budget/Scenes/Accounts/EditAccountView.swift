@@ -37,6 +37,8 @@ struct EditAccountView: View {
     @State private var subscriptionLevel: SubscriptionLevel = .none
     private let subscriptionLevelProvider: SubscriptionLevelProvider
 
+    @ObservedObject private var featureGate: FeatureGate
+
     private var accountToEdit: OptionalAccount = .none
 
     @StateObject var budget: Budget
@@ -44,16 +46,19 @@ struct EditAccountView: View {
     init(budget: Budget) {
         self.init(
             budget: budget,
-            subscriptionLevelProvider: iocContainer~>SubscriptionLevelProvider.self
+            subscriptionLevelProvider: iocContainer~>SubscriptionLevelProvider.self,
+            featureGate: iocContainer~>FeatureGate.self
         )
     }
 
     init(
         budget: Budget,
-        subscriptionLevelProvider: SubscriptionLevelProvider
+        subscriptionLevelProvider: SubscriptionLevelProvider,
+        featureGate: FeatureGate
     ) {
         self._budget = .init(wrappedValue: budget)
         self.subscriptionLevelProvider = subscriptionLevelProvider
+        self.featureGate = featureGate
     }
 
     public func editing(_ account: Account) -> EditAccountView {
@@ -63,6 +68,13 @@ struct EditAccountView: View {
     }
 
     private var isEditingExisting: Bool { accountToEdit.account != nil }
+
+    /// The account limit is enforced here rather than at each "Add Account" button, so the tab bar,
+    /// the empty state, and the create-inline flow in `EditTransactionView` are all covered by one
+    /// check that can't be routed around.
+    private var isBlockedByAccountLimit: Bool {
+        !isEditingExisting && !featureGate.canAddAccount(currentCount: budget.accounts.count)
+    }
 
     private var account: Account? {
         guard let name = Account.Name(nameString) else { return nil }
@@ -136,6 +148,14 @@ struct EditAccountView: View {
     // MARK: - Body
 
     var body: some View {
+        if isBlockedByAccountLimit {
+            PlusPaywallView(context: .accounts, subscriptionLevelProvider: subscriptionLevelProvider)
+        } else {
+            AccountForm()
+        }
+    }
+
+    @ViewBuilder private func AccountForm() -> some View {
         VStack(spacing: 0) {
             Header()
             ScrollView {
@@ -394,7 +414,8 @@ struct EditAccountView: View {
     NavigationStack {
         EditAccountView(
             budget: .previewSample(),
-            subscriptionLevelProvider: MockSubscriptionLevelProvider(level: .boldBudgetPlus)
+            subscriptionLevelProvider: MockSubscriptionLevelProvider(level: .boldBudgetPlus),
+            featureGate: .previewPlus
         )
     }
     .environmentObject(AdProviderFactory.forScreenshots)
@@ -404,7 +425,8 @@ struct EditAccountView: View {
     NavigationStack {
         EditAccountView(
             budget: .previewSample(accounts: Account.samples),
-            subscriptionLevelProvider: MockSubscriptionLevelProvider(level: .boldBudgetPlus)
+            subscriptionLevelProvider: MockSubscriptionLevelProvider(level: .boldBudgetPlus),
+            featureGate: .previewPlus
         )
         .editing(.sampleCarLoan)
     }

@@ -117,20 +117,25 @@ struct BudgetDetailView: View {
     @State private var alertMessage: String = ""
     
     private let subscriptionManager: SubscriptionLevelProvider
-    
+
+    @ObservedObject private var featureGate: FeatureGate
+
     init(budget: Budget) {
         self.init(
             budget: budget,
-            subscriptionManager: iocContainer~>SubscriptionLevelProvider.self
+            subscriptionManager: iocContainer~>SubscriptionLevelProvider.self,
+            featureGate: iocContainer~>FeatureGate.self
         )
     }
     
     init(
         budget: Budget,
-        subscriptionManager: SubscriptionLevelProvider
+        subscriptionManager: SubscriptionLevelProvider,
+        featureGate: FeatureGate
     ) {
         self._budget = .init(wrappedValue: budget)
         self.subscriptionManager = subscriptionManager
+        self.featureGate = featureGate
     }
     
     /// The tab content is delegated to self-contained child views, so the ad this screen loads is
@@ -242,7 +247,7 @@ struct BudgetDetailView: View {
     var body: some View {
         VStack(spacing: 0) {
             if topTab == .netWorth {
-                NetWorthView(budget: budget, ad: $ad, showAds: showAds)
+                NetWorthView(budget: budget, ad: $ad, showAds: showAds, featureGate: featureGate)
                     .overlay {
                         if budget.isLoading { BlockingSpinnerView() }
                     }
@@ -671,7 +676,8 @@ struct BudgetDetailView: View {
     NavigationStack {
         BudgetDetailView(
             budget: Budget(info: .sample),
-            subscriptionManager: MockSubscriptionLevelProvider(level: .boldBudgetPlus)
+            subscriptionManager: MockSubscriptionLevelProvider(level: .boldBudgetPlus),
+            featureGate: .previewPlus
         )
     }
     .environmentObject(AdProviderFactory.forScreenshots)
