@@ -138,7 +138,14 @@ struct PlusPaywallView: View {
         // rather than presented — `EditAccountView` swaps itself for the paywall in place.
         .toolbar(.hidden, for: .navigationBar)
         .navigationBarBackButtonHidden()
-        .task { await store.loadProducts() }
+        .task {
+            await store.loadProducts()
+            // Yearly is the default pick, but StoreKit may not have returned it. Falling back to
+            // whatever did load keeps the buy button live instead of disabled over a phantom plan.
+            if !store.products.contains(where: { $0.id == selectedProductId }) {
+                selectedProductId = store.products.first?.id ?? selectedProductId
+            }
+        }
         .alert(alertMessage, isPresented: $showAlert) {}
         .sheet(isPresented: $showTermsOfService) { LegalTextView(TermsOfService.markdownContent) }
         .sheet(isPresented: $showPrivacyPolicy) { LegalTextView(PrivacyPolicy.markdownContent) }

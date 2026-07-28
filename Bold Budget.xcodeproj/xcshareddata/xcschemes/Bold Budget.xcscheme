@@ -83,7 +83,7 @@
          </BuildableReference>
       </BuildableProductRunnable>
       <StoreKitConfigurationFileReference
-         identifier = "../../../Bold Budget.storekit">
+         identifier = "../../Bold Budget.storekit">
       </StoreKitConfigurationFileReference>
    </LaunchAction>
    <ProfileAction

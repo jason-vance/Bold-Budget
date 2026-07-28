@@ -70,10 +70,22 @@ final class PlusStore: ObservableObject {
         loadState = .loading
         do {
             let loaded = try await Product.products(for: BoldBudgetProduct.allIds)
+
+            // `Product.products(for:)` silently drops ids it can't resolve rather than throwing, so
+            // a missing product looks identical to no products at all. Name the missing ones: on
+            // device that means App Store Connect state (Missing Metadata, agreements), and in the
+            // simulator it means the scheme's StoreKit configuration file isn't attached.
+            let missingIds = BoldBudgetProduct.allIds.filter { id in !loaded.contains { $0.id == id } }
+            if !missingIds.isEmpty {
+                print("PlusStore; StoreKit did not return: \(missingIds.joined(separator: ", "))")
+            }
+
             guard !loaded.isEmpty else {
+                print("PlusStore; StoreKit returned no products at all — check the scheme's StoreKit configuration file, or the products' status in App Store Connect")
                 loadState = .failed(String(localized: "Bold Budget+ isn't available right now. Please try again later."))
                 return
             }
+
             // Present in a deliberate order (yearly, monthly, lifetime) rather than StoreKit's.
             products = BoldBudgetProduct.allIds.compactMap { id in loaded.first { $0.id == id } }
             isEligibleForIntroOffer = await Product.SubscriptionInfo.isEligibleForIntroOffer(
