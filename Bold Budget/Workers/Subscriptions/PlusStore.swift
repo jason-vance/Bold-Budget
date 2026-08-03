@@ -66,35 +66,59 @@ final class PlusStore: ObservableObject {
         return (product.price / 12).formatted(product.priceFormatStyle)
     }
 
+    /// How many times to ask the App Store for the products before giving up, and how long to wait
+    /// between tries. A cold StoreKit — a sandbox account on a freshly installed build, which is
+    /// exactly what App Review runs — can hand back an empty set on the first call and the full set
+    /// a second later, so one attempt is not enough to conclude the products don't exist.
+    private static let loadAttempts = 3
+    private static let delayBetweenLoadAttempts: Duration = .seconds(2)
+
     func loadProducts() async {
         loadState = .loading
-        do {
-            let loaded = try await Product.products(for: BoldBudgetProduct.allIds)
 
-            // `Product.products(for:)` silently drops ids it can't resolve rather than throwing, so
-            // a missing product looks identical to no products at all. Name the missing ones: on
-            // device that means App Store Connect state (Missing Metadata, agreements), and in the
-            // simulator it means the scheme's StoreKit configuration file isn't attached.
-            let missingIds = BoldBudgetProduct.allIds.filter { id in !loaded.contains { $0.id == id } }
-            if !missingIds.isEmpty {
-                print("PlusStore; StoreKit did not return: \(missingIds.joined(separator: ", "))")
-            }
+        for attempt in 1...Self.loadAttempts {
+            do {
+                let loaded = try await Product.products(for: BoldBudgetProduct.allIds)
 
-            guard !loaded.isEmpty else {
-                print("PlusStore; StoreKit returned no products at all — check the scheme's StoreKit configuration file, or the products' status in App Store Connect")
-                loadState = .failed(String(localized: "Bold Budget+ isn't available right now. Please try again later."))
+                // `Product.products(for:)` silently drops ids it can't resolve rather than throwing,
+                // so a missing product looks identical to no products at all. Name the missing ones:
+                // on device that means App Store Connect state (Missing Metadata, agreements), and in
+                // the simulator it means the scheme's StoreKit configuration file isn't attached.
+                let missingIds = BoldBudgetProduct.allIds.filter { id in !loaded.contains { $0.id == id } }
+                if !missingIds.isEmpty {
+                    print("PlusStore; StoreKit did not return: \(missingIds.joined(separator: ", "))")
+                }
+
+                if loaded.isEmpty {
+                    print("PlusStore; StoreKit returned no products on attempt \(attempt) of \(Self.loadAttempts)")
+                    if attempt < Self.loadAttempts {
+                        try? await Task.sleep(for: Self.delayBetweenLoadAttempts)
+                        continue
+                    }
+                    loadState = .failed(String(localized: "Bold Budget+ isn't available right now. Please try again later."))
+                    return
+                }
+
+                // Present in a deliberate order (yearly, monthly, lifetime) rather than StoreKit's.
+                products = BoldBudgetProduct.allIds.compactMap { id in loaded.first { $0.id == id } }
+
+                // Show the plans now. Intro-offer eligibility is a separate round trip that only
+                // changes the wording of the trial line; making the prices wait on it would leave a
+                // spinner where the products should be if that call is slow to come back.
+                loadState = .loaded
+
+                isEligibleForIntroOffer = await Product.SubscriptionInfo.isEligibleForIntroOffer(
+                    for: BoldBudgetProduct.subscriptionGroupId
+                )
                 return
+            } catch {
+                print("PlusStore; failed to load products on attempt \(attempt) of \(Self.loadAttempts). \(error.localizedDescription)")
+                if attempt < Self.loadAttempts {
+                    try? await Task.sleep(for: Self.delayBetweenLoadAttempts)
+                    continue
+                }
+                loadState = .failed(String(localized: "Couldn't reach the App Store. Check your connection and try again."))
             }
-
-            // Present in a deliberate order (yearly, monthly, lifetime) rather than StoreKit's.
-            products = BoldBudgetProduct.allIds.compactMap { id in loaded.first { $0.id == id } }
-            isEligibleForIntroOffer = await Product.SubscriptionInfo.isEligibleForIntroOffer(
-                for: BoldBudgetProduct.subscriptionGroupId
-            )
-            loadState = .loaded
-        } catch {
-            print("PlusStore; failed to load products. \(error.localizedDescription)")
-            loadState = .failed(String(localized: "Couldn't reach the App Store. Check your connection and try again."))
         }
     }
 

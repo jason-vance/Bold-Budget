@@ -105,6 +105,10 @@ struct BudgetsListView: View {
                         } else {
                             BudgetsCard(budgets)
                         }
+                        // The app's standing entry point to Bold Budget+. Home screen rather than
+                        // tucked behind the profile button, so buying it never requires walking
+                        // into a limit first.
+                        PlusUpsellCard(featureGate: featureGate)
                         AdCard()
                     } else {
                         BlockingSpinnerView()
